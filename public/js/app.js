@@ -7,6 +7,7 @@ import { treeStream, setSelectedId, setOnSelect, togglePanel } from './component
 import { logUser, currentUser, authMenuOption } from './auth.js';
 import { initAddOnOverlays } from './addOnOverlays.js';
 import { initAddOnFiltering } from './addOnFiltering.js';
+import { openDiagramPickerModal } from './login.js';
 import { Stream } from './core/stream.js';
 import { createSimulation } from './core/simulation.js';
 import { currentTheme, applyThemeToPage, themedThemeSelector } from './core/theme.js';
@@ -79,8 +80,6 @@ const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
 // === Initial BPMN XML template ===
 const diagramXMLStream = new Stream(defaultXml);
 async function init() {
-  await import('./login.js').catch(() => console.warn('login.js failed to load.'));
-
   const { addOnStore } = window;
 
   const avatarStream = new Stream('flow.png');
