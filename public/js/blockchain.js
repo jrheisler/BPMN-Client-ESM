@@ -1,4 +1,4 @@
-class Block {
+export class Block {
   constructor(timestamp, data, previousHash = '') {
     this.timestamp = timestamp;
     this.data = data;
@@ -20,7 +20,7 @@ class Block {
   }
 }
 
-class Blockchain {
+export class Blockchain {
   constructor(peers = []) {
     this.difficulty = 2;
     this.peers = peers;
@@ -111,5 +111,3 @@ class Blockchain {
   }
 }
 
-window.Block = Block;
-window.Blockchain = Blockchain;

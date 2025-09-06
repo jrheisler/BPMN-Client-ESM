@@ -1,21 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import vm from 'node:vm';
 import crypto from 'node:crypto';
 import { loadSimulation, createSimulationInstance } from '../helpers/simulation.js';
-import { fileURLToPath } from 'node:url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-function loadEnvironment() {
+async function loadEnvironment() {
   const sandbox = loadSimulation({
     sha256: data => crypto.createHash('sha256').update(data).digest('hex')
   });
-  sandbox.window = sandbox;
-  const blockchainCode = fs.readFileSync(resolve(__dirname, '../../public/js/blockchain.js'), 'utf8');
-  vm.runInNewContext(blockchainCode, sandbox);
+  globalThis.localStorage = sandbox.localStorage;
+  globalThis.sha256 = sandbox.sha256;
+  const { Blockchain } = await import('../../public/js/blockchain.js');
+  sandbox.Blockchain = Blockchain;
   return sandbox;
 }
 
@@ -40,8 +35,8 @@ function runToCompletion(sim) {
   }
 }
 
-test('simulation run adds blocks to blockchain', () => {
-  const sandbox = loadEnvironment();
+test('simulation run adds blocks to blockchain', async () => {
+  const sandbox = await loadEnvironment();
   const sim = createSimulationInstance(buildDiagram(), { delay: 0 }, sandbox);
   const blockchain = new sandbox.Blockchain();
   let processed = 0;
@@ -57,8 +52,8 @@ test('simulation run adds blocks to blockchain', () => {
   assert.strictEqual(blockchain.chain.length, sim.tokenLogStream.get().length + 1);
 });
 
-test('resetting simulation and blockchain starts fresh chain', () => {
-  const sandbox = loadEnvironment();
+test('resetting simulation and blockchain starts fresh chain', async () => {
+  const sandbox = await loadEnvironment();
   const sim = createSimulationInstance(buildDiagram(), { delay: 0 }, sandbox);
   const blockchain = new sandbox.Blockchain();
   let processed = 0;
