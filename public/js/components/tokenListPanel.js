@@ -40,6 +40,7 @@ export function createTokenListPanel(logStream, themeStream = currentTheme){
     panel.appendChild(list);
 
     let prevLength = 0;
+    let blockchain = null;
 
     function getTypeClass(id){
       if(!id) return null;
@@ -142,12 +143,16 @@ export function createTokenListPanel(logStream, themeStream = currentTheme){
       downloadBtn.addEventListener('click', handler);
     }
 
+    function setBlockchain(bc){
+      blockchain = bc;
+    }
+
     clearBtn.addEventListener('click', () => {
       if (window.simulation && typeof window.simulation.clearTokenLog === 'function') {
         window.simulation.clearTokenLog();
       }
-      if (window.blockchain && typeof window.blockchain.reset === 'function') {
-        window.blockchain.reset();
+      if (blockchain && typeof blockchain.reset === 'function') {
+        blockchain.reset();
       }
     });
 
@@ -155,5 +160,5 @@ export function createTokenListPanel(logStream, themeStream = currentTheme){
 
     observeDOMRemoval(panel, ...cleanupFns);
 
-    return { el: panel, show, hide, showDownload, setDownloadHandler, setTreeButton };
+    return { el: panel, show, hide, showDownload, setDownloadHandler, setTreeButton, setBlockchain };
   }

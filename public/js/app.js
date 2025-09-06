@@ -260,12 +260,11 @@ Object.assign(document.body.style, {
   let blockchain;
   let processedTokens = 0;
   let blockchainPersistPromise = Promise.resolve();
-  window.blockchain = blockchain;
 
   function initBlockchain() {
     tokenPanel.hide();
     blockchain = new Blockchain();
-    window.blockchain = blockchain;
+    tokenPanel.setBlockchain(blockchain);
     processedTokens = 0;
   }
 
