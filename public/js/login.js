@@ -128,7 +128,7 @@ export function reactiveLoginModal(themeStream = currentTheme) {
 
 
 
-function openDiagramPickerModal(themeStream = currentTheme) {
+export function openDiagramPickerModal(themeStream = currentTheme) {
   const pickStream = new Stream(null); // emits selected diagram or null
 
   const { modal, content } = createModal(themeStream, () => pickStream.set(null));
