@@ -3,7 +3,7 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
-const { createSimulationInstance } = require('../helpers/simulation');
+const { createSimulationInstance } = require('../helpers/simulation.cjs');
 
 class Element {
   constructor(tag) {
