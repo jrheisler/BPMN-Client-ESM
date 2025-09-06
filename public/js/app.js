@@ -16,11 +16,7 @@ import { Blockchain } from './blockchain.js';
 import './addOnStore.js';
 import './palette-toggle.js';
 import './components/layout.js';
-
-await import('./firebase.js').catch(() => console.warn('firebase.js not found; skipping Firebase initialization.'));
-await import('./login.js').catch(() => console.warn('login.js failed to load.'));
-
-const { addOnStore } = window;
+// Initialization function will handle dynamic imports and DOM setup later.
 
 // js/app.js
   const typeIcons = {
@@ -80,10 +76,13 @@ const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
 
 // === Initial BPMN XML template ===
 const diagramXMLStream = new Stream(defaultXml);
+async function init() {
+  await import('./firebase.js').catch(() => console.warn('firebase.js not found; skipping Firebase initialization.'));
+  await import('./login.js').catch(() => console.warn('login.js failed to load.'));
 
-document.addEventListener('DOMContentLoaded', async () => {
+  const { addOnStore } = window;
 
-const avatarStream = new Stream('flow.png');
+  const avatarStream = new Stream('flow.png');
 let currentDiagramId = null;
 let diagramName = null;
 let diagramVersion = 1;
@@ -1141,5 +1140,10 @@ const bjsContainer = document.querySelector('.bjs-container') || document.getEle
 bjsContainer.style.position = 'relative'; // ensure container can host absolute overlay
 bjsContainer.appendChild(overlay);
 
+}
 
-});
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
