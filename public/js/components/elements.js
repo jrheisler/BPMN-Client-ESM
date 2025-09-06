@@ -1,5 +1,6 @@
 import { Stream, observeDOMRemoval } from '../core/stream.js';
 import { currentTheme, applyTheme } from '../core/theme.js';
+import { container } from './layout.js';
 
 export function text(str) {
   return document.createTextNode(str);

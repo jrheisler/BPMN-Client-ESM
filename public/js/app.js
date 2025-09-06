@@ -15,7 +15,7 @@ import AttachBoundaryModule from '../features/attach-boundary/index.js';
 import { Blockchain } from './blockchain.js';
 import './addOnStore.js';
 import './palette-toggle.js';
-import './components/layout.js';
+import { row } from './components/layout.js';
 // Initialization function will handle dynamic imports and DOM setup later.
 
 // js/app.js

@@ -1,7 +1,7 @@
 import { Stream } from '../core/stream.js';
 import { currentTheme } from '../core/theme.js';
 import { reactiveButton, showConfirmationDialog } from './elements.js';
-import { divider } from './layout.js';
+import { divider, row } from './layout.js';
 
 // 1) Create the sidebar container (hidden by default)
 const propsSidebar = document.createElement('div');
