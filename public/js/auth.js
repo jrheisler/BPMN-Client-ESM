@@ -2,6 +2,7 @@ import { Stream } from './core/stream.js';
 import { reactiveLoginModal } from './login.js';
 import { auth } from './firebase.js';
 import { signOut } from 'firebase/auth';
+import { showToast } from './components/elements.js';
 
 export const logUser = new Stream('👤 Login');
 export let currentUser = null;
@@ -20,17 +21,13 @@ export function authMenuOption({ avatarStream, showSaveButton, currentTheme, reb
           window.currentUser = currentUser;
           rebuildMenu();
         }).catch(() => {
-          if (window.showToast) {
-            window.showToast('Logout failed: ', { type: 'error' });
-          }
+          showToast('Logout failed: ', { type: 'error' });
         });
       } else {
         const userStream = reactiveLoginModal(currentTheme);
         userStream.subscribe(result => {
           if (result instanceof Error) {
-            if (window.showToast) {
-              window.showToast(`Error: ${result.message}`, { type: 'error' });
-            }
+            showToast(`Error: ${result.message}`, { type: 'error' });
           } else if (result) {
             currentUser = result;
             window.currentUser = currentUser;

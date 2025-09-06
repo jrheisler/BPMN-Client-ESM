@@ -2,6 +2,7 @@ import customReplaceModule from './modules/customReplaceMenuProvider.js';
 import { createRaciMatrix } from './components/raciMatrix.js';
 import { createTokenListPanel } from './components/tokenListPanel.js';
 import { reactiveButton, dropdownStream, avatarDropdown, openFlowSelectionModal, createDiagramOverlay } from './components/elements.js';
+import { showToast } from './components/elements.js';
 import { showProperties, hideSidebar } from './components/showProperties.js';
 import { treeStream, setSelectedId, setOnSelect, togglePanel } from './components/diagramTree.js';
 import { logUser, currentUser, authMenuOption } from './auth.js';
