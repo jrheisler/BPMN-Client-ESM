@@ -1,5 +1,7 @@
 import { Stream } from './core/stream.js';
 import { reactiveLoginModal } from './login.js';
+import { auth } from './firebase.js';
+import { signOut } from 'firebase/auth';
 
 export const logUser = new Stream('👤 Login');
 export let currentUser = null;
@@ -10,7 +12,7 @@ export function authMenuOption({ avatarStream, showSaveButton, currentTheme, reb
     label: logUser.get(),
     onClick: () => {
       if (currentUser) {
-        firebase.auth().signOut().then(() => {
+        signOut(auth).then(() => {
           logUser.set('👤 Login');
           avatarStream.set('flow.png');
           showSaveButton.set(false);

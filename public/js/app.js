@@ -16,6 +16,8 @@ import { Blockchain } from './blockchain.js';
 import './addOnStore.js';
 import './palette-toggle.js';
 import { row } from './components/layout.js';
+import { db } from './firebase.js';
+import { doc, collection, updateDoc, setDoc, addDoc, getDoc, Timestamp, arrayUnion } from 'firebase/firestore';
 // Initialization function will handle dynamic imports and DOM setup later.
 
 // js/app.js
@@ -77,9 +79,6 @@ const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
 // === Initial BPMN XML template ===
 const diagramXMLStream = new Stream(defaultXml);
 async function init() {
-  await import('./firebase.js').catch(() =>
-    console.warn('Create public/js/firebase.js from firebase.example.js to enable Firebase.')
-  );
   await import('./login.js').catch(() => console.warn('login.js failed to load.'));
 
   const { addOnStore } = window;
@@ -532,16 +531,13 @@ const saveBtn = reactiveButton(
       // If we have an existing diagram, update it
       if (currentDiagramId) {
         // 🔁 UPDATE EXISTING DIAGRAM
-        const diagramRef = db.collection('users')
-          .doc(currentUser.uid)
-          .collection('diagrams')
-          .doc(currentDiagramId);
+        const diagramRef = doc(db, 'users', currentUser.uid, 'diagrams', currentDiagramId);
 
         // Add the new version to the diagram
-        await diagramRef.update({
+        await updateDoc(diagramRef, {
           name: metadata.name, // Update diagram name
-          lastUpdated: firebase.firestore.Timestamp.fromMillis(localTimestamp), // Update lastUpdated
-          versions: firebase.firestore.FieldValue.arrayUnion({
+          lastUpdated: Timestamp.fromMillis(localTimestamp), // Update lastUpdated
+          versions: arrayUnion({
             xml, // Save XML data
             timestamp: localTimestamp, // Timestamp of this version
             notes: metadata.notes, // Save the updated notes
@@ -549,7 +545,7 @@ const saveBtn = reactiveButton(
           })
         });
 
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
         const diagrams = userDoc.data()?.diagrams || [];
 
         const updatedIndex = diagrams.map(d =>
@@ -560,9 +556,11 @@ const saveBtn = reactiveButton(
 
 
         // Save the updated index list back to Firestore
-        await db.collection('users')
-          .doc(currentUser.uid)
-          .set({ diagrams: updatedIndex }, { merge: true });
+        await setDoc(
+          doc(db, 'users', currentUser.uid),
+          { diagrams: updatedIndex },
+          { merge: true }
+        );
 
         // Update local diagram metadata state
         diagramDataStream.set({
@@ -575,14 +573,14 @@ const saveBtn = reactiveButton(
 
       } else {
         // 🆕 CREATE NEW DIAGRAM
-        const diagramRef = await db.collection('users')
-          .doc(currentUser.uid)
-          .collection('diagrams')
-          .add({
+        const diagramRef = await addDoc(
+          collection(doc(db, 'users', currentUser.uid), 'diagrams'),
+          {
             name: metadata.name || 'Untitled Diagram',
             versions: [{ xml, timestamp: localTimestamp, notes: metadata.notes, addOns: allAddOns }],
-            lastUpdated: firebase.firestore.Timestamp.fromMillis(localTimestamp)
-          });
+            lastUpdated: Timestamp.fromMillis(localTimestamp)
+          }
+        );
 
         const newIndexEntry = {
           id: diagramRef.id,
@@ -592,11 +590,13 @@ const saveBtn = reactiveButton(
         };
 
         // Add the new diagram to the user's index list
-        await db.collection('users')
-          .doc(currentUser.uid)
-          .set({
-            diagrams: firebase.firestore.FieldValue.arrayUnion(newIndexEntry)
-          }, { merge: true });
+        await setDoc(
+          doc(db, 'users', currentUser.uid),
+          {
+            diagrams: arrayUnion(newIndexEntry)
+          },
+          { merge: true }
+        );
 
         // Update the diagram ID locally and metadata stream
         currentDiagramId = diagramRef.id;
