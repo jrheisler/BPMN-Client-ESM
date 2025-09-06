@@ -13,6 +13,14 @@ import { currentTheme, applyThemeToPage } from './core/theme.js';
 import BpmnSnapping from 'bpmn-js/lib/features/snapping';
 import AttachBoundaryModule from '../features/attach-boundary/index.js';
 import { Blockchain } from './blockchain.js';
+import './addOnStore.js';
+import './palette-toggle.js';
+import './components/layout.js';
+
+await import('./firebase.js').catch(() => console.warn('firebase.js not found; skipping Firebase initialization.'));
+await import('./login.js').catch(() => console.warn('login.js failed to load.'));
+
+const { addOnStore } = window;
 
 // js/app.js
   const typeIcons = {
