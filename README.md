@@ -9,12 +9,15 @@ Flow Control Center is a browser‑based BPMN modeling and simulation client. It
    npm install
    ```
 2. **Configure Firebase**
-   Create `public/js/firebase.js` and initialize Firebase with your project credentials:
+   Copy the example configuration and fill in your Firebase project credentials:
+   ```bash
+   cp public/js/firebase.example.js public/js/firebase.js
+   ```
+   Edit `public/js/firebase.js` to replace the placeholder values and initialize Firebase with your project's settings:
    ```js
    // public/js/firebase.js
-   const firebaseConfig = { /* your config */ };
+   export const firebaseConfig = { /* your real config */ };
    firebase.initializeApp(firebaseConfig);
-   const db = firebase.firestore();
    ```
 3. **Serve the app**
    Serve the `public/` directory using your preferred static server (e.g. `npx http-server public` or `firebase serve`).
