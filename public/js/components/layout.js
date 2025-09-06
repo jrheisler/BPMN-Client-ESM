@@ -83,36 +83,38 @@ export function divider(options = {}, themeStream = currentTheme) {
 }
 
 // Diagram tree side panel toggle
-window.addEventListener('DOMContentLoaded', () => {
-  const panel = document.createElement('div');
-  panel.classList.add('diagram-tree-panel');
+if (typeof window !== 'undefined') {
+  window.addEventListener('DOMContentLoaded', () => {
+    const panel = document.createElement('div');
+    panel.classList.add('diagram-tree-panel');
 
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = '\u00D7';
-  closeBtn.classList.add('diagram-tree-close');
-  closeBtn.addEventListener('click', () => {
-    panel.style.left = '-300px';
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '\u00D7';
+    closeBtn.classList.add('diagram-tree-close');
+    closeBtn.addEventListener('click', () => {
+      panel.style.left = '-300px';
+    });
+    panel.appendChild(closeBtn);
+
+    const content = createTreeContainer();
+    panel.appendChild(content);
+    document.body.appendChild(panel);
+
+    setTogglePanel(() => {
+      const open = panel.style.left === '0px';
+      panel.style.left = open ? '-300px' : '0px';
+    });
+
+    // Apply theme styling
+    currentTheme.subscribe(theme => {
+      const colors = theme.colors;
+      panel.style.background = colors.surface;
+      panel.style.color = colors.foreground;
+      panel.style.boxShadow = `2px 0 6px ${colors.border}`;
+
+      closeBtn.style.background = 'transparent';
+      closeBtn.style.color = colors.foreground;
+      closeBtn.style.border = 'none';
+    });
   });
-  panel.appendChild(closeBtn);
-
-  const content = createTreeContainer();
-  panel.appendChild(content);
-  document.body.appendChild(panel);
-
-  setTogglePanel(() => {
-    const open = panel.style.left === '0px';
-    panel.style.left = open ? '-300px' : '0px';
-  });
-
-  // Apply theme styling
-  currentTheme.subscribe(theme => {
-    const colors = theme.colors;
-    panel.style.background = colors.surface;
-    panel.style.color = colors.foreground;
-    panel.style.boxShadow = `2px 0 6px ${colors.border}`;
-
-    closeBtn.style.background = 'transparent';
-    closeBtn.style.color = colors.foreground;
-    closeBtn.style.border = 'none';
-  });
-});
+}
