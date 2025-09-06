@@ -69,6 +69,7 @@ with all four roles specified looks like this:
 ## Repository structure
 
 - `public/` – front‑end assets and scripts
+- `docs/` – documentation resources
 - `test/` – automated tests using Node's built‑in test runner
 - `sample*.bpmn` – example diagrams
 
