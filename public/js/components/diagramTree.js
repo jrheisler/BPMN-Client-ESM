@@ -1,11 +1,18 @@
-(function(global){
-  const treeStream = new Stream(null);
-  let selectedId = null;
+import { Stream } from '../core/stream.js';
 
-  function setSelectedId(id){
+export const treeStream = new Stream(null);
+let selectedId = null;
+export let onSelect = () => {};
+export let togglePanel = null;
+
+export function setSelectedId(id){
     selectedId = id;
     treeStream.set(treeStream.get());
   }
+
+export function getSelectedId(){
+  return selectedId;
+}
 
   function renderNode(node){
     const li = document.createElement('li');
@@ -23,7 +30,7 @@
     li.dataset.elementId = node.id;
     li.addEventListener('click', e => {
       e.stopPropagation();
-      global.diagramTree.onSelect?.(node.id);
+      onSelect?.(node.id);
     });
 
     if (node.id === selectedId){
@@ -42,7 +49,7 @@
     return li;
   }
 
-  function createTreeContainer(){
+export function createTreeContainer(){
     const container = document.createElement('div');
     treeStream.subscribe(tree => {
       container.innerHTML = '';
@@ -54,11 +61,11 @@
     return container;
   }
 
-  global.diagramTree = {
-    treeStream,
-    createTreeContainer,
-    onSelect: () => {},
-    setSelectedId,
-    get selectedId(){ return selectedId; }
-  };
-})(window);
+
+export function setOnSelect(fn){
+  onSelect = fn;
+}
+
+export function setTogglePanel(fn){
+  togglePanel = fn;
+}

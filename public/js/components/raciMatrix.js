@@ -1,10 +1,9 @@
-(function(global) {
-  /**
-   * Collect RACI data from all BPMN elements in the modeler.
-   * @param {BpmnJS} modeler
-   * @returns {Array<{id:string,name:string,responsible:string,accountable:string,consulted:string,informed:string}>}
-   */
-  function collectData(modeler) {
+/**
+ * Collect RACI data from all BPMN elements in the modeler.
+ * @param {BpmnJS} modeler
+ * @returns {Array<{id:string,name:string,responsible:string,accountable:string,consulted:string,informed:string}>}
+ */
+export function collectData(modeler) {
     if (!modeler) return [];
     const elementRegistry = modeler.get('elementRegistry');
     if (!elementRegistry) return [];
@@ -25,14 +24,14 @@
           informed:   bo.informed   || raci?.informed   || attrs.informed   || ''
         };
       });
-  }
+}
 
-  /**
-   * Create a DOM node containing a RACI matrix table.
-   * @param {BpmnJS} modeler
-   * @returns {HTMLElement} DOM node for mounting
-   */
-  function createRaciMatrix(modeler) {
+/**
+ * Create a DOM node containing a RACI matrix table.
+ * @param {BpmnJS} modeler
+ * @returns {HTMLElement} DOM node for mounting
+ */
+export function createRaciMatrix(modeler) {
     const data = collectData(modeler);
 
     const table = document.createElement('table');
@@ -117,9 +116,4 @@
 
     return container;
   }
-
-  global.raciMatrix = {
-    createRaciMatrix
-  };
-})(window);
 

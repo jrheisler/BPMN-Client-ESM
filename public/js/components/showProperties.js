@@ -1,3 +1,8 @@
+import { Stream } from '../core/stream.js';
+import { currentTheme } from '../core/theme.js';
+import { reactiveButton, showConfirmationDialog } from './elements.js';
+import { divider } from './layout.js';
+
 // 1) Create the sidebar container (hidden by default)
 const propsSidebar = document.createElement('div');
 propsSidebar.classList.add('props-sidebar');
@@ -292,7 +297,7 @@ function openUrlModal(url) {
   document.body.appendChild(modal);
 }
 
-function showProperties(element, modeling, moddle) {
+export function showProperties(element, modeling, moddle) {
   const bo = element.businessObject;
   const type = element.businessObject.$type;
   const fieldKeys = BPMN_PROPERTY_MAP[type] || [];
@@ -346,14 +351,14 @@ function showProperties(element, modeling, moddle) {
 
   // Sync store on open
   if (window.addOnStore) {
-    addOnStore.setAddOns(bo.id, currentAddOns);
+    window.addOnStore.setAddOns(bo.id, currentAddOns);
   }
 
   // Attach button
   const attachBtn = reactiveButton(
     new Stream("Attach AddOn"),
     () => {
-      openAddOnChooserModal(currentTheme).subscribe(selectedAddOn => {
+      window.openAddOnChooserModal(currentTheme).subscribe(selectedAddOn => {
         if (!selectedAddOn) return;
 
         const newEntry = {
@@ -373,7 +378,7 @@ function showProperties(element, modeling, moddle) {
 
         // Sync store after add
         if (window.addOnStore) {
-          addOnStore.setAddOns(bo.id, currentAddOns);
+          window.addOnStore.setAddOns(bo.id, currentAddOns);
         }
 
       });
@@ -487,7 +492,7 @@ function showProperties(element, modeling, moddle) {
 
           // Sync store after remove
           if (window.addOnStore) {
-            addOnStore.setAddOns(bo.id, currentAddOns);
+            window.addOnStore.setAddOns(bo.id, currentAddOns);
           }
         }
       },
@@ -523,7 +528,7 @@ function showProperties(element, modeling, moddle) {
         currentAddOns = parsedAddOns;
         addOnsField.value = JSON.stringify(currentAddOns, null, 2);
         if (window.addOnStore) {
-          addOnStore.setAddOns(bo.id, currentAddOns);
+          window.addOnStore.setAddOns(bo.id, currentAddOns);
         }
       } catch (e) {
         alert('AddOns must be valid JSON');
@@ -918,7 +923,7 @@ function getOrCreateExtEl(bo, moddle) {
 
       
   // hide helper cleans up subscription
-  function hideSidebar() {
+export function hideSidebar() {
     propsSidebar.classList.remove('open');
     propsSidebar.style.display = 'none';
     if (propsSidebar._unsubTheme) {

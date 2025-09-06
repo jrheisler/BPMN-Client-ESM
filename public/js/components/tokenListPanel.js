@@ -1,5 +1,7 @@
-(function(global){
-  function createTokenListPanel(logStream, themeStream = currentTheme){
+import { currentTheme } from '../core/theme.js';
+import { observeDOMRemoval } from '../core/stream.js';
+
+export function createTokenListPanel(logStream, themeStream = currentTheme){
     const panel = document.createElement('div');
     panel.classList.add('token-list-panel');
     panel.setAttribute('aria-hidden', 'true');
@@ -141,11 +143,11 @@
     }
 
     clearBtn.addEventListener('click', () => {
-      if (global.simulation && typeof global.simulation.clearTokenLog === 'function') {
-        global.simulation.clearTokenLog();
+      if (window.simulation && typeof window.simulation.clearTokenLog === 'function') {
+        window.simulation.clearTokenLog();
       }
-      if (global.blockchain && typeof global.blockchain.reset === 'function') {
-        global.blockchain.reset();
+      if (window.blockchain && typeof window.blockchain.reset === 'function') {
+        window.blockchain.reset();
       }
     });
 
@@ -155,6 +157,3 @@
 
     return { el: panel, show, hide, showDownload, setDownloadHandler, setTreeButton };
   }
-
-  global.tokenListPanel = { createTokenListPanel };
-})(window);

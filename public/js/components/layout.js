@@ -1,4 +1,7 @@
-function column(children = [], options = {}, themeStream = currentTheme) {
+import { currentTheme } from '../core/theme.js';
+import { createTreeContainer, setTogglePanel } from './diagramTree.js';
+
+export function column(children = [], options = {}, themeStream = currentTheme) {
   const el = document.createElement('div');
   el.style.display = 'flex';
   el.style.flexDirection = 'column';
@@ -23,7 +26,7 @@ function column(children = [], options = {}, themeStream = currentTheme) {
   return el;
 }
 
-function row(children = [], options = {}, themeStream = currentTheme) {
+export function row(children = [], options = {}, themeStream = currentTheme) {
   const el = column(children, { ...options, direction: 'row' }, themeStream);
 
   // ensure it's a flex container
@@ -37,7 +40,7 @@ function row(children = [], options = {}, themeStream = currentTheme) {
 }
 
 
-function container(child, options = {}, themeStream = currentTheme) {
+export function container(child, options = {}, themeStream = currentTheme) {
   const div = document.createElement('div');
 
   if (Array.isArray(child)) {
@@ -64,7 +67,7 @@ function container(child, options = {}, themeStream = currentTheme) {
 }
 
 // ➖ Divider: Horizontal or vertical line
-function divider(options = {}, themeStream = currentTheme) {
+export function divider(options = {}, themeStream = currentTheme) {
   const el = document.createElement('div');
 
   const isVertical = options.vertical || false;
@@ -81,8 +84,6 @@ function divider(options = {}, themeStream = currentTheme) {
 
 // Diagram tree side panel toggle
 window.addEventListener('DOMContentLoaded', () => {
-  if (!window.diagramTree) return;
-
   const panel = document.createElement('div');
   panel.classList.add('diagram-tree-panel');
 
@@ -94,14 +95,14 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   panel.appendChild(closeBtn);
 
-  const content = window.diagramTree.createTreeContainer();
+  const content = createTreeContainer();
   panel.appendChild(content);
   document.body.appendChild(panel);
 
-  window.diagramTree.togglePanel = () => {
+  setTogglePanel(() => {
     const open = panel.style.left === '0px';
     panel.style.left = open ? '-300px' : '0px';
-  };
+  });
 
   // Apply theme styling
   currentTheme.subscribe(theme => {

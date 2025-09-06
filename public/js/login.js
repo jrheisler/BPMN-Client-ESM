@@ -1,3 +1,8 @@
+import { Stream } from './core/stream.js';
+import { currentTheme } from './core/theme.js';
+import { createModal } from './components/modal.js';
+import { editText, reactiveButton, dropdownStream, showConfirmationDialog } from './components/elements.js';
+
 const db = firebase.firestore();
 
 // Inject responsive modal styles
@@ -887,7 +892,7 @@ function truncate(str, length = 40) {
   return str.length > length ? str.slice(0, length) + '...' : str;
 }
 
-function openAddOnChooserModal(themeStream = currentTheme) {
+export function openAddOnChooserModal(themeStream = currentTheme) {
 
   refreshAddOns();
   const modalStream = new Stream(null);
@@ -1198,3 +1203,5 @@ function openAddOnHistoryModal(addOnId, themeStream = currentTheme) {
     }
   });
 }
+
+window.openAddOnChooserModal = openAddOnChooserModal;

@@ -1,5 +1,6 @@
-(function(global) {
-  function createModal(themeStream = currentTheme, onClose = () => {}) {
+import { currentTheme } from '../core/theme.js';
+
+export function createModal(themeStream = currentTheme, onClose = () => {}) {
     const theme = themeStream.get ? themeStream.get() : themeStream;
     const colors = theme.colors || {};
 
@@ -43,7 +44,4 @@
 
     return { modal, content };
   }
-
-  global.createModal = createModal;
-})(window);
 

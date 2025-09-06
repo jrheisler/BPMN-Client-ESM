@@ -1,31 +1,22 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import vm from 'node:vm';
-import { fileURLToPath } from 'node:url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-test('reactiveImage returns an img element', () => {
-  const sandbox = {
-    document: {
-      createElement(tag) {
-        return { tagName: tag, style: {} };
-      }
+test('reactiveImage returns an img element', async () => {
+  global.document = {
+    createElement(tag) {
+      return { tagName: tag, style: {} };
     },
-    observeDOMRemoval: () => {},
-    applyTheme: () => {},
-    window: { addEventListener() {}, innerWidth: 1024 },
+    body: { style: {} }
   };
+  global.observeDOMRemoval = () => {};
+  global.applyTheme = () => {};
+  global.fetch = () => Promise.resolve({ json: () => Promise.resolve({}) });
+  global.MutationObserver = class { constructor(){} observe(){} disconnect(){} };
 
-  const code = fs.readFileSync(resolve(__dirname, '../public/js/components/elements.js'), 'utf8');
-  vm.runInNewContext(code, sandbox);
-
-  const stream = { subscribe(fn) { fn('image.png'); return () => {}; } };
+  const stream = { subscribe(fn) { fn('image.png'); return () => {}; }, get() { return 'image.png'; } };
   const themeStream = { subscribe(fn){ fn({ colors: {} }); return () => {}; }, get(){ return { colors: {} }; } };
 
-  const img = sandbox.reactiveImage(stream, {}, themeStream);
+  const { reactiveImage } = await import('../public/js/components/elements.js');
+  const img = reactiveImage(stream, {}, themeStream);
   assert.ok(img);
   assert.strictEqual(img.tagName, 'img');
 });
