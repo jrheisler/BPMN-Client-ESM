@@ -1,4 +1,5 @@
 import { Stream } from './core/stream.js';
+import { reactiveLoginModal } from './login.js';
 
 export const logUser = new Stream('👤 Login');
 export let currentUser = null;
@@ -22,7 +23,7 @@ export function authMenuOption({ avatarStream, showSaveButton, currentTheme, reb
           }
         });
       } else {
-        const userStream = window.reactiveLoginModal(currentTheme);
+        const userStream = reactiveLoginModal(currentTheme);
         userStream.subscribe(result => {
           if (result instanceof Error) {
             if (window.showToast) {

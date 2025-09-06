@@ -22,7 +22,7 @@ const db = firebase.firestore();
   document.head.appendChild(style);
 })();
 
-function reactiveLoginModal(themeStream = currentTheme) {
+export function reactiveLoginModal(themeStream = currentTheme) {
   const loginStream = new Stream(null); // emits user or error or null (cancel)
   const emailStream = new Stream('');
   const passwordStream = new Stream('');
