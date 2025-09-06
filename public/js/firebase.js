@@ -1,13 +1,9 @@
-// Copy this file to firebase.js and replace the placeholder values with your Firebase project configuration.
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_PROJECT.firebaseapp.com',
-  projectId: 'YOUR_PROJECT_ID'
-  // …
+  // TODO: replace with your Firebase project configuration
 };
 
 const app = initializeApp(firebaseConfig);

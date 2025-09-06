@@ -3,8 +3,20 @@ import { currentTheme } from './core/theme.js';
 import { createModal } from './components/modal.js';
 import { editText, reactiveButton, dropdownStream, showConfirmationDialog } from './components/elements.js';
 import { column, row } from './components/layout.js';
-
-const db = firebase.firestore();
+import { auth, db } from './firebase.js';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import {
+  collection,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  addDoc,
+  deleteDoc,
+  serverTimestamp,
+  arrayUnion,
+  arrayRemove
+} from 'firebase/firestore';
 
 // Inject responsive modal styles
 (function ensureModalStyles() {
@@ -64,14 +76,15 @@ export function reactiveLoginModal(themeStream = currentTheme) {
     }
 
     try {
-      const userCred = await firebase.auth().signInWithEmailAndPassword(email, password);
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
       loginStream.set(userCred.user);
       modal.remove();
     } catch (err) {
       loginStream.set(new Error(err.message));
     }
   }, { accent: true }, themeStream);
-    const signupBtn = reactiveButton(new Stream("Subscribe"), async () => {
+
+  const signupBtn = reactiveButton(new Stream("Subscribe"), async () => {
     const email = emailStream.get();
     const password = passwordStream.get();
 
@@ -81,17 +94,17 @@ export function reactiveLoginModal(themeStream = currentTheme) {
     }
 
     try {
-        const userCred = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
 
-        // Optional: Add user to Firestore (if you're using Firestore)
-        const db = firebase.firestore?.();
-        if (db) {
-          await db.collection('users').doc(userCred.user.uid).set({
-              email: userCred.user.email,
-              uid: userCred.user.uid,
-              createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-        }
+        await setDoc(
+          doc(db, 'users', userCred.user.uid),
+          {
+            email: userCred.user.email,
+            uid: userCred.user.uid,
+            createdAt: serverTimestamp()
+          },
+          { merge: true }
+        );
 
         loginStream.set(userCred.user);
         modal.remove();
@@ -133,12 +146,10 @@ function openDiagramPickerModal(themeStream = currentTheme) {
   content.appendChild(list);
 
   // Load diagrams from Firestore
-  
-  db.collection('users')
-  .doc(window.currentUser.uid)
-  .get()
-  .then(doc => {
-    const userData = doc.data();
+
+  getDoc(doc(db, 'users', window.currentUser.uid))
+  .then(docSnap => {
+    const userData = docSnap.data();
     const index = userData.diagrams || [];
 
     if (index.length === 0) {
@@ -197,13 +208,13 @@ function openDiagramPickerModal(themeStream = currentTheme) {
             if (!confirmed) return;
 
             try {
-                const userRef = db.collection('users').doc(window.currentUser.uid);
-                const diagramRef = userRef.collection('diagrams').doc(entry.id);
+                const userRef = doc(db, 'users', window.currentUser.uid);
+                const diagramRef = doc(db, 'users', window.currentUser.uid, 'diagrams', entry.id);
 
-                await diagramRef.delete();
+                await deleteDoc(diagramRef);
 
-                await userRef.update({
-                diagrams: firebase.firestore.FieldValue.arrayRemove(entry)
+                await updateDoc(userRef, {
+                diagrams: arrayRemove(entry)
                 });
 
                 showToast(`🗑️ Diagram "${entry.name}" deleted.`, { type: 'warning' });
@@ -216,15 +227,11 @@ function openDiagramPickerModal(themeStream = currentTheme) {
 
         // Click on main item to load
         item.addEventListener('click', async () => {
-          const doc = await db.collection('users')
-            .doc(window.currentUser.uid)
-            .collection('diagrams')
-            .doc(entry.id)
-            .get();
+          const docSnap = await getDoc(doc(db, 'users', window.currentUser.uid, 'diagrams', entry.id));
 
           if (window.notesStream) window.notesStream.set(entry.notes);
 
-          pickStream.set({ id: entry.id, data: doc.data() });
+          pickStream.set({ id: entry.id, data: docSnap.data() });
           modal.remove();
         });
 
@@ -470,13 +477,9 @@ function selectVersionModal(diagramName, versions, themeStream = currentTheme) {
 
 function handleAttachmentSelection(attachmentId, versionIndex) {
   // Fetch the attachment from Firestore
-  db.collection('users')
-    .doc(window.currentUser.uid)
-    .collection('attachments')
-    .doc(attachmentId)
-    .get()
-    .then(doc => {
-      const attachmentData = doc.data();
+  getDoc(doc(db, 'users', window.currentUser.uid, 'attachments', attachmentId))
+    .then(docSnap => {
+      const attachmentData = docSnap.data();
       
       // Ensure the attachment exists and has versions
       if (!attachmentData || !attachmentData.versions || attachmentData.versions.length <= versionIndex) {
@@ -489,7 +492,7 @@ function handleAttachmentSelection(attachmentId, versionIndex) {
 
       // Prepare the metadata to copy to the diagram element
       const attachmentMetadata = {
-        attachmentId: doc.id, // Reference to the attachment document
+        attachmentId: docSnap.id, // Reference to the attachment document
         version: selectedVersion.version,
         name: selectedVersion.name || attachmentData.name,
         description: selectedVersion.description,
@@ -775,10 +778,10 @@ function openAddOnModal(mode = 'add', addOnData = null, themeStream = currentThe
       name: nameStream.get(),
       notes: notesStream.get(),
       url: urlStream.get(),
-      lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+      lastUpdated: serverTimestamp()
     };
 
-    const userRef = db.collection('users').doc(window.currentUser.uid);
+    const userRef = doc(db, 'users', window.currentUser.uid);
     try {
       if (mode === 'add') {
         const version = {
@@ -789,15 +792,16 @@ function openAddOnModal(mode = 'add', addOnData = null, themeStream = currentThe
           subtype: newAddOn.subtype,
           timestamp: new Date().toISOString()
         };
-        const ref = await userRef
-          .collection('addOns')
-          .add({
+        const ref = await addDoc(
+          collection(doc(db, 'users', window.currentUser.uid), 'addOns'),
+          {
             versions: [version],
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-          });
+            lastUpdated: serverTimestamp()
+          }
+        );
 
-        await userRef.update({
-          addOns: firebase.firestore.FieldValue.arrayUnion({
+        await updateDoc(userRef, {
+          addOns: arrayUnion({
             address: ref.id,
             type: newAddOn.type,
             name: newAddOn.name,
@@ -820,17 +824,17 @@ function openAddOnModal(mode = 'add', addOnData = null, themeStream = currentThe
         };
 
         // 1) add version to the subcollection
-        await userRef
-          .collection('addOns')
-          .doc(addOnData.id)
-          .update({
-            versions: firebase.firestore.FieldValue.arrayUnion(version),
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-          });
+        await updateDoc(
+          doc(db, 'users', window.currentUser.uid, 'addOns', addOnData.id),
+          {
+            versions: arrayUnion(version),
+            lastUpdated: serverTimestamp()
+          }
+        );
 
         // 2) REMOVE the old index entry
-        await userRef.update({
-          addOns: firebase.firestore.FieldValue.arrayRemove({
+        await updateDoc(userRef, {
+          addOns: arrayRemove({
             address: addOnData.id,
             type: addOnData.type,
             name: addOnData.name,
@@ -841,8 +845,8 @@ function openAddOnModal(mode = 'add', addOnData = null, themeStream = currentThe
         });
 
         // 3) ADD the updated index entry
-        await userRef.update({
-          addOns: firebase.firestore.FieldValue.arrayUnion({
+        await updateDoc(userRef, {
+          addOns: arrayUnion({
             address: addOnData.id,
             type: newAddOn.type,
             name: newAddOn.name,
@@ -880,7 +884,7 @@ function openAddOnModal(mode = 'add', addOnData = null, themeStream = currentThe
 
 async function refreshAddOns() {
   try {
-    const snap = await db.collection('users').doc(window.currentUser.uid).get();
+    const snap = await getDoc(doc(db, 'users', window.currentUser.uid));
     const list = (snap.data()?.addOns) || [];
     window.addOnsStream.set(list);
   } catch (err) {
@@ -1061,13 +1065,9 @@ export function openAddOnChooserModal(themeStream = currentTheme) {
 
 
 async function loadLatestAddOnVersion(addOnId) {
-  const doc = await db.collection('users')
-    .doc(window.currentUser.uid)
-    .collection('addOns')
-    .doc(addOnId)
-    .get();
+  const docSnap = await getDoc(doc(db, 'users', window.currentUser.uid, 'addOns', addOnId));
 
-  const data = doc.data();
+  const data = docSnap.data();
   if (!data || !data.versions || data.versions.length === 0) {
     throw new Error("No versions found for this AddOn.");
   }
@@ -1127,13 +1127,9 @@ function openAddOnHistoryModal(addOnId, themeStream = currentTheme) {
   // Load versions
   const loadHistory = async () => {
     try {
-      const doc = await db.collection('users')
-        .doc(window.currentUser.uid)
-        .collection('addOns')
-        .doc(addOnId)
-        .get();
+      const docSnap = await getDoc(doc(db, 'users', window.currentUser.uid, 'addOns', addOnId));
 
-      const data = doc.data();
+      const data = docSnap.data();
       if (!data || !data.versions || data.versions.length === 0) {
         const msg = document.createElement('p');
         msg.textContent = "No versions found.";
