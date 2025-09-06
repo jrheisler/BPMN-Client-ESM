@@ -1,6 +1,9 @@
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
+import fs from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function loadSimulation(extra = {}) {
   const sandbox = {
@@ -15,8 +18,8 @@ function loadSimulation(extra = {}) {
     },
     ...extra
   };
-  const streamCode = fs.readFileSync(path.resolve(__dirname, '../../public/js/core/stream.js'), 'utf8');
-  const simulationCode = fs.readFileSync(path.resolve(__dirname, '../../public/js/core/simulation.js'), 'utf8');
+  const streamCode = fs.readFileSync(resolve(__dirname, '../../public/js/core/stream.js'), 'utf8');
+  const simulationCode = fs.readFileSync(resolve(__dirname, '../../public/js/core/simulation.js'), 'utf8');
   vm.runInNewContext(streamCode, sandbox);
   vm.runInNewContext(simulationCode, sandbox);
   return sandbox;
@@ -44,4 +47,4 @@ function createSimulationInstance(elements, opts = {}, sandbox, context) {
   return sim;
 }
 
-module.exports = { loadSimulation, createSimulationInstance };
+export { loadSimulation, createSimulationInstance };

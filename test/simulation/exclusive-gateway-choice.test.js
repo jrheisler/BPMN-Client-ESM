@@ -1,9 +1,12 @@
-const { test } = require('node:test');
-const assert = require('assert');
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
-const { createSimulationInstance } = require('../helpers/simulation.cjs');
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import vm from 'node:vm';
+import { createSimulationInstance } from '../helpers/simulation.js';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 class Element {
   constructor(tag) {
@@ -154,10 +157,10 @@ function loadElements() {
     setTimeout,
     clearTimeout
   };
-  const streamCode = fs.readFileSync(path.resolve(__dirname, '../../public/js/core/stream.js'), 'utf8');
+  const streamCode = fs.readFileSync(resolve(__dirname, '../../public/js/core/stream.js'), 'utf8');
   vm.runInNewContext(streamCode, sandbox);
   vm.runInNewContext('currentTheme = new Stream({ colors: {}, fonts: {} });', sandbox);
-  const elementsCode = fs.readFileSync(path.resolve(__dirname, '../../public/js/components/elements.js'), 'utf8');
+  const elementsCode = fs.readFileSync(resolve(__dirname, '../../public/js/components/elements.js'), 'utf8');
   vm.runInNewContext(elementsCode, sandbox);
   return { sandbox, document };
 }

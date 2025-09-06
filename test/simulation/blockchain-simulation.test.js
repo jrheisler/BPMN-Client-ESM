@@ -1,17 +1,20 @@
-const { test } = require('node:test');
-const assert = require('assert');
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
-const crypto = require('crypto');
-const { loadSimulation, createSimulationInstance } = require('../helpers/simulation.cjs');
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import vm from 'node:vm';
+import crypto from 'node:crypto';
+import { loadSimulation, createSimulationInstance } from '../helpers/simulation.js';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function loadEnvironment() {
   const sandbox = loadSimulation({
     sha256: data => crypto.createHash('sha256').update(data).digest('hex')
   });
   sandbox.window = sandbox;
-  const blockchainCode = fs.readFileSync(path.resolve(__dirname, '../../public/js/blockchain.js'), 'utf8');
+  const blockchainCode = fs.readFileSync(resolve(__dirname, '../../public/js/blockchain.js'), 'utf8');
   vm.runInNewContext(blockchainCode, sandbox);
   return sandbox;
 }

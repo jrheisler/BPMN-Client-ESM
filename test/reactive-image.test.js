@@ -1,8 +1,11 @@
-const { test } = require('node:test');
-const assert = require('assert');
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 test('reactiveImage returns an img element', () => {
   const sandbox = {
@@ -16,7 +19,7 @@ test('reactiveImage returns an img element', () => {
     window: { addEventListener() {}, innerWidth: 1024 },
   };
 
-  const code = fs.readFileSync(path.resolve(__dirname, '../public/js/components/elements.js'), 'utf8');
+  const code = fs.readFileSync(resolve(__dirname, '../public/js/components/elements.js'), 'utf8');
   vm.runInNewContext(code, sandbox);
 
   const stream = { subscribe(fn) { fn('image.png'); return () => {}; } };

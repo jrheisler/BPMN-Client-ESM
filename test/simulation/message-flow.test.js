@@ -1,6 +1,6 @@
-const { test } = require('node:test');
-const assert = require('assert');
-const { createSimulationInstance } = require('../helpers/simulation.cjs');
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createSimulationInstance } from '../helpers/simulation.js';
 
 function buildDiagram(targetParticipant = false) {
   const startA = {
