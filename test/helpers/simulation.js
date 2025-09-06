@@ -1,9 +1,5 @@
-import fs from 'fs';
-import path from 'path';
-import vm from 'vm';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { Stream } from '../../public/js/core/stream.js';
+import { createSimulation } from '../../public/js/core/simulation.js';
 
 function loadSimulation(extra = {}) {
   const sandbox = {
@@ -16,17 +12,16 @@ function loadSimulation(extra = {}) {
       setItem(key, val) { this._data[key] = String(val); },
       removeItem(key) { delete this._data[key]; }
     },
+    Stream,
+    createSimulation,
     ...extra
   };
-  const streamCode = fs.readFileSync(path.resolve(__dirname, '../../public/js/core/stream.js'), 'utf8');
-  const simulationCode = fs.readFileSync(path.resolve(__dirname, '../../public/js/core/simulation.js'), 'utf8');
-  vm.runInNewContext(streamCode, sandbox);
-  vm.runInNewContext(simulationCode, sandbox);
   return sandbox;
 }
 
 function createSimulationInstance(elements, opts = {}, sandbox, context) {
   const env = sandbox || loadSimulation();
+  global.localStorage = env.localStorage;
   const map = new Map(elements.map(e => [e.id, e]));
   const elementRegistry = {
     get(id) { return map.get(id); },

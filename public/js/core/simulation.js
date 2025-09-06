@@ -1,5 +1,7 @@
 // public/js/core/simulation.js
 
+import { Stream } from './stream.js';
+
 // Simple token simulation service built on Streams
 // Usage:
 //   const simulation = createSimulation({ elementRegistry, canvas, context: { foo: true } }, { delay: 500 });
@@ -13,7 +15,7 @@
 //     return [token];
 //   });
 
-function createSimulation(services, opts = {}) {
+export function createSimulation(services, opts = {}) {
   const { elementRegistry, canvas, context: initialContext = {} } = services;
   const delay = opts.delay || 1000;
   const conditionFallback = Object.prototype.hasOwnProperty.call(opts, 'conditionFallback')

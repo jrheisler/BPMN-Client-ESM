@@ -1,4 +1,4 @@
-class Stream {
+export class Stream {
   constructor(initial) {
     this.subscribers = [];
 
@@ -39,7 +39,7 @@ class Stream {
 }
 
 // === Helper: derived stream ===
-function derived(streams, transformFn, options = {}) {
+export function derived(streams, transformFn, options = {}) {
   const isArray = Array.isArray(streams);
   const sources = isArray ? streams : [streams];
   const getValues = () => isArray ? streams.map(s => s.get()) : [streams.get()];
@@ -84,7 +84,7 @@ function derived(streams, transformFn, options = {}) {
 
 
 
-function fieldStream(sourceStream, fieldName) {
+export function fieldStream(sourceStream, fieldName) {
   const derived = new Stream(sourceStream.get()?.[fieldName] ?? '');
   sourceStream.subscribe(value => {
     derived.set(value?.[fieldName] ?? '');
@@ -101,7 +101,7 @@ function fieldStream(sourceStream, fieldName) {
  * const unsub = tickStream.subscribe(value => { // handle value });
  * // later: stop(); unsub();
  */
-function intervalStream(ms, fn) {
+export function intervalStream(ms, fn) {
   const stream = new Stream();
   const id = setInterval(() => stream.set(fn()), ms);
   const cleanup = () => clearInterval(id);
@@ -117,14 +117,14 @@ function intervalStream(ms, fn) {
  * doneStream.subscribe(value => { // handle completion });
  * // later: cancel();
  */
-function timeoutStream(ms, value) {
+export function timeoutStream(ms, value) {
   const stream = new Stream();
   const id = setTimeout(() => stream.set(value), ms);
   const cleanup = () => clearTimeout(id);
   return [stream, cleanup];
 }
 
-function observeDOMRemoval(el, ...cleanups) {
+export function observeDOMRemoval(el, ...cleanups) {
   const observer = new MutationObserver(() => {
     if (!document.body.contains(el)) {
       cleanups.forEach(fn => fn?.());
@@ -132,5 +132,9 @@ function observeDOMRemoval(el, ...cleanups) {
     }
   });
   observer.observe(document.body, { childList: true, subtree: true });
+}
+
+if (typeof window !== 'undefined') {
+  window.Stream = Stream;
 }
 

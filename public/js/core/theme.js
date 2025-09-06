@@ -1,9 +1,10 @@
 // theme.js
 
+import { Stream } from './stream.js';
+
 let themes = {};
 
-const currentTheme = new Stream({ colors: {}, fonts: {} });
-window.currentTheme = currentTheme;
+export const currentTheme = new Stream({ colors: {}, fonts: {} });
 
 function validateThemes(data) {
   const valid = {};
@@ -26,7 +27,7 @@ function validateThemes(data) {
   return valid;
 }
 
-const themesLoaded = fetch('./js/core/themes.json')
+export const themesLoaded = fetch('./js/core/themes.json')
   .then(r => r.json())
   .then(json => {
     themes = validateThemes(json);
@@ -41,9 +42,7 @@ const themesLoaded = fetch('./js/core/themes.json')
     console.error('Failed to load themes.json', err);
   });
 
-window.themesLoaded = themesLoaded;
-
-function applyTheme(el, options = {}) {
+export function applyTheme(el, options = {}) {
   const {
     size = '1rem',
     weight = 'normal',
@@ -72,7 +71,7 @@ function applyTheme(el, options = {}) {
   });
 }
 
-function themeToggleButton() {
+export function themeToggleButton() {
   const button = document.createElement('button');
   button.textContent = '🌗 Toggle Theme';
 
@@ -92,7 +91,7 @@ function themeToggleButton() {
   return button;
 }
 
-function themedThemeSelector(themeStream = currentTheme) {
+export function themedThemeSelector(themeStream = currentTheme) {
   const container = document.createElement('div');
   container.style.display = 'flex';
   container.style.alignItems = 'center';
@@ -154,7 +153,7 @@ function themedThemeSelector(themeStream = currentTheme) {
   return container;
 }
 
-function applyThemeToPage(theme, container = document.body) {
+export function applyThemeToPage(theme, container = document.body) {
   const colors = theme.colors || {};
   const fonts = theme.fonts || {};
 

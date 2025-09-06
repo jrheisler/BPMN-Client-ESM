@@ -1,3 +1,5 @@
+import { Stream } from './core/stream.js';
+
 export const logUser = new Stream('👤 Login');
 export let currentUser = null;
 window.currentUser = currentUser;

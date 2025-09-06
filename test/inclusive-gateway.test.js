@@ -1,46 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import vm from 'node:vm';
-import { fileURLToPath } from 'node:url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-function loadSimulation() {
-  const sandbox = {
-    console,
-    setTimeout,
-    clearTimeout,
-    localStorage: {
-      _data: {},
-      getItem(key) { return this._data[key] || null; },
-      setItem(key, val) { this._data[key] = String(val); },
-      removeItem(key) { delete this._data[key]; }
-    }
-  };
-  const streamCode = fs.readFileSync(resolve(__dirname, '../public/js/core/stream.js'), 'utf8');
-  const simulationCode = fs.readFileSync(resolve(__dirname, '../public/js/core/simulation.js'), 'utf8');
-  vm.runInNewContext(streamCode, sandbox);
-  vm.runInNewContext(simulationCode, sandbox);
-  return sandbox.createSimulation;
-}
-
-function createSimulationInstance(elements, opts = {}) {
-  const map = new Map(elements.map(e => [e.id, e]));
-  const elementRegistry = {
-    get(id) { return map.get(id); },
-    filter(fn) { return Array.from(map.values()).filter(fn); }
-  };
-  for (const el of map.values()) {
-    if (!el.type && el.source && el.target) {
-      el.type = 'bpmn:SequenceFlow';
-    }
-  }
-  const canvas = { addMarker() {}, removeMarker() {} };
-  const createSimulation = loadSimulation();
-  return createSimulation({ elementRegistry, canvas }, opts);
-}
+import { createSimulationInstance } from './helpers/simulation.js';
 
 function buildDiagram(direction, outgoingCount = 1) {
   const task = { id: 'task', type: 'bpmn:Task', incoming: [], outgoing: [] };
