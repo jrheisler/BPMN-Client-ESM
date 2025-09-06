@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('assert');
-const { createSimulationInstance } = require('../helpers/simulation');
+const { createSimulationInstance } = require('../helpers/simulation.cjs');
 
 function buildDiagram(targetParticipant = false) {
   const startA = {

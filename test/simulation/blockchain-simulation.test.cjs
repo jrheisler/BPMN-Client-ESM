@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 const crypto = require('crypto');
-const { loadSimulation, createSimulationInstance } = require('../helpers/simulation');
+const { loadSimulation, createSimulationInstance } = require('../helpers/simulation.cjs');
 
 function loadEnvironment() {
   const sandbox = loadSimulation({
