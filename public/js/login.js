@@ -276,7 +276,7 @@ export function openDiagramPickerModal(themeStream = currentTheme) {
 }
 
 
-function promptDiagramMetadata(initialName = '', initialNotes = '', themeStream = currentTheme) {
+export function promptDiagramMetadata(initialName = '', initialNotes = '', themeStream = currentTheme) {
   const resultStream = new Stream(null);
   const theme = themeStream.get();
   const colors = theme.colors;
