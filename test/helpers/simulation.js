@@ -1,5 +1,5 @@
-import { Stream } from '../../public/js/core/stream.js';
-import { createSimulation } from '../../public/js/core/simulation.js';
+const { Stream } = await import('../../public/js/core/stream.js');
+const { createSimulation } = await import('../../public/js/core/simulation.js');
 
 function loadSimulation(extra = {}) {
   const sandbox = {
