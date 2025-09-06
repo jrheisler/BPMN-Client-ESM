@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import vm from 'node:vm';
 import { createSimulationInstance } from '../helpers/simulation.js';
+import { Stream } from '../../public/js/core/stream.js';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -155,11 +156,11 @@ function loadElements() {
     Node: Element,
     console,
     setTimeout,
-    clearTimeout
+    clearTimeout,
+    Stream
   };
-  const streamCode = fs.readFileSync(resolve(__dirname, '../../public/js/core/stream.js'), 'utf8');
-  vm.runInNewContext(streamCode, sandbox);
-  vm.runInNewContext('currentTheme = new Stream({ colors: {}, fonts: {} });', sandbox);
+  sandbox.window.Stream = Stream;
+  sandbox.currentTheme = new Stream({ colors: {}, fonts: {} });
   const elementsCode = fs.readFileSync(resolve(__dirname, '../../public/js/components/elements.js'), 'utf8');
   vm.runInNewContext(elementsCode, sandbox);
   return { sandbox, document };

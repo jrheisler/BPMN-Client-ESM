@@ -3,6 +3,9 @@ import './components/raciMatrix.js';
 import { logUser, currentUser, authMenuOption } from './auth.js';
 import { initAddOnOverlays } from './addOnOverlays.js';
 import { initAddOnFiltering } from './addOnFiltering.js';
+import { Stream } from './core/stream.js';
+import { createSimulation } from './core/simulation.js';
+import { currentTheme, applyThemeToPage } from './core/theme.js';
 import BpmnSnapping from 'bpmn-js/lib/features/snapping';
 import AttachBoundaryModule from '../features/attach-boundary/index.js';
 
