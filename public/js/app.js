@@ -77,7 +77,9 @@ const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
 // === Initial BPMN XML template ===
 const diagramXMLStream = new Stream(defaultXml);
 async function init() {
-  await import('./firebase.js').catch(() => console.warn('firebase.js not found; skipping Firebase initialization.'));
+  await import('./firebase.js').catch(() =>
+    console.warn('Create public/js/firebase.js from firebase.example.js to enable Firebase.')
+  );
   await import('./login.js').catch(() => console.warn('login.js failed to load.'));
 
   const { addOnStore } = window;
