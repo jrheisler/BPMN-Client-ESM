@@ -1,5 +1,7 @@
+import { createAddOnFilterPanel, selectedType, selectedSubtype } from './components/addOnFilter.js';
+import { createAddOnLegend } from './components/addOnLegend.js';
+
 export function initAddOnFiltering({ currentTheme, elementRegistry, modeling, canvas, scheduleOverlayUpdate, addOnStore, diagramXMLStream, typeIcons }) {
-  const { createAddOnFilterPanel, selectedType, selectedSubtype } = window.addOnFilter;
   let addOnFilterPanelEl = null;
 
   const filterToggleBtn = document.createElement('button');
@@ -19,11 +21,9 @@ export function initAddOnFiltering({ currentTheme, elementRegistry, modeling, ca
     addOnFilterPanelEl.style.display = isVisible ? 'none' : 'flex';
   });
 
-  if (window.addOnLegend) {
-    const legendEl = addOnLegend.createAddOnLegend(typeIcons, currentTheme);
-    legendEl.prepend(filterToggleBtn);
-    document.body.appendChild(legendEl);
-  }
+  const legendEl = createAddOnLegend(typeIcons, currentTheme);
+  legendEl.prepend(filterToggleBtn);
+  document.body.appendChild(legendEl);
 
   const highlightedNodes = new Set();
   function updateHighlightedNodes() {

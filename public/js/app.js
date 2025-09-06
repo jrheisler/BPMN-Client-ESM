@@ -1,5 +1,9 @@
 import customReplaceModule from './modules/customReplaceMenuProvider.js';
-import './components/raciMatrix.js';
+import { createRaciMatrix } from './components/raciMatrix.js';
+import { createTokenListPanel } from './components/tokenListPanel.js';
+import { reactiveButton, dropdownStream, avatarDropdown, openFlowSelectionModal, createDiagramOverlay } from './components/elements.js';
+import { showProperties, hideSidebar } from './components/showProperties.js';
+import { treeStream, setSelectedId, setOnSelect, togglePanel } from './components/diagramTree.js';
 import { logUser, currentUser, authMenuOption } from './auth.js';
 import { initAddOnOverlays } from './addOnOverlays.js';
 import { initAddOnFiltering } from './addOnFiltering.js';
@@ -234,8 +238,7 @@ Object.assign(document.body.style, {
   });
 
   // Token list panel for simulation log
-  const tokenPanel = window.tokenListPanel
-    .createTokenListPanel(simulation.tokenLogStream, currentTheme);
+  const tokenPanel = createTokenListPanel(simulation.tokenLogStream, currentTheme);
   document.body.appendChild(tokenPanel.el);
 
 
@@ -313,18 +316,18 @@ Object.assign(document.body.style, {
     prevTokenCount = tokens.length;
   });
 
-  window.diagramTree.onSelect = id => {
+  setOnSelect(id => {
     const element = elementRegistry.get(id);
     if (element) {
       selectionService.select(element);
       showProperties(element, modeling, moddle);
     }
-    window.diagramTree.setSelectedId(id);
-  };
+    setSelectedId(id);
+  });
 
   eventBus.on('selection.changed', ({ newSelection }) => {
     const element = newSelection[0];
-    window.diagramTree.setSelectedId(element?.id || null);
+    setSelectedId(element?.id || null);
   });
 
   function updateDiagramTree() {
@@ -335,7 +338,7 @@ Object.assign(document.body.style, {
       root = root.children[0]; // pick first participant/process
     }
     if (!root) {
-      window.diagramTree?.treeStream.set(null);
+      treeStream.set(null);
       return;
     }
 
@@ -369,7 +372,7 @@ Object.assign(document.body.style, {
     }
 
     const tree = build(root);
-    window.diagramTree?.treeStream.set(tree);
+    treeStream.set(tree);
   }
   // Prompt user to choose path at gateways
   simulation.pathsStream.subscribe(data => {
@@ -379,7 +382,7 @@ Object.assign(document.body.style, {
     const isInclusive = type === 'bpmn:InclusiveGateway';
     // Access modal helper via `window` to avoid ReferenceError when used
     // within modules or strict scopes
-    window.openFlowSelectionModal(flowOptions, currentTheme, isInclusive).subscribe(chosen => {
+    openFlowSelectionModal(flowOptions, currentTheme, isInclusive).subscribe(chosen => {
       if (chosen && chosen.length) {
         if (isInclusive) {
           simulation.step(chosen.map(f => f.id));
@@ -801,7 +804,7 @@ function buildDropdownOptions() {
       {
         label: "🧩 Add AddOns", 
         onClick: () => {
-          openAddOnChooserModal().subscribe(selectedAddOn => {
+          window.openAddOnChooserModal().subscribe(selectedAddOn => {
             if (selectedAddOn) {
               // Process the selected AddOn (either picked, newly added, or edited)
 
@@ -854,7 +857,7 @@ function rebuildMenu() {
   avatarMenu = avatarDropdown(avatarStream, avatarOptions, currentTheme, buildDropdownOptions());
 
   function openRaciMatrixModal() {
-    const matrix = window.raciMatrix?.createRaciMatrix(modeler);
+    const matrix = createRaciMatrix(modeler);
     if (!matrix) return;
 
     const modal = document.createElement('div');
@@ -983,8 +986,8 @@ function rebuildMenu() {
   controls.push(treeBtn);
 
   (function bindTreeToggle() {
-    if (window.diagramTree?.togglePanel) {
-      treeToggle = window.diagramTree.togglePanel;
+    if (togglePanel) {
+      treeToggle = togglePanel;
     } else {
       requestAnimationFrame(bindTreeToggle);
     }

@@ -1,13 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import vm from 'node:vm';
 import { createSimulationInstance } from '../helpers/simulation.js';
 import { Stream } from '../../public/js/core/stream.js';
-import { fileURLToPath } from 'node:url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import { openFlowSelectionModal } from '../../public/js/components/elements.js';
 
 class Element {
   constructor(tag) {
@@ -149,25 +144,18 @@ test('exclusive gateway pauses even when only one flow is viable', () => {
 
 function loadElements() {
   const document = new Document();
-  const window = { document };
-  const sandbox = {
-    window,
-    document,
-    Node: Element,
-    console,
-    setTimeout,
-    clearTimeout,
-    Stream
-  };
-  sandbox.window.Stream = Stream;
-  sandbox.currentTheme = new Stream({ colors: {}, fonts: {} });
-  const elementsCode = fs.readFileSync(resolve(__dirname, '../../public/js/components/elements.js'), 'utf8');
-  vm.runInNewContext(elementsCode, sandbox);
-  return { sandbox, document };
+  global.document = document;
+  global.window = { document };
+  global.Node = Element;
+  global.console = console;
+  global.setTimeout = setTimeout;
+  global.clearTimeout = clearTimeout;
+  const themeStream = new Stream({ colors: {}, fonts: {} });
+  return { document, themeStream };
 }
 
 test('flow selection modal displays condition text', () => {
-  const { sandbox, document } = loadElements();
+  const { document, themeStream } = loadElements();
   const flows = [
     {
       flow: {
@@ -184,14 +172,14 @@ test('flow selection modal displays condition text', () => {
       satisfied: true
     }
   ];
-  sandbox.window.openFlowSelectionModal(flows);
+  openFlowSelectionModal(flows, themeStream);
   const labels = document.querySelectorAll('label > span');
   assert.ok(labels[0].textContent.includes('${x>5}'));
   assert.ok(labels[1].textContent.includes('default'));
 });
 
 test('flow selection modal indicates unsatisfied flows but keeps them enabled', () => {
-  const { sandbox, document } = loadElements();
+  const { document, themeStream } = loadElements();
   const flows = [
     {
       flow: {
@@ -208,7 +196,7 @@ test('flow selection modal indicates unsatisfied flows but keeps them enabled', 
       satisfied: false
     }
   ];
-  sandbox.window.openFlowSelectionModal(flows);
+  openFlowSelectionModal(flows, themeStream);
   const inputs = document.querySelectorAll('input');
   assert.strictEqual(inputs.length, 2);
   assert.ok(!inputs[0].disabled);

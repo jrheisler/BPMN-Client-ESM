@@ -1,5 +1,7 @@
-(function(global){
-  const addOnTypes = {
+import { Stream } from '../core/stream.js';
+import { currentTheme } from '../core/theme.js';
+
+const addOnTypes = {
     'Knowledge': [
       'Process Assumptions',
       'Process Issues',
@@ -99,9 +101,9 @@
     ]
   };
 
-  const selectedType = new Stream(null);
-  const selectedSubtype = new Stream(null);
-  const expandedType = new Stream(null);
+const selectedType = new Stream(null);
+const selectedSubtype = new Stream(null);
+const expandedType = new Stream(null);
 
   function adjustColor(hex, amount) {
     const col = hex.startsWith('#') ? hex.slice(1) : hex;
@@ -126,7 +128,7 @@
     return adjustColor(col, brightness < 128 ? amount : -amount);
   }
 
-  function createAddOnFilterPanel(themeStream = currentTheme){
+export function createAddOnFilterPanel(themeStream = currentTheme){
     const panel = document.createElement('div');
     panel.classList.add('addon-filter');
     Object.assign(panel.style, {
@@ -213,10 +215,4 @@
     return panel;
   }
 
-  global.addOnFilter = {
-    createAddOnFilterPanel,
-    selectedType,
-    selectedSubtype
-  };
-
-})(window);
+export { selectedType, selectedSubtype };

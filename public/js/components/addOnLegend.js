@@ -1,5 +1,7 @@
-(function(global){
-  function createAddOnLegend(typeIcons = {}, themeStream = currentTheme){
+import { Stream } from '../core/stream.js';
+import { currentTheme } from '../core/theme.js';
+
+export function createAddOnLegend(typeIcons = {}, themeStream = currentTheme){
     const container = document.createElement('div');
     Object.assign(container.style, {
       position: 'absolute',
@@ -34,8 +36,8 @@
 
     function computeCounts(){
       const counts = {};
-      if(!global.addOnStore || !addOnStore.getAllAddOns) return counts;
-      const all = addOnStore.getAllAddOns();
+      if(!window.addOnStore || !window.addOnStore.getAllAddOns) return counts;
+      const all = window.addOnStore.getAllAddOns();
       Object.values(all).forEach(addOns => {
         const seen = new Set();
         (addOns || []).forEach(a => {
@@ -55,14 +57,14 @@
       });
     });
 
-    if(global.addOnStore){
-      const originalSet = addOnStore.setAddOns;
-      addOnStore.setAddOns = function(nodeId, addOns){
+    if(window.addOnStore){
+      const originalSet = window.addOnStore.setAddOns;
+      window.addOnStore.setAddOns = function(nodeId, addOns){
         originalSet(nodeId, addOns);
         countsStream.set(computeCounts());
       };
-      const originalClear = addOnStore.clear;
-      addOnStore.clear = function(){
+      const originalClear = window.addOnStore.clear;
+      window.addOnStore.clear = function(){
         originalClear();
         countsStream.set(computeCounts());
       };
@@ -77,6 +79,3 @@
 
     return container;
   }
-
-  global.addOnLegend = { createAddOnLegend };
-})(window);

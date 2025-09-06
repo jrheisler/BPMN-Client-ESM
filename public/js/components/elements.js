@@ -1,8 +1,11 @@
-function text(str) {
+import { Stream, observeDOMRemoval } from '../core/stream.js';
+import { currentTheme, applyTheme } from '../core/theme.js';
+
+export function text(str) {
   return document.createTextNode(str);
 }
 
-function reactiveElement(stream, renderFn = v => v) {
+export function reactiveElement(stream, renderFn = v => v) {
   const placeholder = document.createElement('div');
 
   function update(value) {
@@ -34,7 +37,7 @@ function reactiveElement(stream, renderFn = v => v) {
 }
 
 
-function reactiveText(stream, options = {}, themeStream = currentTheme) {
+export function reactiveText(stream, options = {}, themeStream = currentTheme) {
   const el = document.createElement(options.tag || 'p');
 
   function applyStyles(theme) {
@@ -68,7 +71,7 @@ function reactiveText(stream, options = {}, themeStream = currentTheme) {
   return el;
 }
 
-function editText(stream, options = {}, themeStream = currentTheme) {
+export function editText(stream, options = {}, themeStream = currentTheme) {
   const input = document.createElement('input');
   input.type = 'text';
   input.value = stream.get();
@@ -116,7 +119,7 @@ function editText(stream, options = {}, themeStream = currentTheme) {
   return input;
 }
 
-function reactiveImage(stream, options = {}, themeStream = currentTheme) {
+export function reactiveImage(stream, options = {}, themeStream = currentTheme) {
   const img = document.createElement('img');
 
   function applyStyles(theme) {
@@ -147,7 +150,7 @@ function reactiveImage(stream, options = {}, themeStream = currentTheme) {
   return img;
 }
 
-function toggleSwitch(stream, options = {}, themeStream = currentTheme) {
+export function toggleSwitch(stream, options = {}, themeStream = currentTheme) {
   const wrapper = document.createElement('div');
   wrapper.style.display = 'flex';
   wrapper.style.alignItems = 'center';
@@ -242,7 +245,7 @@ function toggleSwitch(stream, options = {}, themeStream = currentTheme) {
 }
 
 
-function reactiveButton(labelStream, onClick, options = {}, themeStream = currentTheme) {
+export function reactiveButton(labelStream, onClick, options = {}, themeStream = currentTheme) {
   const button = document.createElement('button');
   button.type = 'button';
 
@@ -355,7 +358,7 @@ function reactiveButton(labelStream, onClick, options = {}, themeStream = curren
 }
 
 
-function fileInput(stream, options = {}, themeStream = currentTheme) {
+export function fileInput(stream, options = {}, themeStream = currentTheme) {
   const input = document.createElement('input');
   input.type = 'file';
 
@@ -393,7 +396,7 @@ function fileInput(stream, options = {}, themeStream = currentTheme) {
   return input;
 }
 
-function conditional(showStream, childElementFn) {
+export function conditional(showStream, childElementFn) {
   const wrapper = document.createElement('div');
   let child = null;
 
@@ -412,7 +415,7 @@ function conditional(showStream, childElementFn) {
   return wrapper;
 }
 
-function headerContainer(titleStream) {
+export function headerContainer(titleStream) {
   return container([
     reactiveText(titleStream, {
       size: '2rem',
@@ -427,7 +430,7 @@ function headerContainer(titleStream) {
 }
 
 
-function openFlowSelectionModal(flows, themeStream = currentTheme, allowMultiple = false) {
+export function openFlowSelectionModal(flows, themeStream = currentTheme, allowMultiple = false) {
   const pickStream = new Stream(null);
 
   // Overlay
@@ -555,9 +558,8 @@ function openFlowSelectionModal(flows, themeStream = currentTheme, allowMultiple
   return pickStream;
 }
 // Expose helper globally for external usage
-window.openFlowSelectionModal = openFlowSelectionModal;
 
-function gridView(dataStream, options = {}, themeStream = currentTheme) {
+export function gridView(dataStream, options = {}, themeStream = currentTheme) {
   const wrapper = document.createElement('div');
   wrapper.style.overflowX = 'auto';
   wrapper.style.width = '100%';
@@ -636,7 +638,7 @@ function gridView(dataStream, options = {}, themeStream = currentTheme) {
   return wrapper;
 }
 
-function editableDropdown(valueStream, optionsStream, themeStream = currentTheme) {
+export function editableDropdown(valueStream, optionsStream, themeStream = currentTheme) {
   const wrapper = document.createElement('div');
   const select = document.createElement('select');
   const input = document.createElement('input');
@@ -817,7 +819,7 @@ async function showFileHistoryModal(filename, themeStream = currentTheme) {
   }
 }
 
-function dropdownStream(stream, selectOptions = [], themeStream = currentTheme) {
+export function dropdownStream(stream, selectOptions = [], themeStream = currentTheme) {
   const select = document.createElement('select');
 
   function applyStyles(theme) {
@@ -878,7 +880,7 @@ function dropdownStream(stream, selectOptions = [], themeStream = currentTheme) 
   return select;
 }
 
-function avatarImage(stream, options = {}, themeStream = currentTheme) {
+export function avatarImage(stream, options = {}, themeStream = currentTheme) {
   // Create the img element
   const img = document.createElement('img');
 
@@ -915,7 +917,7 @@ function avatarImage(stream, options = {}, themeStream = currentTheme) {
   return img; // Return the img element
 }
 
-function avatarDropdown(stream, options = {}, themeStream = currentTheme, menuItems = []) {
+export function avatarDropdown(stream, options = {}, themeStream = currentTheme, menuItems = []) {
   const container = document.createElement('div');
   container.style.position = 'relative';
   container.style.display = 'inline-block';
@@ -1026,7 +1028,7 @@ function avatarDropdown(stream, options = {}, themeStream = currentTheme, menuIt
 }
 
 
-function showConfirmationDialog(message, themeStream = currentTheme) {
+export function showConfirmationDialog(message, themeStream = currentTheme) {
   return new Promise((resolve) => {
     // Create modal container
     const modal = document.createElement('div');
@@ -1142,7 +1144,7 @@ function showConfirmationDialog(message, themeStream = currentTheme) {
 }
 
 
-function showToast(message, {
+export function showToast(message, {
   duration = 3000,
   themeStream = currentTheme,
   type = 'info' // 'info' | 'success' | 'warning' | 'error'
@@ -1207,7 +1209,7 @@ function showToast(message, {
 }
 
 
-function createDiagramOverlay(nameStream, versionStream, themeStream) {
+export function createDiagramOverlay(nameStream, versionStream, themeStream) {
   const overlay = document.createElement('div');
   overlay.className = 'diagram-overlay';
 
