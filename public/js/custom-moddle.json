@@ -1,0 +1,39 @@
+{
+  "name": "Custom",
+  "uri": "http://example.com/custom",
+  "prefix": "custom",
+  "xml": {
+    "tagAlias": "lowerCase"
+  },
+  "types": [
+    {
+      "name": "Variable",
+      "superClass": [ "Element" ],
+      "properties": [
+        { "name": "name", "type": "String", "isAttr": true },
+        { "name": "type", "type": "String", "isAttr": true },
+        { "name": "default", "type": "String", "isAttr": true }
+      ]
+    },
+    {
+      "name": "Mapping",
+      "superClass": [ "Element" ],
+      "properties": [
+        { "name": "name", "type": "String", "isAttr": true },
+        { "name": "type", "type": "String", "isAttr": true },
+        { "name": "default", "type": "String", "isAttr": true },
+        { "name": "direction", "type": "String", "isAttr": true }
+      ]
+    },
+    {
+      "name": "Raci",
+      "superClass": [ "Element" ],
+      "properties": [
+        { "name": "responsible", "type": "String", "isAttr": true },
+        { "name": "accountable", "type": "String", "isAttr": true },
+        { "name": "consulted",  "type": "String", "isAttr": true },
+        { "name": "informed",   "type": "String", "isAttr": true }
+      ]
+    }
+  ]
+}

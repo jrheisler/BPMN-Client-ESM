@@ -1,0 +1,1010 @@
+Here’s a clean and concise documentation for each of the functions, describing their properties, behavior, and returns:
+
+
+avatarImage(stream, options = {}, themeStream = currentTheme)
+Description: Creates an image element (avatar) based on the favicon.ico, reacting to changes in a stream. The image element updates whenever the stream’s value (e.g., the URL or path to the avatar) changes.
+
+Parameters:
+
+stream: The stream whose value will be used as the src of the avatar image (typically the URL to the favicon.ico or a user-defined avatar).
+
+options: Styling options for the image element (e.g., width, height, borderRadius for round avatars).
+
+themeStream: A stream that provides theme information for styling the avatar.
+
+Returns: An image element (<img>) that updates based on the stream’s value.
+
+
+---
+avatarDropdown
+/**
+ * Creates an avatar image that, when clicked, shows a themed dropdown menu with custom menu items.
+ * 
+ * @param {Stream<string>} stream - Stream that holds the avatar image URL. Updates in real-time.
+ * @param {Object} options - Styling options for the avatar.
+ * @param {string} [options.width] - Width of the avatar image (default: '50px').
+ * @param {string} [options.height] - Height of the avatar image (default: '50px').
+ * @param {boolean} [options.rounded] - Whether to make the avatar fully circular (default: false).
+ * @param {string} [options.border] - Border CSS for the avatar (default: themed border).
+ * @param {string} [options.bg] - Background color for the avatar container.
+ * @param {string} [options.margin] - Margin around the avatar image.
+ * @param {Stream} themeStream - Theme stream to dynamically style the avatar and menu.
+ * @param {Array<Object>} menuItems - Array of menu items, each with `label` and `onClick` properties.
+ * 
+ * @returns {HTMLElement} The constructed avatar dropdown container element.
+ */
+
+
+showConfirmationDialog
+/**
+ * Shows a themed confirmation dialog modal with OK and Cancel buttons.
+ * 
+ * @param {string} message - The message to display in the confirmation dialog.
+ * @param {Stream} themeStream - Theme stream for applying consistent styles.
+ * 
+ * @returns {Promise<boolean>} Resolves to true if OK is clicked, false if Cancel or outside click.
+ */
+
+
+showToast
+/**
+ * Displays a themed toast notification in the bottom-right corner of the screen.
+ * 
+ * @param {string} message - Text content of the toast.
+ * @param {Object} options - Additional options for the toast.
+ * @param {number} [options.duration=3000] - How long (in ms) the toast stays visible before fading.
+ * @param {Stream} [options.themeStream=currentTheme] - Theme stream for consistent coloring.
+ * @param {'info' | 'success' | 'warning' | 'error'} [options.type='info'] - Type of toast, controls icon and border color.
+ */
+
+createDiagramOverlay
+/**
+ * Creates a fixed overlay element to display the diagram name and version on top of the BPMN canvas.
+ * 
+ * @param {Stream<string>} nameStream - Stream holding the diagram name. Updates overlay in real-time.
+ * @param {Stream<number>} versionStream - Stream holding the current version number. Updates overlay in real-time.
+ * @param {Stream} themeStream - Theme stream for dynamic styling of overlay background, font, and borders.
+ * 
+ * @returns {HTMLElement} The constructed overlay element.
+ */
+
+
+
+### `text(str)`
+
+* **Description**: Creates a text node containing the string `str`.
+* **Parameters**:
+
+  * `str`: A string of text to be inserted into the text node.
+* **Returns**: A text node (`Text`), created using `document.createTextNode(str)`.
+
+---
+
+### `reactiveElement(stream, renderFn = v => v)`
+
+* **Description**: Creates a `div` element that reacts to changes in a stream. The element is updated whenever the stream's value changes.
+* **Parameters**:
+
+  * `stream`: The stream whose value will be used to update the content of the element.
+  * `renderFn`: A function that processes the value from the stream before rendering. Defaults to the identity function (`v => v`).
+* **Returns**: A `div` element that is updated reactively with content rendered by `renderFn`.
+
+---
+
+### `reactiveText(stream, options = {}, themeStream = currentTheme)`
+
+* **Description**: Creates a `text`-based element (e.g., `<p>` or other tags) that reacts to changes in a stream. The text content and styles are updated based on stream and theme values.
+* **Parameters**:
+
+  * `stream`: The stream whose value is used as the text content.
+  * `options`: An object containing style options for the element (e.g., `size`, `weight`, `color`).
+  * `themeStream`: A stream providing theme settings to style the element.
+* **Returns**: A styled text element (`p` by default) that updates based on stream and theme changes.
+
+---
+
+### `editText(stream, options = {}, themeStream = currentTheme)`
+
+* **Description**: Creates an editable text input element that reflects the value of a stream. The input element is updated whenever the stream's value changes and vice versa.
+* **Parameters**:
+
+  * `stream`: The stream representing the value of the input field.
+  * `options`: An object containing style options for the input field (e.g., `placeholder`, `width`, `padding`).
+  * `themeStream`: A stream that provides theme information used to style the input element.
+* **Returns**: An input element (`<input type="text">`) that is tied to the stream.
+
+---
+
+### `reactiveImage(stream, options = {}, themeStream = currentTheme)`
+
+* **Description**: Creates an image element that reacts to changes in a stream. The `src` of the image is updated whenever the stream's value changes.
+* **Parameters**:
+
+  * `stream`: The stream whose value is used as the `src` of the image.
+  * `options`: An object containing style options for the image (e.g., `width`, `height`, `fit`, `border`).
+  * `themeStream`: A stream providing theme information for the image.
+* **Returns**: An image element (`<img>`) that updates based on the stream’s value.
+
+---
+
+### `toggleSwitch(stream, options = {}, themeStream = currentTheme)`
+
+* **Description**: Creates a toggle switch that reacts to changes in a stream. The switch is updated whenever the stream’s value changes and vice versa.
+* **Parameters**:
+
+  * `stream`: The stream representing the state of the switch (`true` or `false`).
+  * `options`: An object containing style options for the toggle (e.g., `gap`, `width`, `height`, `onColor`, `offColor`).
+  * `themeStream`: A stream providing theme information for the toggle.
+* **Returns**: A wrapper `div` containing the toggle switch and an optional label element that reflects the state of the `stream`.
+
+---
+
+### Notes for all functions:
+
+* **`stream`** is an object that provides reactive behavior via methods like `.get()`, `.set()`, and `.subscribe()`.
+* **`themeStream`** is used for theming and styling, where stream values are typically used to adjust colors, fonts, and other visual styles.
+
+Each of these functions provides a reactive DOM element that automatically updates when the bound stream changes. The `applyStyles` method is common in some functions to ensure styles are applied dynamically based on the current theme. The DOM elements clean up automatically when removed from the DOM to prevent memory leaks.
+
+Here’s the documentation for the additional functions, including descriptions, parameters, and return types:
+
+---
+
+### `reactiveButton(labelStream, onClick, options = {}, themeStream = currentTheme)`
+
+* **Description**: Creates a button that reacts to a stream and can be clicked to trigger an action. It updates its label and styles based on stream and theme changes.
+* **Parameters**:
+
+  * `labelStream`: The stream whose value is used as the button label.
+  * `onClick`: A function to be executed when the button is clicked.
+  * `options`: An object containing optional properties for button styling (e.g., `bg`, `color`, `size`, `outline`, `disabled`).
+  * `themeStream`: A stream that provides the current theme for styling.
+* **Returns**: A `button` element that reacts to the stream for its label and theme styling, and invokes `onClick` when clicked.
+
+---
+
+### `fileInput(stream, options = {}, themeStream = currentTheme)`
+
+* **Description**: Creates a file input field that binds its value to a stream. When a file is selected, the stream is updated with the selected file.
+* **Parameters**:
+
+  * `stream`: The stream that will be updated with the selected file.
+  * `options`: An object containing optional properties for styling the file input (e.g., `size`, `bg`, `color`, `padding`, `width`).
+  * `themeStream`: A stream that provides theme information for styling.
+* **Returns**: An `input` element of type `file` that reacts to the stream for its value.
+
+---
+
+### `conditional(showStream, childElementFn)`
+
+* **Description**: Creates a container element that conditionally renders its child element based on the value of `showStream`. When `showStream` is `true`, the child element returned by `childElementFn` is appended.
+* **Parameters**:
+
+  * `showStream`: The stream that determines whether the child element should be rendered (`true` for showing the element, `false` for hiding it).
+  * `childElementFn`: A function that returns the child element to be displayed when the `showStream` is `true`.
+* **Returns**: A `div` element that conditionally contains the child element based on the stream's value.
+
+---
+
+### `headerContainer(titleStream)`
+
+* **Description**: Creates a container element with a centered header text. The header’s text is reactive and updates based on the `titleStream`.
+* **Parameters**:
+
+  * `titleStream`: The stream that provides the title text for the header.
+* **Returns**: A `div` container that contains a reactive text element with the header’s title.
+
+---
+
+### `dropdownStream(stream, selectOptions = [], themeStream = currentTheme)`
+
+* **Description**: Creates a dropdown (`<select>`) element that reacts to a stream and keeps its value synced. The dropdown is populated with options from `selectOptions.choices`.
+* **Parameters**:
+
+  * `stream`: The stream that holds the current value of the dropdown.
+  * `selectOptions`: An object containing options for the dropdown (e.g., `choices` for the list of options, `width` for the dropdown width).
+  * `themeStream`: A stream that provides the theme styling.
+* **Returns**: A `select` element whose value is controlled by the stream and whose styling is updated based on the theme stream.
+
+---
+
+### Notes for all functions:
+
+* **`stream`**: Typically a reactive stream that allows the component to update when its value changes (e.g., `Stream` object or similar).
+* **`themeStream`**: A stream that provides the current theme for styling the elements (e.g., colors, fonts).
+* **`applyStyles`**: A common function in these components that applies styling based on options and the current theme.
+
+These functions create UI elements that reactively update their content and style based on the values of streams, making them highly dynamic and adaptable to real-time changes. Each component cleans up after itself when removed from the DOM to prevent memory leaks.
+Here’s the documentation for the additional functions you provided:
+
+---
+
+### `gridView(dataStream, options = {}, themeStream = currentTheme)`
+
+* **Description**: Creates a table grid that displays data rows and supports row selection. The grid layout is responsive to the stream's data and theme.
+* **Parameters**:
+
+  * `dataStream`: The stream that provides the list of data items to display in the grid.
+  * `options`: An optional object for configuring grid behavior (e.g., `onSelect` callback when a row is clicked).
+  * `themeStream`: A stream that provides theme settings for styling the grid.
+* **Returns**: A `div` containing a grid layout (`table`), with rows that can be clicked to trigger a callback.
+
+---
+
+### `editableDropdown(valueStream, optionsStream, themeStream = currentTheme)`
+
+* **Description**: Creates a dropdown that allows selecting from predefined options or entering a custom value. The value is synchronized with the `valueStream` and the options with the `optionsStream`.
+* **Parameters**:
+
+  * `valueStream`: The stream that holds the current value of the dropdown (either selected or manually entered).
+  * `optionsStream`: The stream that provides the list of available options for the dropdown.
+  * `themeStream`: A stream that provides the current theme for styling the dropdown.
+* **Returns**: A `div` containing a `select` element and an input field for custom values.
+
+---
+
+### `showFileHistoryModal(filename, themeStream = currentTheme)`
+
+* **Description**: Opens a modal that displays the commit history of a file from a GitHub repository. The modal includes links to download previous versions of the file.
+* **Parameters**:
+
+  * `filename`: The name of the file whose commit history will be fetched.
+  * `themeStream`: A stream that provides the theme settings for styling the modal.
+* **Returns**: A modal containing the file's commit history with links to download past versions.
+
+---
+
+### Notes for all functions:
+
+* **`stream`**: These functions rely on reactive streams (e.g., `Stream`) to dynamically update the UI based on changes in data or user interaction.
+* **`themeStream`**: A stream that provides theme information (such as colors and fonts) for styling the elements.
+* **Event Listeners**: Most functions utilize event listeners for user interactions (e.g., button clicks, input changes) to trigger actions like updates to the stream or DOM changes.
+* **UI Updates**: The functions dynamically update the DOM based on stream values and ensure clean-up when elements are removed from the DOM to prevent memory leaks.
+
+These functions are designed to build interactive, reactive components that work seamlessly with streams, providing users with a real-time experience.
+
+Here’s the documentation for the layout functions you provided:
+
+---
+
+### `column(children = [], options = {}, themeStream = currentTheme)`
+
+* **Description**: Creates a vertical flex container (`div`) that arranges its children in a column layout. The layout can be customized with various options.
+* **Parameters**:
+
+  * `children`: An array of child elements to be appended to the container.
+  * `options`: An object containing styling options for the column (e.g., `gap`, `align`, `justify`, `width`, `height`, `bg`, `border`, `padding`, `radius`).
+  * `themeStream`: A stream providing the current theme for dynamic styling (e.g., background color, border color).
+* **Returns**: A `div` element styled as a column layout with the provided children.
+
+---
+
+### `row(children = [], options = {}, themeStream = currentTheme)`
+
+* **Description**: Creates a horizontal flex container (`div`) that arranges its children in a row layout. This function builds upon the `column` function but with a flex direction of `row`.
+* **Parameters**:
+
+  * `children`: An array of child elements to be appended to the container.
+  * `options`: An object containing styling options for the row (e.g., `gap`, `align`, `justify`, `wrap`, `width`, `height`).
+  * `themeStream`: A stream providing the current theme for dynamic styling.
+* **Returns**: A `div` element styled as a row layout with the provided children.
+
+---
+
+### `container(child, options = {}, themeStream = currentTheme)`
+
+* **Description**: Creates a container `div` element that can hold a single child or an array of children. The container's appearance can be customized with various options, including padding, margin, border, and background color.
+* **Parameters**:
+
+  * `child`: A single child element or an array of child elements to be appended to the container.
+  * `options`: An object containing styling options for the container (e.g., `padding`, `margin`, `border`, `borderRadius`, `bg`, `color`).
+  * `themeStream`: A stream that provides theme information for styling.
+* **Returns**: A `div` element that wraps the child or children with the specified styles.
+
+---
+
+### `grid(children = [], options = {}, themeStream = currentTheme)`
+
+* **Description**: Creates a grid layout (`div`) using CSS Grid. The grid automatically adjusts based on the number of columns and the size of the content, and it can be customized with various options.
+* **Parameters**:
+
+  * `children`: An array of child elements to be placed in the grid.
+  * `options`: An object containing grid layout options (e.g., `columns`, `gap`, `bg`, `border`, `padding`, `radius`).
+  * `themeStream`: A stream providing the current theme for dynamic styling.
+* **Returns**: A `div` element styled as a CSS Grid container with the provided children.
+
+---
+
+### `spacer(options = {})`
+
+* **Description**: Creates an element that can be used as flexible or fixed space. The element's size is controlled by the `flexGrow` property and optional width/height settings.
+* **Parameters**:
+
+  * `options`: An object containing options for the spacer (e.g., `flexGrow`, `width`, `height`).
+* **Returns**: A `div` element that acts as a spacer, either flexible or fixed in size.
+
+---
+
+### `divider(options = {}, themeStream = currentTheme)`
+
+* **Description**: Creates a divider (horizontal or vertical line). The line can be customized with options like thickness, length, color, and margin.
+* **Parameters**:
+
+  * `options`: An object containing styling options for the divider (e.g., `vertical`, `thickness`, `length`, `color`, `margin`).
+  * `themeStream`: A stream providing the current theme for dynamic styling (e.g., divider color).
+* **Returns**: A `div` element styled as a horizontal or vertical line divider.
+
+---
+
+### Notes for all functions:
+
+* **`themeStream`**: Used for dynamic theming, ensuring that the elements reflect the current theme's colors, fonts, and other visual properties.
+* **`options`**: Each layout function accepts an options object that controls various CSS properties like `padding`, `margin`, `align`, `gap`, `bg`, `border`, `radius`, and more.
+* **Responsiveness**: Several of the layout functions, like `grid` and `column`, are designed to adapt to different screen sizes, with properties like `auto-fit` and `minmax` ensuring flexibility.
+* **`observeDOMRemoval`**: These functions may be part of a reactive framework where DOM elements are automatically cleaned up when they are removed from the page, avoiding memory leaks.
+
+These layout functions offer flexible containers for managing and styling content, making it easy to create structured, responsive UI layouts in a web application.
+
+
+Here’s the documentation for the Stream-related classes and functions:
+
+---
+
+### `Stream`
+
+* **Description**: A class that represents a reactive stream of values. It allows you to subscribe to value changes, get the current value, and update the value, with support for integrating with objects that follow the JSON structure.
+* **Constructor**:
+
+  * `initial`: The initial value for the stream. If it's an object with a `json` and `key` property, the value will be extracted from that object.
+* **Methods**:
+
+  * `subscribe(fn)`:
+
+    * **Description**: Subscribes to changes in the stream. The provided function (`fn`) will be called with the current stream value every time it changes.
+    * **Parameters**:
+
+      * `fn`: A function that will be called with the stream’s current value whenever it updates.
+    * **Returns**: A function to unsubscribe from the stream.
+  * `set(val)`:
+
+    * **Description**: Sets a new value for the stream. This will trigger all the subscribers to update with the new value.
+    * **Parameters**:
+
+      * `val`: The new value to set.
+  * `get()`:
+
+    * **Description**: Gets the current value of the stream.
+    * **Returns**: The current value of the stream.
+
+---
+
+### `derived(streams, transformFn, options = {})`
+
+* **Description**: Creates a derived stream based on one or more source streams. The derived stream will automatically update whenever the source streams change. A transformation function (`transformFn`) is applied to the values of the source streams to compute the derived value.
+* **Parameters**:
+
+  * `streams`: A single stream or an array of streams to derive the value from.
+  * `transformFn`: A function that takes the values of the source streams and computes the new value for the derived stream.
+  * `options`: An object with optional settings:
+
+    * `debounce`: A delay (in milliseconds) before applying updates, preventing excessive reactivity.
+    * `distinct`: Whether to ignore updates if the derived value hasn’t changed (default is `true`).
+* **Returns**: A new `Stream` that holds the derived value and automatically updates when the source streams change. It also has a `cleanup` method to remove the listeners when no longer needed.
+
+---
+
+### `fieldStream(sourceStream, fieldName)`
+
+* **Description**: Creates a derived stream that tracks a specific field from the value of a source stream. It extracts the specified field from the stream's current value and updates the derived stream when the source stream’s value changes.
+* **Parameters**:
+
+  * `sourceStream`: The source stream to derive the value from.
+  * `fieldName`: The name of the field to extract from the source stream’s value.
+* **Returns**: A `Stream` that represents the value of the specified field from the source stream’s current value.
+
+---
+
+### `observeDOMRemoval(el, ...cleanups)`
+
+* **Description**: Observes the removal of a DOM element (`el`) and automatically calls the provided cleanup functions when the element is removed from the document body.
+* **Parameters**:
+
+  * `el`: The DOM element to observe for removal.
+  * `cleanups`: One or more functions to call when the element is removed from the DOM.
+* **Returns**: None. The cleanup functions are invoked when the element is removed from the DOM, and the observer stops observing.
+
+---
+
+### Notes for all functions and classes:
+
+* **Reactivity**: All `Stream`-based functions are designed to create reactive behavior, where updates to a stream trigger automatic updates to subscribed listeners, providing a dynamic interface.
+* **Subscription Management**: `Stream.subscribe` returns an unsubscribe function, which allows for efficient memory management by detaching event listeners when no longer needed.
+* **Derived Streams**: The `derived` function enables reactive calculations based on one or more streams, with optional debouncing and distinct value checks to manage performance.
+* **Field Streams**: `fieldStream` is a simple way to focus on a specific property within an object stream, making it easier to manage complex data structures with individual properties.
+
+These stream-based functions provide a robust way to manage dynamic data and handle reactivity in web applications, making them essential for building interactive UIs.
+
+Here’s the documentation for the theme-related code you provided:
+
+---
+
+### `themes.json`
+
+* **Description**: This JSON file defines multiple theme configurations for the application. Each theme contains color settings for UI elements, BPMN (Business Process Model and Notation) styling, and font settings for general text and monospace fonts.
+* **Properties**:
+
+  * **`name`**: The name of the theme (e.g., 'Dark', 'Light', 'Ocean').
+  * **`colors`**: An object containing various color values for the background, foreground, primary, accent, surface, and border.
+  * **`bpmn`**: An object defining the styles for BPMN elements such as shapes, connections, markers, labels, and selected states.
+  * **`fonts`**: An object defining the base font family and monospace font.
+
+---
+
+### `applyTheme(el, options = {})`
+
+* **Description**: Applies a theme to a specific DOM element (`el`) as well as the global page body. This function allows you to customize the appearance of an element with various styling options, while also applying the global theme to the body.
+* **Parameters**:
+
+  * `el`: The DOM element to which the theme will be applied.
+  * `options`: An optional object with the following properties:
+
+    * `size`: Font size for the element (default: `1rem`).
+    * `weight`: Font weight (default: `normal`).
+    * `color`: Font color (overrides theme’s color).
+    * `background`: Background color (overrides theme’s background).
+    * `padding`: Padding for the element (default: `0.5rem`).
+    * `margin`: Margin for the element (default: `0.5rem`).
+    * `borderRadius`: Border radius (default: `4px`).
+* **Returns**: None. The function directly modifies the style of the passed element (`el`) and the page body.
+
+---
+
+### `themeToggleButton()`
+
+* **Description**: Creates a button that toggles between the light and dark themes. When clicked, the button switches the current theme and updates the UI accordingly.
+* **Parameters**: None.
+* **Returns**: A `button` element that toggles the theme when clicked.
+
+---
+
+### `themedThemeSelector(themeStream = currentTheme)`
+
+* **Description**: Creates a theme selector dropdown that allows users to choose from the available themes. The selected theme is applied to the page, and the choice is saved in `localStorage` for persistence across sessions.
+* **Parameters**:
+
+  * `themeStream`: A stream that provides the current theme to ensure the theme selector reacts to changes.
+* **Returns**: A `div` container containing a label and a `select` dropdown with theme options.
+
+---
+
+### `applyThemeToPage(theme, container = document.body)`
+
+* **Description**: Applies a theme to the entire page, updating the background color, text color, and font family based on the selected theme. The theme also includes smooth transitions for background and text colors.
+* **Parameters**:
+
+  * `theme`: The theme object to apply (e.g., one of the themes from the `themes` object).
+  * `container`: The DOM element to apply the theme to (default: `document.body`).
+* **Returns**: None. The function modifies the styles of the `container` element.
+
+---
+
+### Notes for all functions:
+
+* **`currentTheme`**: A `Stream` instance that holds the current theme. It allows the theme to be dynamically updated and propagated to various UI components.
+* **Persistence**: Themes are persisted using `localStorage`, so the user's theme preference remains even after they reload the page.
+* **Reactivity**: Theme-related functions like `applyTheme` and `themedThemeSelector` are reactive, meaning they automatically update the UI when the theme changes.
+* **BPMN Styling**: The themes also define styles for BPMN elements (e.g., shapes, connections), which can be used to apply a consistent visual theme across BPMN diagrams.
+
+These functions and the `themes` object allow for easy theme management and dynamic switching in your web application, ensuring a personalized user experience.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Jazira cookbook
+
+Perfect. Here’s a **Jazira.js Usage Cookbook** – written to align with your framework's architecture and optimized for reuse with AI help or solo development.
+
+---
+
+# 📘 **Jazira.js Usage Cookbook**
+
+Each recipe below follows this pattern:
+
+* ✅ Goal (what the UI does)
+* 🧠 Mental Model (streams, layout, structure)
+* 🔧 Code Snippet (in your declarative style)
+
+---
+
+## 1. **Basic Counter UI**
+
+✅ **Goal**: Show a counter with increment and decrement buttons.
+
+```js
+const count = Stream(0);
+
+const counterUI = column([
+  reactiveText(count, { size: '2rem', weight: 'bold' }),
+
+  row([
+    reactiveButton(Stream('-'), () => count.set(count.get() - 1)),
+    reactiveButton(Stream('+'), () => count.set(count.get() + 1)),
+  ], { gap: '1rem' })
+], { align: 'center', gap: '1rem', padding: '2rem' });
+```
+
+---
+
+## 2. **Reactive Form with Save Button**
+
+✅ **Goal**: Input a name and category, then click Save.
+
+```js
+const name = Stream('');
+const category = Stream('user');
+const categories = Stream(['user', 'admin', 'guest']);
+
+const form = column([
+  editText(name, { placeholder: 'Enter your name' }),
+  editableDropdown(category, categories),
+
+  row([
+    spacer(),
+    reactiveButton(Stream('Save'), () => {
+      /* handle save action */
+    })
+  ])
+], { gap: '1rem', padding: '1rem' });
+```
+
+---
+
+## 3. **Themed Header Bar with Avatar Dropdown**
+
+✅ **Goal**: Top bar with title on the left, avatar dropdown on right.
+
+```js
+const userAvatar = Stream('/images/user.png');
+const menuItems = [
+  { label: 'Profile', onClick: () => {/* profile */} },
+  { label: 'Logout', onClick: () => {/* logout */} },
+];
+
+const header = row([
+  reactiveText(Stream('My App'), { size: '1.5rem', weight: 'bold' }),
+  spacer(),
+  avatarDropdown(userAvatar, { width: '40px', rounded: true }, currentTheme, menuItems)
+], { padding: '0.5rem 1rem', align: 'center', bg: '#222' });
+```
+
+---
+
+## 4. **Confirmation Dialog on Action**
+
+✅ **Goal**: Show a confirmation dialog before deleting.
+
+```js
+const onDelete = async () => {
+  const confirmed = await showConfirmationDialog('Are you sure you want to delete this?', currentTheme);
+  if (confirmed) {
+    /* deletion confirmed */
+  }
+};
+
+const deleteBtn = reactiveButton(Stream('Delete'), onDelete, { bg: 'red', color: 'white' });
+```
+
+---
+
+## 5. **Toast Notification**
+
+✅ **Goal**: Trigger a toast message.
+
+```js
+const notify = () => {
+  showToast('Saved successfully!', { type: 'success', duration: 2500 });
+};
+
+const saveBtn = reactiveButton(Stream('Save'), notify);
+```
+
+---
+
+## 6. **Toggle Switch to Show/Hide Content**
+
+✅ **Goal**: A toggle switch that conditionally shows a box.
+
+```js
+const isVisible = Stream(true);
+
+const toggleUI = column([
+  toggleSwitch(isVisible),
+
+  conditional(isVisible, () => container(
+    reactiveText(Stream('This is visible!')), 
+    { bg: '#ddd', padding: '1rem' }
+  ))
+]);
+```
+
+---
+
+## 7. **Grid View of Items with Selection**
+
+✅ **Goal**: Display a list of items as a selectable grid.
+
+```js
+const items = Stream([
+  { id: 1, name: 'Item A' },
+  { id: 2, name: 'Item B' },
+  { id: 3, name: 'Item C' }
+]);
+
+const onSelect = item => showToast(`Selected ${item.name}`);
+
+const grid = gridView(items, { onSelect });
+```
+
+---
+
+## 8. **Header + Content + Footer Page Shell**
+
+✅ **Goal**: Full layout with a header, content section, and footer.
+
+```js
+const page = column([
+  headerContainer(Stream('Dashboard')),
+
+  container(
+    reactiveText(Stream('Welcome to your dashboard.')), 
+    { padding: '1rem' }
+  ),
+
+  row([
+    spacer(),
+    reactiveText(Stream('© 2025 MyApp'), { size: '0.85rem', color: '#999' })
+  ], { padding: '0.5rem 1rem' })
+], { gap: '1rem' });
+```
+
+---
+
+## 9. **Dynamic Diagram Overlay**
+
+✅ **Goal**: Overlay showing name and version of a diagram.
+
+```js
+const diagramName = Stream('Process Model');
+const version = Stream(5);
+
+const overlay = createDiagramOverlay(diagramName, version, currentTheme);
+```
+
+Attach it with:
+
+```js
+document.body.appendChild(overlay);
+```
+
+---
+
+## 10. **Theme Selector Dropdown**
+
+✅ **Goal**: Let users switch between available themes.
+
+```js
+const selector = themedThemeSelector(currentTheme);
+
+// Mount somewhere in your settings UI
+```
+
+---
+
+## 🔚 Wrap-Up: How to Use This Cookbook
+
+* Use these as **templates for layouts and interactions**
+* Drop in new `Stream()` instances for custom logic
+* Describe new UIs like:
+
+  > “Make a row with toggle + editable text + save button, all reactive”
+
+…and I can keep generating them in the **Jazira way**.
+
+---
+
+Absolutely. Here's the **Expanded Jazira.js Usage Cookbook: Advanced Flows Edition**—designed to give you production-ready UI patterns and composable techniques for real apps.
+
+---
+
+# 📘 **Jazira.js Advanced Usage Cookbook**
+
+Each section expands on **real-world patterns**, such as dynamic state handling, modals, lists with CRUD, and loading/failure states—**all in Jazira’s declarative stream-first style**.
+
+---
+
+## 11. **Live Search Filter with List Output**
+
+✅ **Goal**: Filter a list of items by name as you type.
+
+```js
+const searchTerm = Stream('');
+const fullList = Stream(['Apple', 'Banana', 'Cherry', 'Avocado']);
+
+const filteredList = derived([searchTerm, fullList], ([term, list]) =>
+  list.filter(item => item.toLowerCase().includes(term.toLowerCase()))
+);
+
+const searchUI = column([
+  editText(searchTerm, { placeholder: 'Search fruits...' }),
+
+  derived(filteredList, list =>
+    column(list.map(name => reactiveText(Stream(name))))
+  )
+], { gap: '1rem' });
+```
+
+---
+
+## 12. **Loading Spinner with Delayed Data Load**
+
+✅ **Goal**: Simulate a fetch call and show a spinner until it completes.
+
+```js
+const data = Stream(null);
+const isLoading = Stream(true);
+
+setTimeout(() => {
+  data.set({ name: 'Loaded Data' });
+  isLoading.set(false);
+}, 2000);
+
+const ui = conditional(isLoading, () =>
+  reactiveText(Stream('Loading...'), { size: '1.2rem' }),
+  () => reactiveText(derived(data, d => `Result: ${d.name}`))
+);
+```
+
+---
+
+## 13. **Inline Editable List Items**
+
+✅ **Goal**: Render a list of items where each item can be edited in place.
+
+```js
+const items = Stream([
+  { id: 1, name: 'Task A' },
+  { id: 2, name: 'Task B' }
+]);
+
+const itemList = derived(items, list =>
+  column(
+    list.map(item => {
+      const nameStream = Stream(item.name);
+      return row([
+        editText(nameStream),
+        reactiveButton(Stream('Save'), () => {
+          items.set(items.get().map(i =>
+            i.id === item.id ? { ...i, name: nameStream.get() } : i
+          ));
+        })
+      ], { gap: '1rem' });
+    })
+  )
+);
+```
+
+---
+
+## 14. **Confirmation Modal for Destructive Action (Reusable Pattern)**
+
+✅ **Goal**: Ask before deleting a user.
+
+```js
+const users = Stream(['Alice', 'Bob', 'Charlie']);
+
+const ui = derived(users, list =>
+  column(list.map(name => {
+    return row([
+      reactiveText(Stream(name)),
+      reactiveButton(Stream('Delete'), async () => {
+        const ok = await showConfirmationDialog(`Delete ${name}?`, currentTheme);
+        if (ok) {
+          users.set(users.get().filter(n => n !== name));
+        }
+      })
+    ], { justify: 'space-between' });
+  }))
+);
+```
+
+---
+
+## 15. **Tab View Using Stream State**
+
+✅ **Goal**: Toggle between views using tab buttons.
+
+```js
+const tab = Stream('info');
+
+const tabButtons = row([
+  reactiveButton(Stream('Info'), () => tab.set('info')),
+  reactiveButton(Stream('Settings'), () => tab.set('settings'))
+], { gap: '0.5rem' });
+
+const tabView = derived(tab, t => {
+  if (t === 'info') {
+    return reactiveText(Stream('This is the info view'));
+  } else {
+    return reactiveText(Stream('Settings go here'));
+  }
+});
+
+const ui = column([tabButtons, tabView], { gap: '1rem' });
+```
+
+---
+
+## 16. **Form with Validation and Error Feedback**
+
+✅ **Goal**: Show errors if fields are empty before saving.
+
+```js
+const name = Stream('');
+const error = Stream('');
+
+const form = column([
+  editText(name, { placeholder: 'Name' }),
+  reactiveText(error, { color: 'red' }),
+
+  reactiveButton(Stream('Submit'), () => {
+    if (name.get().trim() === '') {
+      error.set('Name is required');
+    } else {
+      error.set('');
+      showToast(`Submitted: ${name.get()}`, { type: 'success' });
+    }
+  })
+]);
+```
+
+---
+
+## 17. **Multi-Step Wizard**
+
+✅ **Goal**: Navigate through multiple steps with “Next” and “Back”.
+
+```js
+const step = Stream(0);
+const maxStep = 2;
+
+const steps = [
+  () => reactiveText(Stream('Step 1: Intro')),
+  () => reactiveText(Stream('Step 2: Info')),
+  () => reactiveText(Stream('Step 3: Review'))
+];
+
+const wizardUI = column([
+  derived(step, s => steps[s]()),
+
+  row([
+    reactiveButton(Stream('Back'), () => step.set(Math.max(0, step.get() - 1))),
+    spacer(),
+    reactiveButton(Stream('Next'), () => step.set(Math.min(maxStep, step.get() + 1)))
+  ], { gap: '1rem' })
+], { gap: '1.5rem' });
+```
+
+---
+
+## 18. **State-Driven Diagram Info Panel**
+
+✅ **Goal**: Show a versioned BPMN overlay and update via streams.
+
+```js
+const name = Stream('Loan Workflow');
+const version = Stream(2);
+const overlay = createDiagramOverlay(name, version, currentTheme);
+
+// Later:
+version.set(version.get() + 1);
+```
+
+You can place this directly over the canvas.
+
+---
+
+## 19. **Dynamic Grid With Row Selection and Highlight**
+
+✅ **Goal**: Click on a row to highlight it.
+
+```js
+const data = Stream([
+  { id: 1, title: 'A' },
+  { id: 2, title: 'B' },
+  { id: 3, title: 'C' }
+]);
+
+const selectedId = Stream(null);
+
+const grid = derived(data, rows =>
+  column(rows.map(row => {
+    const isSelected = derived(selectedId, id => id === row.id);
+
+    return container(
+      reactiveText(Stream(row.title)),
+      {
+        bg: derived(isSelected, selected => selected ? '#aae' : '#eee'),
+        padding: '0.5rem',
+        border: '1px solid #ccc',
+        margin: '0.25rem 0'
+      }
+    );
+  }))
+);
+```
+
+---
+
+## 20. **Dropdown-Driven Form Switching**
+
+✅ **Goal**: Pick a mode from a dropdown, and show a different form per selection.
+
+```js
+const mode = Stream('login');
+
+const modeOptions = Stream(['login', 'register']);
+
+const loginForm = column([
+  editText(Stream(''), { placeholder: 'Email' }),
+  editText(Stream(''), { placeholder: 'Password' })
+]);
+
+const registerForm = column([
+  editText(Stream(''), { placeholder: 'Email' }),
+  editText(Stream(''), { placeholder: 'Username' }),
+  editText(Stream(''), { placeholder: 'Password' })
+]);
+
+const formSwitcher = derived(mode, m => m === 'login' ? loginForm : registerForm);
+
+const ui = column([
+  dropdownStream(mode, { choices: modeOptions }),
+  formSwitcher
+], { gap: '1rem' });
+```
+
+---
+
+## 🧠 Recap: Design Patterns in Use
+
+| Pattern                                           | Description                          |
+| ------------------------------------------------- | ------------------------------------ |
+| `derived` views                                   | Declarative logic for computed state |
+| `conditional`                                     | Controlled DOM insertion             |
+| `Stream` + `editableDropdown`                     | Controlled components                |
+| `column` / `row` layout                           | Reusable, themeable layout system    |
+| `showConfirmationDialog`                          | Modal interaction pattern            |
+| `toast`, `avatarDropdown`, `createDiagramOverlay` | High-level utilities for UI          |
+| `spacer()`                                        | Implicit layout tension / alignment  |
+
+---
+
+Would you like this published as:
+
+* A downloadable **Markdown or PDF**
+* A **GitHub page** with live examples
+* A **Jazira cookbook repo** with modules for each pattern?
+
+Let’s turn this into a reusable asset you can keep growing.

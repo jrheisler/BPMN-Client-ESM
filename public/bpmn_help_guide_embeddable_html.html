@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BPMN Help Guide</title>
+  <style>
+    .help-guide-content{
+      --radius:14px;
+      height:100%;
+      margin:0;
+      font:16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+      background:var(--bg);
+      color:var(--text);
+    }
+    .help-guide-content *{box-sizing:border-box}
+    .wrap{max-width:1100px;margin:0 auto;padding:32px 20px}
+    header{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;margin-bottom:20px}
+    h1{font-size:28px;margin:0;letter-spacing:0.3px}
+    .search{display:flex;gap:10px;align-items:center;width:100%;max-width:600px;background:var(--panel);padding:10px 14px;border-radius:var(--radius);border:1px solid var(--border)}
+    .search input{flex:1; background:transparent;border:0;outline:none;color:var(--text);font-size:15px}
+    .tagbar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 24px}
+    .chip{padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:var(--panel);color:var(--muted);cursor:pointer;font-size:12px}
+    .chip.active{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--text);border-color:transparent}
+
+    details.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:12px 0}
+    details.card[open]{background:var(--panel2);border-color:var(--border)}
+    summary{cursor:pointer;list-style:none;padding:16px 18px;display:flex;gap:12px;align-items:center}
+    summary::-webkit-details-marker{display:none}
+    .bullet{width:10px;height:10px;border-radius:3px;background:var(--accent)}
+    .title{font-weight:600}
+    .subtitle{color:var(--muted);font-size:13px}
+    .section{padding:0 20px 18px}
+    .grid{display:grid;gap:10px}
+    .grid.two{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    .box{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px}
+    h3{margin:16px 0 8px;font-size:16px}
+    h4{margin:14px 0 8px;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em}
+    ul{margin:8px 0 0 18px}
+    code{background:var(--panel2);border:1px solid var(--border);padding:2px 6px;border-radius:6px}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--border);color:var(--muted)}
+    .bad{color:var(--err)} .good{color:var(--ok)} .tip{color:var(--warn)}
+    footer{opacity:.65;margin-top:26px;font-size:13px}
+    a{color:var(--accent-2)}
+  </style>
+</head>
+  <body>
+    <div class="help-guide-content">
+      <div class="wrap">
+    <header>
+      <h1>🎯 BPMN Quick Help (for bpmn-js)</h1>
+      <div class="search" role="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"/></svg>
+        <input id="q" placeholder="Search topics (try: start, gateway, boundary, lanes, message)…" />
+      </div>
+      <div class="tagbar" id="tags"></div>
+    </header>
+
+    <!-- Cards will be injected here -->
+    <div id="cards"></div>
+    <footer>Orpheus' Fully BMPN 2 Compliant v5.0.0.1</footer>
+      </div>
+
+    </div>
+
+    <script>
+  // ---- Data Model ---------------------------------------------------------
+  const HELP = [
+    {
+      id: 'avatar-menu',
+      group: 'Menu',
+      title: 'Avatar Menu — Quick actions',
+      subtitle: 'Access diagram, version, add-on, and account options.',
+      tags: ['menu','diagrams','addons'],
+      blocks: [
+        { h3: 'Select or New Diagram', items: ['Choose an existing diagram or start a fresh one when beginning work.']},
+        { h3: 'Switch Version', items: ['Move between BPMN client versions to test compatibility or features.']},
+        { h3: 'Add AddOns', items: ['Enable extra tools only when you need additional functionality.']},
+        { h3: 'Import BPMN', items: ['Load a BPMN XML file when bringing in work from elsewhere.']},
+        { h3: 'Download XML', items: ['Export the current diagram as BPMN XML for sharing or backups.']},
+        { h3: 'Login/Logout', items: ['Sign in to sync diagrams or sign out to end your session.']}
+      ]
+    },
+    {
+      id: 'addons',
+      group: 'AddOns',
+      title: 'AddOns — Filter and manage extras',
+      subtitle: 'Toggle filters, refine types, and add features through the avatar menu.',
+      tags: ['addons','filters'],
+      blocks: [
+        { h3: 'Filter toggle', items: ['Show only elements with add-ons or reveal all items.']},
+        { h3: 'Select type / subtype', items: ['Pick an add-on type and optional subtype to narrow what is displayed.']},
+        { h3: 'Add AddOns (avatar menu)', items: ['Open the avatar menu → “Add AddOns” to attach tools and display the legend with counts if available.']}
+      ]
+    },
+    {
+      id: 'diagram-tree',
+      group: 'Navigation',
+      title: 'Diagram Tree — Navigate and edit elements',
+      subtitle: 'Toggle the tree, focus elements, and change their properties.',
+      tags: ['tree','properties','navigation'],
+      blocks: [
+        { h3: 'Toggle the tree', items: ['Show or hide the diagram tree to explore the process structure.']},
+        { h3: 'Select nodes', items: ['Click a node to center and highlight its diagram element.']},
+        { h3: 'Edit properties', items: ['Select a node and adjust its details in the properties panel.']}
+      ]
+    },
+    {
+      id: 'start',
+      group: 'Events',
+      title: 'StartEvent — Entry point of the process',
+      subtitle: 'Creates the first token in a process or event sub-process.',
+      tags: ['events','start','trigger','message','timer','signal','conditional','multiple','event sub-process'],
+      blocks: [
+        { h3: 'What it is', items: [
+          'Marks where a process (or event sub-process) begins and creates the first token.'
+        ]},
+        { h3: 'Valid types', items: [
+          '<b>Top-level</b>: None, Message, Timer, Conditional, Signal, Multiple.',
+          '<b>Event Sub-Process</b>: Message, Timer, Conditional, Signal, <b>Error</b> (interrupting only), Escalation, Multiple, Parallel Multiple (interrupting / non-interrupting).'
+        ]},
+        { h3: 'Quick menu (bpmn-js)', items: [
+          'Replace → switch start type or toggle interrupting in event sub-process.',
+          'Append Task / Gateway / EndEvent.',
+          'Connect with Sequence Flow, add Text Annotation.'
+        ]},
+        { h3: 'Common mistakes', items: [
+          'End-only types (e.g., Terminate, Compensation) are <span class="bad">not</span> StartEvents.',
+          'Error/Escalation Start are only available in an <b>Event Sub-Process</b>.'
+        ]}
+      ]
+    },
+    {
+      id: 'task',
+      group: 'Activities',
+      title: 'Task — A unit of work',
+      subtitle: 'A single manual or automated step performed within the process.',
+      tags: ['task','user task','service task','manual task','script','send','receive','business rule','call activity'],
+      blocks: [
+        { h3: 'Task types', items: [
+          'None (generic), <b>User</b>, <b>Manual</b>, <b>Service</b>, <b>Script</b>, <b>Send</b>, <b>Receive</b>, <b>Business Rule</b>, and <b>Call Activity</b> (reusable).'
+        ]},
+        { h3: 'Quick menu', items: [
+          'Replace → change task subtype.',
+          'Append Task / Gateway / Intermediate / End.',
+          'Connect via Sequence Flow; add Annotation.'
+        ]},
+        { h3: 'When to use which', items: [
+          '<b>User</b>: human action via UI/form. <b>Service</b>: API/system call. <b>Script</b>: inline logic. <b>Manual</b>: offline work. <b>Send/Receive</b>: messaging. <b>Business Rule</b>: DMN. <b>Call Activity</b>: reuse.'
+        ]},
+        { h3: 'Common mistakes', items: [
+          'Using None Task for everything — be explicit later for clarity.',
+          'Confusing Script vs Service: Script runs inside the engine; Service calls out.'
+        ]}
+      ]
+    },
+    {
+      id: 'end',
+      group: 'Events',
+      title: 'EndEvent — Where the process finishes',
+      subtitle: 'Consumes the token; multiple ends represent different outcomes.',
+      tags: ['events','end','message','signal','error','escalation','terminate','cancel','compensation','multiple'],
+      blocks: [
+        { h3: 'End types', items: [
+          'None, <b>Message</b>, <b>Signal</b>, <b>Error</b>, <b>Escalation</b>, <b>Terminate</b>, <b>Cancel</b> (for Transactions), <b>Compensation</b>, <b>Multiple</b>.'
+        ]},
+        { h3: 'Quick menu', items: [
+          'Replace → swap end type.',
+          'Append/Connect upstream elements; add Annotation.'
+        ]},
+        { h3: 'When to use which', items: [
+          'Message/Signal: notify others; Error: throw problem; Escalation: raise without killing all; Terminate: hard stop; Cancel/Compensation: transaction/rollback.'
+        ]},
+        { h3: 'Common mistakes', items: [
+          'Using Terminate casually (kills all tokens).',
+          'Expecting None End to notify others — use Message/Signal.'
+        ]}
+      ]
+    },
+
+    // Gateways
+    {
+      id: 'gw-xor',
+      group: 'Gateways',
+      title: 'Exclusive Gateway (XOR) — One path only',
+      subtitle: 'Chooses exactly one outgoing path based on conditions; merges any one incoming token.',
+      tags: ['gateway','exclusive','xor','decision'],
+      blocks: [
+        { h3: 'Quick menu', items: ['Replace to another gateway; append elements; set conditions on outgoing flows.']},
+        { h3: 'Use for', items: ['Mutually exclusive outcomes (approve vs reject).']},
+        { h3: 'Common mistakes', items: ['Forgetting conditions → default path always taken.', 'Expecting multiple branches — use Inclusive or Parallel.']}
+      ]
+    },
+    {
+      id: 'gw-and',
+      group: 'Gateways',
+      title: 'Parallel Gateway (AND) — All paths at once',
+      subtitle: 'Splits into all outgoing paths; merge waits for tokens from all active incoming paths.',
+      tags: ['gateway','parallel','and','synchronization'],
+      blocks: [
+        { h3: 'Use for', items: ['Run tasks in parallel; synchronize later.']},
+        { h3: 'Common mistakes', items: ['Using instead of XOR (when only one branch is needed).','Deadlock by joining paths that may never all arrive.']}
+      ]
+    },
+    {
+      id: 'gw-or',
+      group: 'Gateways',
+      title: 'Inclusive Gateway (OR) — One or more paths',
+      subtitle: 'Splits into one or more branches; merge waits for all <i>active</i> incoming tokens.',
+      tags: ['gateway','inclusive','or'],
+      blocks: [
+        { h3: 'Use for', items: ['When multiple conditions can be true simultaneously.']},
+        { h3: 'Common mistakes', items: ['Using XOR when more than one branch may apply.', 'Forgetting merge waits only for active paths.']}
+      ]
+    },
+    {
+      id: 'gw-event',
+      group: 'Gateways',
+      title: 'Event-Based Gateway — Wait for first event',
+      subtitle: 'Routes based on whichever event occurs first; only events may follow directly.',
+      tags: ['gateway','event-based','race','timer','message'],
+      blocks: [
+        { h3: 'Use for', items: ['Races like “Message or Timeout, whichever happens first.”']},
+        { h3: 'Common mistakes', items: ['Placing tasks directly after it (must be catching events).','Expecting multiple paths — only one wins.']}
+      ]
+    },
+    {
+      id: 'gw-complex',
+      group: 'Gateways',
+      title: 'Complex Gateway — Advanced synchronization',
+      subtitle: 'Custom split/join rules (e.g., 3 of 5 tokens). Rare; engine support varies.',
+      tags: ['gateway','complex','advanced'],
+      blocks: [
+        { h3: 'Use for', items: ['When no other gateway can model the rule.']},
+        { h3: 'Caution', items: ['Harder to read/maintain; avoid unless necessary.']}
+      ]
+    },
+
+    // Intermediate Events
+    {
+      id: 'ie',
+      group: 'Events',
+      title: 'Intermediate Events — Something happens mid-process',
+      subtitle: 'Catching events wait; throwing events send. Inline or attached to activity boundaries.',
+      tags: ['events','intermediate','message','timer','conditional','signal','link','escalation','compensation','boundary','interrupting'],
+      blocks: [
+        { h3: 'Catching', items: ['Message, Timer, Conditional, Signal, Link, Multiple, Parallel Multiple.']},
+        { h3: 'Throwing', items: ['Message, Escalation, Compensation, Signal, Link.']},
+        { h3: 'Boundary events', items: ['Attach to Task/Sub-Process. <b>Solid</b> outline = interrupting, <b>dashed</b> = non-interrupting. Common: Timer, Error, Message, Escalation, Signal, Conditional, Compensation.']},
+        { h3: 'Common mistakes', items: ['Using Start/End icons by accident; throws do not wait; overusing Link events.']}
+      ]
+    },
+
+    // Sub-Processes
+    {
+      id: 'subproc',
+      group: 'Activities',
+      title: 'Sub-Processes — Encapsulated parts of the process',
+      subtitle: 'Containers with their own internal flow; can be embedded, reusable, transactional, or event-triggered.',
+      tags: ['activities','sub-process','call activity','transaction','event sub-process','collapse','expand'],
+      blocks: [
+        { h3: 'Types', items: [
+          '<b>Embedded</b> (plus marker): internal flow; not reusable.',
+          '<b>Call Activity</b> (thick border): references reusable process/global task.',
+          '<b>Transaction</b> (double border): all-or-nothing unit; supports Cancel/Compensation.',
+          '<b>Event Sub-Process</b> (dashed): triggered by event; interrupting or non-interrupting.'
+        ]},
+        { h3: 'Quick menu', items: ['Replace type; Expand/Collapse; Append; Attach boundary events; Connect flows; Add annotation.']},
+        { h3: 'Common mistakes', items: ['Overusing embedded sub-processes; forgetting Cancel/Compensation on transactions; assuming event sub-process starts via sequence flow (it does not).']}
+      ]
+    },
+
+    // Artifacts
+    {
+      id: 'artifacts',
+      group: 'Artifacts',
+      title: 'Artifacts — Information and context helpers',
+      subtitle: 'Do not move tokens; clarify data, groupings, and notes.',
+      tags: ['artifacts','data object','data store','group','annotation','association'],
+      blocks: [
+        { h3: 'Data Object', items: ['Represents info used/produced; mark as input/output; connect via <b>Data Association</b> (dotted).']},
+        { h3: 'Data Store', items: ['Persistent storage (DB, repo); connect via Data Association.']},
+        { h3: 'Group', items: ['Dashed container for visual grouping only (no execution semantics).']},
+        { h3: 'Text Annotation', items: ['Bracket note with dotted association; explain rules/comments.']},
+        { h3: 'Common mistakes', items: ['Using Sequence Flow instead of Data Association; assuming Group changes execution.']}
+      ]
+    },
+
+    // Swimlanes
+    {
+      id: 'swim',
+      group: 'Collaboration',
+      title: 'Swimlanes — Who does the work',
+      subtitle: 'Pools represent participants; Lanes divide responsibility within a pool.',
+      tags: ['pools','lanes','message flow','sequence flow','responsibility'],
+      blocks: [
+        { h3: 'Pool', items: ['Separate participant; tokens do <b>not</b> cross; communicate with <b>Message Flow</b> (dashed). Can be a black box.']},
+        { h3: 'Lane', items: ['Subdivision for roles/teams/components; tokens still move with Sequence Flow within the pool; lanes can nest.']},
+        { h3: 'Message vs Sequence Flow', items: ['Sequence (solid) stays in pool; Message (dashed open arrow) crosses pools and does not carry tokens.']},
+        { h3: 'Common mistakes', items: ['Connecting pools with Sequence Flow; too many lanes; over-modeling externals — use black-box pools.']}
+      ]
+    },
+
+    // Wrap-up
+    {
+      id: 'wrap',
+      group: 'Guides',
+      title: 'BPMN — Putting it all together',
+      subtitle: 'Practical tips for clear, valid diagrams in bpmn-js.',
+      tags: ['best practices','how to','guide'],
+      blocks: [
+        { h3: 'Core building blocks', items: [
+          'Events (Start/Intermediate/End), Activities (Tasks & Sub-Processes), Gateways, Artifacts, Swimlanes.',
+          'Flows: <b>Sequence</b> (solid, carries token), <b>Message</b> (dashed, across pools), <b>Data Association</b> (dotted).'
+        ]},
+        { h3: 'Quick menu tips', items: ['Replace type; Append next element; Connect flows; Add Annotations.']},
+        { h3: 'Best practices', items: [
+          'Model left→right; label everything; use lanes only when responsibility matters; collapse sub-processes for readability; handle exceptions with boundary events/event sub-processes; document with artifacts.'
+        ]},
+        { h3: 'Pitfalls', items: ['Mixing Message vs Sequence flows; wrong gateway choice; missing conditions on outgoing flows; treating BPMN as code instead of a communication tool.']}
+      ]
+    },
+
+    // Toolbar
+    {
+      id: 'toolbar',
+      group: 'Toolbar',
+      title: 'Toolbar Controls — Run and view options',
+      subtitle: 'Quick access to simulation and diagram tools.',
+      tags: ['toolbar','controls'],
+      blocks: [
+        { h3: 'Buttons', items: [
+          '▶️ Play — start simulation.',
+          '⏸️ Pause — halt execution.',
+          '⏭️ Step — advance token.',
+          '➕ Zoom In / ➖ Zoom Out — adjust view.',
+          '🔳 Fit — center diagram.',
+          '🖼️ PNG — export image.',
+          '💾 Save — download BPMN.',
+          '🌲 Tree — toggle element tree.',
+          '❓ Help — open this guide.',
+          '🌓 Theme — switch light/dark.'
+        ]}
+      ]
+    },
+
+    {
+      id: 'simulation',
+      group: 'Simulation',
+      title: 'Simulation — Playback and tokens',
+      subtitle: 'Control execution and inspect token state.',
+      tags: ['simulation','tokens','blockchain'],
+      blocks: [
+        { h3: 'Playback controls', items: [
+          '▶️ Play — begin or resume execution.',
+          '⏸️ Pause — suspend running tokens.',
+          '⏭️ Step — advance a single move.'
+        ]},
+        { h3: 'Token List', items: [
+          'Open the token list to see all active tokens during a run.'
+        ]},
+        { h3: 'Blockchain Log', items: [
+          'Download the blockchain log to review recorded events.'
+        ]}
+      ]
+    }
+  ];
+
+  // ---- Rendering ----------------------------------------------------------
+  const cardsEl = document.getElementById('cards');
+  const tagsEl  = document.getElementById('tags');
+  const qEl     = document.getElementById('q');
+
+  const allTags = Array.from(new Set(HELP.flatMap(x=>x.tags))).sort((a,b)=>a.localeCompare(b));
+  const active = new Set();
+
+  function renderTags(){
+    tagsEl.innerHTML = '';
+    allTags.forEach(t=>{
+      const b = document.createElement('button');
+      b.className = 'chip'+(active.has(t)?' active':'');
+      b.textContent = t;
+      b.onclick = ()=>{ active.has(t) ? active.delete(t) : active.add(t); render(); };
+      tagsEl.appendChild(b);
+    });
+    if(active.size){
+      const clear = document.createElement('button');
+      clear.className = 'chip';
+      clear.textContent = 'clear filters';
+      clear.onclick = ()=>{ active.clear(); qEl.value=''; render(); };
+      tagsEl.appendChild(clear);
+    }
+  }
+
+  function cardTemplate(item){
+    const det = document.createElement('details');
+    det.className = 'card';
+    det.id = item.id;
+    const sum = document.createElement('summary');
+    sum.innerHTML = `<span class="bullet"></span><div><div class="title">${item.title}</div><div class="subtitle">${item.subtitle}</div></div>`;
+    det.appendChild(sum);
+
+    const sec = document.createElement('div');
+    sec.className = 'section';
+
+    // group label
+    const lab = document.createElement('div');
+    lab.style.cssText='font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin:0 0 6px 2px';
+    lab.textContent = item.group;
+    sec.appendChild(lab);
+
+    item.blocks.forEach(b=>{
+      const box = document.createElement('div');
+      box.className = 'box';
+      const h = document.createElement('h3');
+      h.innerHTML = b.h3; box.appendChild(h);
+      const ul = document.createElement('ul');
+      b.items.forEach(li=>{ const el = document.createElement('li'); el.innerHTML = li; ul.appendChild(el); });
+      box.appendChild(ul);
+      sec.appendChild(box);
+    });
+
+    // tag pills
+    const tagbox = document.createElement('div');
+    tagbox.style.marginTop = '10px';
+    item.tags.forEach(t=>{ const s = document.createElement('span'); s.className='pill'; s.textContent=t; s.style.marginRight='6px'; tagbox.appendChild(s);});
+    sec.appendChild(tagbox);
+
+    det.appendChild(sec);
+    return det;
+  }
+
+  function render(){
+    cardsEl.innerHTML='';
+    const q = qEl.value.trim().toLowerCase();
+
+    const filtered = HELP.filter(it=>{
+      const text = (it.title+' '+it.subtitle+' '+it.group+' '+it.tags.join(' ')+' '+it.blocks.flatMap(b=>b.items).join(' ')).toLowerCase();
+      const matchesQ = !q || text.includes(q);
+      const matchesTags = !active.size || it.tags.some(t=>active.has(t));
+      return matchesQ && matchesTags;
+    });
+
+    filtered.forEach(it=> cardsEl.appendChild(cardTemplate(it)));
+
+    // auto-open first match on typed search
+    if(q && filtered.length){ filtered[0].__openOnce || (document.getElementById(filtered[0].id).open = true, filtered[0].__openOnce=true); }
+  }
+
+  qEl.addEventListener('input', render);
+
+  renderTags();
+  render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flow Control Center</title>
+
+  <!-- 1) Core BPMN + diagram-js CSS -->
+  <link rel="stylesheet"
+        href="https://unpkg.com/bpmn-js@18.6.2/dist/assets/bpmn-js.css" />
+  <link rel="stylesheet"
+        href="https://unpkg.com/bpmn-js@18.6.2/dist/assets/diagram-js.css" />
+
+  <!-- 2) BPMN icon font (palette icons) -->
+  <link rel="stylesheet"
+        href="https://unpkg.com/bpmn-js@18.6.2/dist/assets/bpmn-font/css/bpmn.css" />
+
+  <link rel="stylesheet" href="css/app.css" />
+
+
+
+  <style>
+  html, body, #canvas, #palette {
+    height: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
+  html, body {
+    overflow: hidden;
+    width: 100%;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #canvas {
+    touch-action: none;
+    overflow: hidden;
+  }
+
+  #canvas .djs-container,
+  #canvas .djs-container svg {
+    touch-action: none;
+    overflow: hidden;
+  }
+
+  #diagram-wrapper {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+
+  /* properties sidebar */
+  .props-sidebar {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    height: 100%;
+    background: #fff;
+    box-shadow: -2px 0 6px rgba(0,0,0,0.2);
+    padding: 1rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s;
+    z-index: 1100;
+    width: 420px;
+    max-width: 90vw;
+    resize: horizontal;
+  }
+
+  .props-sidebar.open {
+    right: 0;
+  }
+
+  .props-sidebar textarea {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  @media (max-width: 1024px) {
+    .props-sidebar {
+      width: 80vw;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .props-sidebar {
+      width: 100vw;
+    }
+  }
+
+  /* highlight currently active BPMN element during simulation */
+  .djs-element.active .djs-visual > :nth-child(1) {
+    stroke: #ff5722;
+    stroke-width: 4px;
+  }
+
+  /* highlight active sequence flows */
+  .djs-connection.active .djs-visual > :nth-child(1) {
+    stroke: #ff5722;
+    stroke-width: 4px;
+  }
+
+  /* mobile palette toggle */
+  #toggle-palette {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    #palette {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 70%;
+      max-width: 300px;
+      overflow-y: auto;
+      background: #fff;
+      z-index: 1000;
+    }
+
+    #palette.open {
+      display: block;
+    }
+
+    #toggle-palette {
+      display: block;
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 1100;
+    }
+  }
+  </style>
+
+</head>
+
+<body>
+  <!-- Jazira toolbar will be injected here -->
+  <button id="toggle-palette" aria-label="Toggle palette">Tools</button>
+  <!-- Palette + canvas wrapper -->
+  <div id="diagram-wrapper" style="display:flex; flex:1; overflow:hidden">
+    <div id="palette"></div>
+    <div id="canvas"></div>
+  </div>
+
+  <div id="help-guide" hidden>
+    <button id="help-guide-close" aria-label="Close">&times;</button>
+    <iframe src="bpmn_help_guide_embeddable_html.html"></iframe>
+  </div>
+
+  <!-- 3) Modeler UMD bundle (this defines window.BpmnJS) -->
+  <script src="https://unpkg.com/bpmn-js@18.6.2/dist/bpmn-modeler.development.js"></script>
+  <!-- 4) auto-layout + navigator -->
+  <script src="https://unpkg.com/bpmn-auto-layout@0.4.0/dist/bpmn-auto-layout.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@bpmn-io/navigator@1.0.0/dist/bpmn-navigator.umd.js"></script>
+  <!-- Firebase Core + Auth (10.12.0) -->
+  <!-- Firebase App (always required) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+
+  <!-- Firebase Auth -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+  <!-- Firebase Firestore (optional) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+
+  <!-- DOMPurify for sanitizing HTML -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.2/dist/purify.min.js"></script>
+
+  <!-- 5) Your Jazira core -->
+  <script src="js/core/stream.js"></script>
+  <script src="js/core/theme.js"></script>
+  <script src="js/core/simulation.js"></script>
+  <script src="js/components/elements.js"></script>
+  <script src="js/components/layout.js"></script>
+  <script src="js/components/modal.js"></script>
+  <script src="js/components/diagramTree.js"></script>
+  <script src="js/components/showProperties.js"></script>
+  <script src="js/components/addOnFilter.js"></script>
+    <script src="js/components/addOnLegend.js"></script>
+    <script src="js/components/tokenListPanel.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-sha256@0.11.0/build/sha256.min.js"></script>
+  <script src="js/blockchain.js"></script>
+  <!-- 6) Your application code -->
+  <script src="js/firebase.js"></script>
+  <script src="js/addOnStore.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "bpmn-js/": "https://unpkg.com/bpmn-js@18.6.2/",
+      "diagram-js/": "https://unpkg.com/diagram-js@15.3.0/",
+      "diagram-js-direct-editing/": "https://unpkg.com/diagram-js-direct-editing@3.2.0/",
+      "bpmn-moddle": "https://unpkg.com/bpmn-moddle@9.0.2/dist/index.js",
+      "moddle": "https://unpkg.com/moddle@7.2.0/dist/index.js",
+      "moddle-xml": "https://unpkg.com/moddle-xml@11.0.0/dist/index.js",
+      "saxen": "https://unpkg.com/saxen@10.0.0/dist/index.js",
+      "min-dash": "https://unpkg.com/min-dash@4.2.3/dist/index.esm.js",
+      "min-dom": "https://unpkg.com/min-dom@4.2.1/dist/index.esm.js",
+      "tiny-svg": "https://unpkg.com/tiny-svg@3.1.3/dist/index.esm.js",
+      "inherits-browser": "https://unpkg.com/inherits-browser@0.1.0/dist/index.es.js",
+      "object-refs": "https://unpkg.com/object-refs@0.4.0/dist/index.js",
+      "path-intersection": "https://unpkg.com/path-intersection@3.1.0/intersect.js",
+      "didi": "https://unpkg.com/didi@10.2.2/dist/index.js",
+      "clsx": "https://unpkg.com/clsx@2.1.1/dist/clsx.mjs",
+      "@bpmn-io/diagram-js-ui/": "https://unpkg.com/@bpmn-io/diagram-js-ui@0.2.3/lib/",
+      "htm": "https://unpkg.com/htm@3.1.1/dist/htm.module.js",
+      "preact": "https://unpkg.com/preact@10.26.9/dist/preact.module.js"
+    }
+  }
+  </script>
+  <script type="module" src="js/app.js"></script>
+  <script src="js/login.js"></script>
+  <script src="js/palette-toggle.js"></script>
+  <!-- 7) more to come -->
+
+</body>
+</html>

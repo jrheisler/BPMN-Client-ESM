@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  id="Definitions_Delivery" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Delivery_Process" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_Delivery"/>
+    <bpmn:exclusiveGateway id="Gateway_DeliveryCheck"/>
+    <bpmn:task id="Task_DeliverySuccess"/>
+    <bpmn:task id="Task_Dispute"/>
+    <bpmn:task id="Task_Investigate"/>
+    <bpmn:endEvent id="EndEvent"/>
+    <bpmn:sequenceFlow id="Flow_Start_Gateway" sourceRef="StartEvent_Delivery" targetRef="Gateway_DeliveryCheck"/>
+    <bpmn:sequenceFlow id="Flow_Success" sourceRef="Gateway_DeliveryCheck" targetRef="Task_DeliverySuccess">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${deliveryStatus === 'successful'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Dispute" sourceRef="Gateway_DeliveryCheck" targetRef="Task_Dispute">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${deliveryStatus === 'disputed'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Other" sourceRef="Gateway_DeliveryCheck" targetRef="Task_Investigate">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${deliveryStatus !== 'successful' &amp;&amp; deliveryStatus !== 'disputed'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Success_End" sourceRef="Task_DeliverySuccess" targetRef="EndEvent"/>
+    <bpmn:sequenceFlow id="Flow_Dispute_End" sourceRef="Task_Dispute" targetRef="EndEvent"/>
+    <bpmn:sequenceFlow id="Flow_Other_End" sourceRef="Task_Investigate" targetRef="EndEvent"/>
+  </bpmn:process>
+</bpmn:definitions>

@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>List / Orpheus → BPMN (with DI)</title>
+  <style>
+    :root{--bg:#0b1020;--panel:#121935;--muted:#98a2b3;--text:#e6e8ee;--accent:#7c9bff;--accent-2:#6ce5b3;--danger:#ff7a7a}
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%}
+    body{font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .wrap{max-width:980px;margin:40px auto;padding:0 20px}
+    h1{font-weight:700;letter-spacing:.2px;margin:0 0 8px}
+    p.sub{margin:0 0 18px;color:var(--muted)}
+    .card{background:linear-gradient(180deg,var(--panel),#0c1440);border:1px solid #1d2a5a;border-radius:16px;padding:18px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .btn{appearance:none;border:0;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer;background:linear-gradient(180deg,var(--accent),#4b6bff);color:#07112e;box-shadow:0 8px 24px rgba(124,155,255,.2)}
+    .btn:hover{transform:translateY(-1px)}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .ghost{background:transparent;border:1px dashed #2a3a7a;color:var(--text)}
+    .pill{border:1px solid #2b3b7a;border-radius:999px;padding:6px 10px}
+    textarea{width:100%;min-height:200px;border-radius:12px;border:1px solid #1d2a5a;background:#0b1338;color:var(--text);padding:12px}
+    .meta{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);margin-top:10px}
+    .preview{margin-top:14px;background:#0b1338;border:1px solid #1a275e;border-radius:12px;padding:12px;max-height:240px;overflow:auto;white-space:pre-wrap}
+    .status{margin-top:12px;font-size:14px}
+    .status.ok{color:var(--accent-2)}
+    .status.err{color:var(--danger)}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>List / Orpheus → BPMN</h1>
+    <p class="sub">Convert either an <strong>Orpheus JSON</strong> file or a <strong>numbered list</strong> into BPMN 2.0 XML with <strong>BPMN‑DI</strong> (diagram shapes & edges) so it renders in Camunda Modeler / bpmn‑js.</p>
+
+    <div class="card">
+      <div class="row" style="margin-bottom:10px">
+        <button id="btnImportJson" class="btn">Import JSON</button>
+        <button id="btnConvertList" class="btn ghost">Convert Pasted List</button>
+        <button id="btnDownloadAgain" class="btn ghost" disabled>Download Again</button>
+        <input id="file" type="file" accept=".json,application/json" class="sr-only" />
+        <span class="pill" id="modePill">Mode: —</span>
+      </div>
+      <textarea id="taList" placeholder="Paste a structured list here (e.g. \n1.1 Do thing (12345)\n1.1.1 Child step (23456)\n…)"></textarea>
+      <div class="meta" id="meta"></div>
+      <div class="preview" id="preview" hidden></div>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+    </div>
+
+    <p class="sub">Tip: Drag & drop a <code>.json</code> file anywhere on the card to convert it.</p>
+    <p class="sub">Everything runs client‑side. No uploads.</p>
+  </div>
+
+  <script>
+  "use strict";
+
+  // ===== Utilities =====
+  const esc = (s = '') => String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+  const idPart = (s = '') => String(s).replace(/\./g, '_').replace(/[^\w]/g, '');
+  const parseStep = (s='') => s.split('.').filter(Boolean).map(n => parseInt(n, 10) || 0);
+
+  // Simple grid layout
+  const COL_W = 240, ROW_H = 110, MARGIN_X = 40, MARGIN_Y = 40;
+  const SIZE = { startEvent:[36,36], endEvent:[36,36], task:[140,80], exclusiveGateway:[50,50] };
+
+  function waypointPath(src, tgt){
+    const [sw, sh] = src.size, [tw, th] = tgt.size;
+    const sx = src.x + sw; const sy = src.y + sh/2;
+    const tx = tgt.x;     const ty = tgt.y + th/2;
+    const midX = (sx + tx)/2;
+    return [ [sx,sy], [midX,sy], [midX,ty], [tx,ty] ];
+  }
+
+  // ===== Orpheus JSON → BPMN+DI =====
+  function orpheusJsonToBpmnDi(input){
+    const data = typeof input === 'string' ? JSON.parse(input) : input;
+    const procs = Array.isArray(data.processes) ? data.processes : [];
+
+    const typeFrom = (p) => {
+      const pt = String(p.processType||'').toLowerCase();
+      if (/stop\s*terminator/.test(pt)) return 'endEvent';
+      if (/decision/.test(pt)) return 'exclusiveGateway';
+      return 'task';
+    };
+
+    // Build nodes
+    const nodesByStep = new Map();
+    const nodes = [];
+    for (const p of procs){
+      const step = String(p.processStep||'').trim();
+      if (!step) continue;
+      const type = typeFrom(p);
+      const id = `${type==='task'?'Activity':type==='exclusiveGateway'?'Gateway':type==='endEvent'?'EndEvent':'StartEvent'}_${idPart(step)}`;
+      const name = `${step} ${p.name||''}`.trim();
+      const node = { id, type, name, step, incoming:[], outgoing:[], x:0,y:0,size: SIZE[type]||SIZE.task };
+      nodesByStep.set(step, node); nodes.push(node);
+    }
+
+    // Build flows from p.arrows like "1.002|JOIN^1.001.001|PASS^"
+    const flows = [];
+    for (const p of procs){
+      const srcStep = String(p.processStep||'').trim();
+      if (!srcStep || !nodesByStep.has(srcStep)) continue;
+      const srcNode = nodesByStep.get(srcStep);
+      const chunks = String(p.arrows||'').split('^');
+      const seen = new Set();
+      for (const ch of chunks){
+        const s = ch.trim(); if (!s) continue;
+        const [tRaw,labelRaw] = s.split('|');
+        const tgtStep = String(tRaw||'').trim();
+        if (!tgtStep || seen.has(tgtStep)) continue; seen.add(tgtStep);
+        const tgtNode = nodesByStep.get(tgtStep); if (!tgtNode) continue;
+        const id = `Flow_${idPart(srcStep)}__${idPart(tgtStep)}`;
+        flows.push({ id, sourceRef: srcNode.id, targetRef: tgtNode.id, name: (labelRaw||'').trim()||undefined });
+        srcNode.outgoing.push(id); tgtNode.incoming.push(id);
+      }
+    }
+
+    // Synthetic Start/End if missing
+    const starters = nodes.filter(n => n.incoming.length===0);
+    let startNode = null;
+    if (starters.length){
+      startNode = { id:'StartEvent_1', type:'startEvent', name:'Start', incoming:[], outgoing:[], x:0,y:0,size:SIZE.startEvent };
+      nodes.unshift(startNode);
+      for (const n of starters){
+        const id = `Flow_start__${n.id}`;
+        flows.unshift({ id, sourceRef:startNode.id, targetRef:n.id });
+        startNode.outgoing.push(id); n.incoming.push(id);
+      }
+    }
+    const enders = nodes.filter(n => n.type!=='endEvent' && n.outgoing.length===0);
+    let endNode = null;
+    if (enders.length){
+      endNode = { id:'EndEvent_1', type:'endEvent', name:'End', incoming:[], outgoing:[], x:0,y:0,size:SIZE.endEvent };
+      nodes.push(endNode);
+      for (const n of enders){
+        const id = `Flow_${n.id}__end`;
+        flows.push({ id, sourceRef:n.id, targetRef:endNode.id });
+        n.outgoing.push(id); endNode.incoming.push(id);
+      }
+    }
+
+    // Layout: column = depth, row = order by numeric step
+    const ordered = nodes.filter(n=>n.step).sort((a,b)=>{
+      const A=parseStep(a.step), B=parseStep(b.step);
+      for(let i=0;i<Math.max(A.length,B.length);i++){ const da=A[i]||0, db=B[i]||0; if(da!==db) return da-db; }
+      return 0;
+    });
+    const withSynthetic = [];
+    if (startNode) withSynthetic.push(startNode);
+    withSynthetic.push(...ordered);
+    if (endNode) withSynthetic.push(endNode);
+
+    let row=0;
+    for (const n of withSynthetic){
+      const depth = n.step ? n.step.split('.').length : (n.type==='endEvent'? (Math.max(2, ...ordered.map(o=>o.step.split('.').length))) : 1);
+      const [w,h] = n.size;
+      n.x = MARGIN_X + (depth-1)*COL_W;
+      n.y = MARGIN_Y + (row++)*ROW_H;
+      n.size = [w,h];
+    }
+
+    // Build XML pieces
+    const defsId = `Definitions_${idPart(data.id||'Orpheus')}`;
+    const procId = `Process_${idPart(data.id||'Orpheus')}`;
+
+    const nodeXml = (n) => {
+      const incoming = n.incoming.map(i=>`<bpmn:incoming>${esc(i)}</bpmn:incoming>`).join('');
+      const outgoing = n.outgoing.map(o=>`<bpmn:outgoing>${esc(o)}</bpmn:outgoing>`).join('');
+      if (n.type==='startEvent') return `<bpmn:startEvent id="${esc(n.id)}" name="${esc(n.name)}">${outgoing}</bpmn:startEvent>`;
+      if (n.type==='endEvent') return `<bpmn:endEvent id="${esc(n.id)}" name="${esc(n.name)}">${incoming}</bpmn:endEvent>`;
+      if (n.type==='exclusiveGateway') return `<bpmn:exclusiveGateway id="${esc(n.id)}" name="${esc(n.name)}">${incoming}${outgoing}</bpmn:exclusiveGateway>`;
+      return `<bpmn:task id="${esc(n.id)}" name="${esc(n.name)}">${incoming}${outgoing}</bpmn:task>`;
+    };
+    const flowXml = (f) => `<bpmn:sequenceFlow id="${esc(f.id)}" sourceRef="${esc(f.sourceRef)}" targetRef="${esc(f.targetRef)}"${f.name?` name="${esc(f.name)}"`:''}/>`;
+
+    // DI: shapes and edges
+    const shapeXml = (n) => {
+      const [w,h] = n.size; return `<bpmndi:BPMNShape id="DI_${esc(n.id)}" bpmnElement="${esc(n.id)}"><dc:Bounds x="${n.x}" y="${n.y}" width="${w}" height="${h}"/></bpmndi:BPMNShape>`;
+    };
+    const edgeXml = (f) => {
+      const src = nodes.find(n=>n.id===f.sourceRef), tgt = nodes.find(n=>n.id===f.targetRef);
+      if(!src||!tgt){ return `<bpmndi:BPMNEdge id="DI_${esc(f.id)}" bpmnElement="${esc(f.id)}"/>`; }
+      const pts = waypointPath(src,tgt).map(([x,y])=>`<di:waypoint x="${x}" y="${y}"/>`).join('');
+      return `<bpmndi:BPMNEdge id="DI_${esc(f.id)}" bpmnElement="${esc(f.id)}">${pts}</bpmndi:BPMNEdge>`;
+    };
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n`+
+`<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="${esc(defsId)}">\n`+
+`  <bpmn:process id="${esc(procId)}" isExecutable="true">\n`+
+`    ${withSynthetic.map(nodeXml).join('\n    ')}\n`+
+`    ${flows.map(flowXml).join('\n    ')}\n`+
+`  </bpmn:process>\n`+
+`  <bpmndi:BPMNDiagram id="BPMNDiagram_1">\n`+
+`    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="${esc(procId)}">\n`+
+`      ${withSynthetic.map(shapeXml).join('\n      ')}\n`+
+`      ${flows.map(edgeXml).join('\n      ')}\n`+
+`    </bpmndi:BPMNPlane>\n`+
+`  </bpmndi:BPMNDiagram>\n`+
+`</bpmn:definitions>`;
+
+    return xml;
+  }
+
+  // ===== Numbered List → BPMN+DI =====
+  function listTextToBpmnDi(text){
+    const lines = String(text).split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+    const rx = /^(\d+(?:\.\d+)*)\s+(.+?)(?:\s*\(([^()]+)\))?$/; // step, title, optional code
+
+    const items = [];
+    for (const line of lines){
+      const m = line.match(rx); if(!m) continue;
+      const step = m[1]; const title = m[2]; const code = m[3]||'';
+      items.push({ step, title, code });
+    }
+    if (!items.length) throw new Error('No list items matched the expected pattern.');
+
+    // Sort numerically by step
+    items.sort((a,b)=>{
+      const A=parseStep(a.step), B=parseStep(b.step);
+      for(let i=0;i<Math.max(A.length,B.length);i++){ const da=A[i]||0, db=B[i]||0; if(da!==db) return da-db; } return 0; });
+
+    // Build nodes
+    const nodes = [];
+    for (const it of items){
+      const id = `Activity_${idPart(it.step)}`;
+      const name = `${it.step} ${it.title}${it.code?` (${it.code})`:''}`;
+      nodes.push({ id, type:'task', name, step:it.step, incoming:[], outgoing:[], x:0,y:0,size:SIZE.task });
+    }
+
+    // Synthetic Start/End + sequential flows in DFS-like order (already sorted)
+    const start = { id:'StartEvent_1', type:'startEvent', name:'Start', incoming:[], outgoing:[], x:0,y:0,size:SIZE.startEvent };
+    const end   = { id:'EndEvent_1',   type:'endEvent',   name:'End',   incoming:[], outgoing:[], x:0,y:0,size:SIZE.endEvent };
+
+    const flows = [];
+    // Start to first
+    flows.push({ id:`Flow_start__${nodes[0].id}`, sourceRef:start.id, targetRef:nodes[0].id });
+    start.outgoing.push(`Flow_start__${nodes[0].id}`); nodes[0].incoming.push(`Flow_start__${nodes[0].id}`);
+    // Chain
+    for (let i=0;i<nodes.length-1;i++){
+      const fId = `Flow_${nodes[i].id}__${nodes[i+1].id}`;
+      flows.push({ id:fId, sourceRef:nodes[i].id, targetRef:nodes[i+1].id });
+      nodes[i].outgoing.push(fId); nodes[i+1].incoming.push(fId);
+    }
+    // Last to End
+    const last = nodes[nodes.length-1];
+    flows.push({ id:`Flow_${last.id}__end`, sourceRef:last.id, targetRef:end.id });
+    last.outgoing.push(`Flow_${last.id}__end`); end.incoming.push(`Flow_${last.id}__end`);
+
+    // Layout: column by depth, row by sorted index
+    const all = [start, ...nodes, end];
+    let row=0;
+    for (const n of all){
+      const depth = n.step ? n.step.split('.').length : (n.type==='endEvent'? (Math.max(2, ...nodes.map(o=>o.step.split('.').length))) : 1);
+      const [w,h] = n.size;
+      n.x = MARGIN_X + (depth-1)*COL_W;
+      n.y = MARGIN_Y + (row++)*ROW_H;
+      n.size = [w,h];
+    }
+
+    const nodeXml = (n) => {
+      const incoming = n.incoming.map(i=>`<bpmn:incoming>${esc(i)}</bpmn:incoming>`).join('');
+      const outgoing = n.outgoing.map(o=>`<bpmn:outgoing>${esc(o)}</bpmn:outgoing>`).join('');
+      if (n.type==='startEvent') return `<bpmn:startEvent id="${esc(n.id)}" name="${esc(n.name)}">${outgoing}</bpmn:startEvent>`;
+      if (n.type==='endEvent') return `<bpmn:endEvent id="${esc(n.id)}" name="${esc(n.name)}">${incoming}</bpmn:endEvent>`;
+      return `<bpmn:task id="${esc(n.id)}" name="${esc(n.name)}">${incoming}${outgoing}</bpmn:task>`;
+    };
+    const flowXml = (f) => `<bpmn:sequenceFlow id="${esc(f.id)}" sourceRef="${esc(f.sourceRef)}" targetRef="${esc(f.targetRef)}"/>`;
+
+    const defsId = 'Definitions_ListToBPMN';
+    const procId = 'Process_ListToBPMN';
+
+    const shapeXml = (n) => { const [w,h]=n.size; return `<bpmndi:BPMNShape id="DI_${esc(n.id)}" bpmnElement="${esc(n.id)}"><dc:Bounds x="${n.x}" y="${n.y}" width="${w}" height="${h}"/></bpmndi:BPMNShape>`; };
+    const edgeXml = (f) => { const src=all.find(n=>n.id===f.sourceRef), tgt=all.find(n=>n.id===f.targetRef); const pts=waypointPath(src,tgt).map(([x,y])=>`<di:waypoint x="${x}" y="${y}"/>`).join(''); return `<bpmndi:BPMNEdge id="DI_${esc(f.id)}" bpmnElement="${esc(f.id)}">${pts}</bpmndi:BPMNEdge>`; };
+
+    const xml = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n`+
+`<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" xmlns:bpmndi=\"http://www.omg.org/spec/BPMN/20100524/DI\" xmlns:dc=\"http://www.omg.org/spec/DD/20100524/DC\" xmlns:di=\"http://www.omg.org/spec/DD/20100524/DI\" id=\"${defsId}\">\n`+
+`  <bpmn:process id=\"${procId}\" isExecutable=\"true\">\n`+
+`    ${all.map(nodeXml).join('\n    ')}\n`+
+`    ${flows.map(flowXml).join('\n    ')}\n`+
+`  </bpmn:process>\n`+
+`  <bpmndi:BPMNDiagram id=\"BPMNDiagram_1\">\n`+
+`    <bpmndi:BPMNPlane id=\"BPMNPlane_1\" bpmnElement=\"${procId}\">\n`+
+`      ${all.map(shapeXml).join('\n      ')}\n`+
+`      ${flows.map(edgeXml).join('\n      ')}\n`+
+`    </bpmndi:BPMNPlane>\n`+
+`  </bpmndi:BPMNDiagram>\n`+
+`</bpmn:definitions>`;
+
+    return xml;
+  }
+
+  // ===== UI glue =====
+  const elFile = document.getElementById('file');
+  const btnImportJson = document.getElementById('btnImportJson');
+  const btnConvertList = document.getElementById('btnConvertList');
+  const btnDownloadAgain = document.getElementById('btnDownloadAgain');
+  const elMeta = document.getElementById('meta');
+  const elPreview = document.getElementById('preview');
+  const elStatus = document.getElementById('status');
+  const elMode = document.getElementById('modePill');
+  const elTa = document.getElementById('taList');
+
+  let lastBlobUrl=null, lastFileName='diagram.bpmn';
+
+  function setMode(s){ elMode.textContent = 'Mode: ' + s; }
+  function setStatus(msg, kind){ elStatus.textContent=msg; elStatus.className='status'+(kind?' '+kind:''); }
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;'); }
+
+  function downloadBlob(xml, name='diagram.bpmn'){
+    if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
+    const blob = new Blob([xml], { type:'application/xml' });
+    const url = URL.createObjectURL(blob); lastBlobUrl=url; lastFileName=name;
+    const a = document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  function showMeta(inputName, inputSize, xml){
+    const xmlKb = (new Blob([xml]).size/1024).toFixed(1);
+    elMeta.innerHTML = `<span class=\"pill\">Input: ${escapeHtml(inputName)} · ${(inputSize/1024).toFixed(1)} KB</span>`+
+                       `<span class=\"pill\">Output: ${escapeHtml(lastFileName)} · ${xmlKb} KB</span>`;
+  }
+  function showPreview(xml){ elPreview.hidden=false; elPreview.textContent = xml.slice(0, 2000); }
+
+  // File (JSON)
+  btnImportJson.addEventListener('click', ()=>{ setMode('Orpheus JSON'); document.getElementById('file').click(); });
+  elFile.addEventListener('change', async (e)=>{
+    const f = e.target.files && e.target.files[0]; if(!f) return;
+    try{
+      setStatus(`Reading "${f.name}" …`);
+      const txt = await f.text();
+      setStatus('Converting to BPMN + DI …');
+      const xml = orpheusJsonToBpmnDi(txt);
+      const outName = (f.name||'diagram.json').replace(/\.[^.]*$/, '') + '.bpmn';
+      downloadBlob(xml, outName);
+      showMeta(f.name, f.size, xml); showPreview(xml);
+      setStatus('Done. File downloaded.', 'ok'); btnDownloadAgain.disabled=false;
+    }catch(err){ console.error(err); setStatus('Failed: '+(err?.message||err), 'err'); btnDownloadAgain.disabled=true; }
+  });
+
+  // Drag & drop JSON
+  ;(() => {
+    const card = document.querySelector('.card');
+    ['dragenter','dragover'].forEach(ev => card.addEventListener(ev, e=>{ e.preventDefault(); e.stopPropagation(); card.style.outline='2px dashed #2a3a7a'; setMode('Orpheus JSON'); }));
+    ['dragleave','drop'].forEach(ev => card.addEventListener(ev, e=>{ e.preventDefault(); e.stopPropagation(); card.style.outline='none'; }));
+    card.addEventListener('drop', async e => { const files = e.dataTransfer.files; if (files && files[0]) { elFile.files = files; elFile.dispatchEvent(new Event('change')); } });
+  })();
+
+  // List conversion
+  btnConvertList.addEventListener('click', ()=>{
+    try{
+      setMode('Structured List');
+      const txt = elTa.value || '';
+      if (!txt.trim()) { setStatus('Paste your numbered list first.', 'err'); return; }
+      setStatus('Converting list to BPMN + DI …');
+      const xml = listTextToBpmnDi(txt);
+      downloadBlob(xml, 'list-diagram.bpmn');
+      showMeta('pasted-list.txt', new Blob([txt]).size, xml); showPreview(xml);
+      setStatus('Done. File downloaded.', 'ok'); btnDownloadAgain.disabled=false;
+    }catch(err){ console.error(err); setStatus('Failed: '+(err?.message||err), 'err'); btnDownloadAgain.disabled=true; }
+  });
+
+  btnDownloadAgain.addEventListener('click', ()=>{ if(lastBlobUrl){ const a=document.createElement('a'); a.href=lastBlobUrl; a.download=lastFileName; a.click(); }});
+
+  </script>
+</body>
+</html>
