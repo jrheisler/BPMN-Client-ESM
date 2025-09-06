@@ -1,13 +1,16 @@
-const { test } = require('node:test');
-const assert = require('assert');
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
-const BpmnModdle = require('bpmn-moddle');
-const customModdle = require('../public/js/custom-moddle.json');
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import vm from 'node:vm';
+import BpmnModdle from 'bpmn-moddle';
+import customModdle from '../public/js/custom-moddle.json' assert { type: 'json' };
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function loadCollectData() {
-  const file = fs.readFileSync(path.resolve(__dirname, '../public/js/components/raciMatrix.js'), 'utf8');
+  const file = fs.readFileSync(resolve(__dirname, '../public/js/components/raciMatrix.js'), 'utf8');
   const patched = file.replace('global.raciMatrix = {', 'global.raciMatrix = { collectData,');
   const sandbox = { window: {} };
   vm.runInNewContext(patched, sandbox);

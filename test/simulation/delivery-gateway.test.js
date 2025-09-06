@@ -1,6 +1,6 @@
-const { test } = require('node:test');
-const assert = require('assert');
-const { createSimulationInstance } = require('../helpers/simulation.cjs');
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createSimulationInstance } from '../helpers/simulation.js';
 
 function buildDeliveryCheckDiagram() {
   const start = { id: 'start', type: 'bpmn:StartEvent', outgoing: [], incoming: [], businessObject: { $type: 'bpmn:StartEvent' } };

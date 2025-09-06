@@ -1,7 +1,7 @@
-const { test } = require('node:test');
-const assert = require('assert');
-const BpmnModdle = require('bpmn-moddle');
-const customModdle = require('../public/js/custom-moddle.json');
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import BpmnModdle from 'bpmn-moddle';
+import customModdle from '../public/js/custom-moddle.json' assert { type: 'json' };
 
 test('RACI attributes persist through serialization', async () => {
   const moddle = new BpmnModdle({ custom: customModdle });
