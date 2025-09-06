@@ -539,9 +539,6 @@ export function showProperties(element, modeling, moddle) {
       const props = {};
       const standardKeys = BPMN_PROPERTY_MAP[bo.$type] || [];
       const arrayKeys = ['variables', 'inputMappings', 'outputMappings'];
-
-      bo.$attrs = bo.$attrs || {};
-
       standardKeys.forEach(key => {
         const val = data.get(key);
         if (val !== null && !arrayKeys.includes(key) && key !== 'conditionExpression') {
@@ -555,7 +552,7 @@ export function showProperties(element, modeling, moddle) {
       modeling.updateProperties(element, props);
 
       const raciKeys = RACI_FIELDS;
-      bo.$attrs = bo.$attrs || {};
+      const attrs = bo.$attrs;
       let raciEl = (bo.extensionElements?.values || []).find(v => v.$type === 'custom:Raci');
       if (!raciEl) {
         const extEl = getOrCreateExtEl(bo, moddle);
@@ -565,10 +562,10 @@ export function showProperties(element, modeling, moddle) {
       raciKeys.forEach(k => {
         const v = data.get(k) || '';
         if (v) {
-          bo.$attrs[k] = v;
+          attrs[k] = v;
           raciEl[k] = v;
         } else {
-          delete bo.$attrs[k];
+          delete attrs[k];
           delete raciEl[k];
         }
       });
