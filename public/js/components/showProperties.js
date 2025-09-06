@@ -299,6 +299,7 @@ function openUrlModal(url) {
 
 export function showProperties(element, modeling, moddle) {
   const bo = element.businessObject;
+  const attrs = bo.$attrs;
   const type = element.businessObject.$type;
   const fieldKeys = BPMN_PROPERTY_MAP[type] || [];
 
@@ -335,7 +336,7 @@ export function showProperties(element, modeling, moddle) {
   addOnsField.value = '';
 
   // Load existing addOns value from element
-  let existingVal = bo?.$attrs?.addOns || bo.addOns;
+  let existingVal = attrs?.addOns || bo.addOns;
   if (Array.isArray(existingVal)) {
     currentAddOns = existingVal;
     addOnsField.value = JSON.stringify(currentAddOns, null, 2);
@@ -552,7 +553,6 @@ export function showProperties(element, modeling, moddle) {
       modeling.updateProperties(element, props);
 
       const raciKeys = RACI_FIELDS;
-      const attrs = bo.$attrs;
       let raciEl = (bo.extensionElements?.values || []).find(v => v.$type === 'custom:Raci');
       if (!raciEl) {
         const extEl = getOrCreateExtEl(bo, moddle);
@@ -603,9 +603,9 @@ export function showProperties(element, modeling, moddle) {
 
       // Store addOns under $attrs for custom serialization
       if (addOnsField.value) {
-        bo.$attrs.addOns = addOnsField.value;
+        attrs.addOns = addOnsField.value;
       } else {
-        delete bo.$attrs.addOns;
+        delete attrs.addOns;
       }
       delete bo.addOns;
 
@@ -695,7 +695,7 @@ export function showProperties(element, modeling, moddle) {
       }
 
       if (!items.length) {
-        let existingVal = bo?.$attrs?.[key] || bo.get(key);
+        let existingVal = attrs?.[key] || bo.get(key);
         if (existingVal) {
           try {
             items = typeof existingVal === 'string' ? JSON.parse(existingVal) : existingVal;
@@ -800,7 +800,7 @@ export function showProperties(element, modeling, moddle) {
 
     let val = bo.get(key);
     if (val == null) {
-      val = bo.$attrs?.[key];
+      val = attrs?.[key];
     }
     if (val == null && RACI_FIELDS.includes(key)) {
       const raci = (bo.extensionElements?.values || []).find(v => v.$type === 'custom:Raci');
