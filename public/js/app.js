@@ -8,7 +8,7 @@ import { treeStream, setSelectedId, setOnSelect, togglePanel } from './component
 import { logUser, currentUser, authMenuOption } from './auth.js';
 import { initAddOnOverlays } from './addOnOverlays.js';
 import { initAddOnFiltering } from './addOnFiltering.js';
-import { openDiagramPickerModal, promptDiagramMetadata } from './login.js';
+import { openDiagramPickerModal, promptDiagramMetadata, selectVersionModal } from './login.js';
 import { Stream } from './core/stream.js';
 import { createSimulation } from './core/simulation.js';
 import { currentTheme, applyThemeToPage, themedThemeSelector } from './core/theme.js';

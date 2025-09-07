@@ -403,7 +403,7 @@ export function promptDiagramMetadata(initialName = '', initialNotes = '', theme
 }
 
 
-function selectVersionModal(diagramName, versions, themeStream = currentTheme) {
+export function selectVersionModal(diagramName, versions, themeStream = currentTheme) {
   const versionStream = new Stream((versions.length - 1).toString()); // Default to latest
   const pickStream = new Stream(null);   // Emits selected version index
 
