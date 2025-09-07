@@ -4,7 +4,7 @@ import { reactiveButton, dropdownStream, avatarDropdown, createDiagramOverlay, o
 import { showToast } from './components/elements.js';
 import { showProperties, hideSidebar } from './components/showProperties.js';
 import { treeStream, setSelectedId, setOnSelect, togglePanel } from './components/diagramTree.js';
-import { logUser, currentUser, authMenuOption } from './auth.js';
+import { currentUser, authMenuOption } from './auth.js';
 import { initAddOnOverlays } from './addOnOverlays.js';
 import { initAddOnFiltering } from './addOnFiltering.js';
 import { openDiagramPickerModal, promptDiagramMetadata, selectVersionModal } from './login.js';
@@ -269,7 +269,7 @@ Object.assign(document.body.style, {
       openFlowSelectionModal(flows, currentTheme, allowMultiple).subscribe(selected => {
         if (typeof context?.decide === 'function') {
           context.decide(selected);
-        }
+      }
       });
     });
   }
@@ -1004,28 +1004,21 @@ currentTheme.subscribe(theme => {
       stroke: ${bpmn.marker.stroke} !important;
     }
 
-    /* ── selected styles ───────────────────────────────────────────────── */
-    .djs-element.djs-element-selected .djs-shape,
-    .djs-connection.djs-connection-selected .djs-connection-outer {
-      stroke: ${bpmn.selected.stroke} !important;
-      stroke-width: ${bpmn.selected.strokeWidth}px !important;
-    }
+      /* ── selected styles ───────────────────────────────────────────────── */
+      .djs-element.djs-element-selected .djs-shape,
+      .djs-connection.djs-connection-selected .djs-connection-outer {
+        stroke: ${bpmn.selected.stroke} !important;
+        stroke-width: ${bpmn.selected.strokeWidth}px !important;
+      }
 
-    /* ── simulation active token highlight ─────────────────────────────── */
-    .djs-element.active .djs-visual > :nth-child(1),
-    .djs-connection.active .djs-visual > path {
-      stroke: orange !important;
-      stroke-width: 4px !important;
-    }
-
-    /* ── direct editing overlay ───────────────────────────────────────── */
-    .djs-direct-editing-parent,
-    .djs-direct-editing-content {
-      background: ${colors.surface} !important;
-      color: ${colors.foreground} !important;
-      border: 1px solid ${colors.border} !important;
-      outline: 1px solid ${colors.border} !important;
-    }
+      /* ── direct editing overlay ───────────────────────────────────────── */
+      .djs-direct-editing-parent,
+      .djs-direct-editing-content {
+        background: ${colors.surface} !important;
+        color: ${colors.foreground} !important;
+        border: 1px solid ${colors.border} !important;
+        outline: 1px solid ${colors.border} !important;
+      }
   `;
 });
 
