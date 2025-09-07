@@ -1,7 +1,7 @@
 import { currentTheme } from '../core/theme.js';
-import { observeDOMRemoval } from '../core/stream.js';
+import { Stream, observeDOMRemoval } from '../core/stream.js';
 
-export function createTokenListPanel(logStream, themeStream = currentTheme, simulator = null){
+export function createTokenListPanel(themeStream = currentTheme){
     const panel = document.createElement('div');
     panel.classList.add('token-list-panel');
     panel.setAttribute('aria-hidden', 'true');
@@ -40,7 +40,8 @@ export function createTokenListPanel(logStream, themeStream = currentTheme, simu
     panel.appendChild(list);
 
     let prevLength = 0;
-    let blockchain = null;
+    const logStream = new Stream([]);
+    let tokenSimulation = null;
 
     function getTypeClass(id){
       if(!id) return null;
@@ -89,6 +90,51 @@ export function createTokenListPanel(logStream, themeStream = currentTheme, simu
     searchInput.addEventListener('input', () => render(logStream.get()));
 
     const cleanupFns = [unsubscribe];
+
+    function attachSimulation(sim){
+      tokenSimulation = sim;
+      if(!sim || !sim.events) return;
+
+      const bus = sim.events;
+
+      function record({ token, element } = {}){
+        const entry = {
+          tokenId: token && token.id,
+          elementId: element && element.id,
+          elementName: element && (element.businessObject && element.businessObject.name || element.name),
+          timestamp: Date.now()
+        };
+        const current = logStream.get();
+        logStream.set([...current, entry]);
+      }
+
+      const tokenEvents = [
+        'token-start',
+        'token-end',
+        'token-cancel',
+        'token-wait',
+        'token-move'
+      ];
+
+      tokenEvents.forEach(evt => bus.on && bus.on(evt, record));
+
+      const startHandler = () => show();
+      const clearHandler = () => { clearLog(); hide(); };
+
+      bus.on && bus.on('simulation.start', startHandler);
+      bus.on && bus.on('simulation.clear', clearHandler);
+
+      cleanupFns.push(() => {
+        tokenEvents.forEach(evt => bus.off && bus.off(evt, record));
+        bus.off && bus.off('simulation.start', startHandler);
+        bus.off && bus.off('simulation.clear', clearHandler);
+      });
+    }
+
+    function clearLog(){
+      logStream.set([]);
+      prevLength = 0;
+    }
 
     function setTreeButton(treeBtn){
       if(!treeBtn) return;
@@ -143,16 +189,10 @@ export function createTokenListPanel(logStream, themeStream = currentTheme, simu
       downloadBtn.addEventListener('click', handler);
     }
 
-    function setBlockchain(bc){
-      blockchain = bc;
-    }
-
     clearBtn.addEventListener('click', () => {
-      if (simulator && typeof simulator.clearTokenLog === 'function') {
-        simulator.clearTokenLog();
-      }
-      if (blockchain && typeof blockchain.reset === 'function') {
-        blockchain.reset();
+      clearLog();
+      if(tokenSimulation && tokenSimulation.events && tokenSimulation.events.emit){
+        tokenSimulation.events.emit('simulation.clear');
       }
     });
 
@@ -160,5 +200,5 @@ export function createTokenListPanel(logStream, themeStream = currentTheme, simu
 
     observeDOMRemoval(panel, ...cleanupFns);
 
-    return { el: panel, show, hide, showDownload, setDownloadHandler, setTreeButton, setBlockchain };
+    return { el: panel, show, hide, showDownload, setDownloadHandler, setTreeButton, attachSimulation };
   }
