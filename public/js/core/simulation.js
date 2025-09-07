@@ -22,14 +22,15 @@ export function createSimulation(services, opts = {}) {
     ? opts.conditionFallback
     : false;
 
-  function setContext(obj, token = tokens[0]) {
-    if (token) {
-      token.context = { ...(token.context || {}), ...obj };
-    }
+  let sharedContext = { ...initialContext };
+
+  function setContext(obj) {
+    sharedContext = { ...sharedContext, ...obj };
+    tokens.forEach(t => (t.context = sharedContext));
   }
 
-  function getContext(token = tokens[0]) {
-    return token ? { ...(token.context || {}) } : {};
+  function getContext() {
+    return sharedContext;
   }
 
   // Stream of currently active tokens [{ id, element }]
@@ -64,7 +65,7 @@ export function createSimulation(services, opts = {}) {
           if (last.elementId) {
             const el = elementRegistry.get(last.elementId);
             if (el) {
-              tokens = [{ id: last.tokenId, element: el, context: { ...initialContext } }];
+              tokens = [{ id: last.tokenId, element: el, context: sharedContext }];
               tokenStream.set(tokens);
             }
           }
@@ -216,7 +217,7 @@ let nextTokenId = 1;
           element: target,
           pendingJoins: token.pendingJoins,
           viaFlow: flow.id,
-          context: { ...token.context }
+          context: sharedContext
         };
         logToken(next);
         generated.push(next);
@@ -233,7 +234,7 @@ let nextTokenId = 1;
         element: flow.target,
         pendingJoins: token.pendingJoins,
         viaFlow: flow.id,
-        context: { ...token.context }
+        context: sharedContext
       };
       logToken(next);
       return [next];
@@ -305,7 +306,7 @@ let nextTokenId = 1;
         element: flow.target,
         pendingJoins: token.pendingJoins,
         viaFlow: flow.id,
-        context: { ...token.context }
+        context: sharedContext
       };
       logToken(next);
       return [next];
@@ -320,7 +321,7 @@ let nextTokenId = 1;
         element: flow.target,
         pendingJoins: token.pendingJoins,
         viaFlow: flow.id,
-        context: { ...token.context }
+        context: sharedContext
       };
       logToken(next);
       return next;
@@ -468,7 +469,7 @@ let nextTokenId = 1;
           element: flow.target,
           pendingJoins,
           viaFlow: flow.id,
-          context: { ...token.context }
+          context: sharedContext
         };
         logToken(next);
         return next;
@@ -491,7 +492,7 @@ let nextTokenId = 1;
         element: flow.target,
         pendingJoins: token.pendingJoins,
         viaFlow: flow.id,
-        context: { ...token.context }
+        context: sharedContext
       };
       logToken(next);
       return [next];
@@ -513,8 +514,8 @@ let nextTokenId = 1;
           pause,
           resume,
           addCleanup: fn => handlerCleanups.add(fn),
-          setContext: obj => setContext(obj, token),
-          getContext: () => getContext(token)
+          setContext: obj => setContext(obj),
+          getContext: () => getContext()
         };
         const res = elHandler(token, api, flowIds);
         if (Array.isArray(res)) {
@@ -586,11 +587,10 @@ let nextTokenId = 1;
           newTokens.push(...group);
           continue;
         }
-        const merged = { id: group[0].id, element: el, context: { ...group[0].context } };
+        const merged = { id: group[0].id, element: el, context: sharedContext };
         const mergedPending = {};
         group.forEach(t => {
           if (t.pendingJoins) Object.assign(mergedPending, t.pendingJoins);
-          Object.assign(merged.context, t.context);
         });
         if (mergedPending[el.id]) delete mergedPending[el.id];
         if (Object.keys(mergedPending).length) {
@@ -652,8 +652,9 @@ let nextTokenId = 1;
     previousElementIds = new Set();
     previousFlowIds = new Set();
 
+    sharedContext = { ...initialContext };
     const startEl = getStart();
-    const t = { id: nextTokenId++, element: startEl, viaFlow: null, context: { ...initialContext } };
+    const t = { id: nextTokenId++, element: startEl, viaFlow: null, context: sharedContext };
     tokens = [t];
     tokenStream.set(tokens);
     logToken(t);
@@ -685,8 +686,9 @@ let nextTokenId = 1;
     pause();
     cleanup();
     clearTokenLog();
+    sharedContext = { ...initialContext };
     const startEl = getStart();
-    const t = { id: nextTokenId++, element: startEl, viaFlow: null, context: { ...initialContext } };
+    const t = { id: nextTokenId++, element: startEl, viaFlow: null, context: sharedContext };
     tokens = [t];
     tokenStream.set(tokens);
     logToken(t);
