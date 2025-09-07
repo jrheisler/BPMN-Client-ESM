@@ -331,3 +331,10 @@
   margin-right: 0;
 }
 
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
