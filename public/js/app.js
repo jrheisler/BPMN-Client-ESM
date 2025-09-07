@@ -1,7 +1,6 @@
 import customReplaceModule from './modules/customReplaceMenuProvider.js';
 import { createRaciMatrix } from './components/raciMatrix.js';
-import { createTokenListPanel } from './components/tokenListPanel.js';
-import { reactiveButton, dropdownStream, avatarDropdown, openFlowSelectionModal, createDiagramOverlay } from './components/elements.js';
+import { reactiveButton, dropdownStream, avatarDropdown, createDiagramOverlay } from './components/elements.js';
 import { showToast } from './components/elements.js';
 import { showProperties, hideSidebar } from './components/showProperties.js';
 import { treeStream, setSelectedId, setOnSelect, togglePanel } from './components/diagramTree.js';
@@ -10,11 +9,10 @@ import { initAddOnOverlays } from './addOnOverlays.js';
 import { initAddOnFiltering } from './addOnFiltering.js';
 import { openDiagramPickerModal, promptDiagramMetadata, selectVersionModal } from './login.js';
 import { Stream } from './core/stream.js';
-import { createSimulation } from './core/simulation.js';
 import { currentTheme, applyThemeToPage, themedThemeSelector } from './core/theme.js';
 import BpmnSnapping from 'bpmn-js/lib/features/snapping';
 import AttachBoundaryModule from '../features/attach-boundary/index.js';
-import { Blockchain } from './blockchain.js';
+import TokenSimulationModule from 'bpmn-js-token-simulation';
 import './addOnStore.js';
 import './palette-toggle.js';
 import { row } from './components/layout.js';
@@ -192,7 +190,8 @@ Object.assign(document.body.style, {
   const additionalModules = [
     customReplaceModule,
     BpmnSnapping,
-    AttachBoundaryModule
+    AttachBoundaryModule,
+    TokenSimulationModule
   ];
   if (navModule) additionalModules.push(navModule);
 
@@ -212,8 +211,6 @@ Object.assign(document.body.style, {
   const elementRegistry = modeler.get('elementRegistry');
   const selectionService= modeler.get('selection');
   const canvas          = modeler.get('canvas');
-  const simulation      = createSimulation({ elementRegistry, canvas });
-  window.simulation = simulation;
   const overlays        = modeler.get('overlays');
 
   const { scheduleOverlayUpdate } = initAddOnOverlays({ overlays, elementRegistry, typeIcons });
@@ -246,83 +243,7 @@ Object.assign(document.body.style, {
       }
   });
 
-  // Token list panel for simulation log
-  const tokenPanel = createTokenListPanel(simulation.tokenLogStream, currentTheme);
-  document.body.appendChild(tokenPanel.el);
-
-
   let treeBtn;
-  // render persisted log immediately if entries exist
-  if (simulation.tokenLogStream.get().length) {
-    tokenPanel.show();
-  }
-
-  let blockchain;
-  let processedTokens = 0;
-  let blockchainPersistPromise = Promise.resolve();
-
-  function initBlockchain() {
-    tokenPanel.hide();
-    blockchain = new Blockchain();
-    tokenPanel.setBlockchain(blockchain);
-    processedTokens = 0;
-  }
-
-  const origStart = simulation.start;
-  simulation.start = (...args) => {
-    initBlockchain();
-    tokenPanel.show();
-    return origStart.apply(simulation, args);
-  };
-
-  const origReset = simulation.reset;
-  simulation.reset = (...args) => {
-    initBlockchain();
-    const res = origReset.apply(simulation, args);
-    return res;
-  };
-
-  if (tokenPanel.setDownloadHandler)
-    tokenPanel.setDownloadHandler(() => {
-      const data = JSON.stringify(blockchain?.chain ?? [], null, 2);
-      const blob = new Blob([data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'blockchain.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-
-  simulation.tokenLogStream.subscribe(entries => {
-    if (entries.length) {
-      tokenPanel.show();
-    } else {
-      tokenPanel.hide();
-    }
-
-    if (blockchain && entries.length > processedTokens) {
-      const toPersist = entries.slice(processedTokens);
-      blockchainPersistPromise = blockchainPersistPromise.then(() => {
-        for (let i = 0; i < toPersist.length; i++) {
-          blockchain.addBlock(toPersist[i]);
-        }
-        processedTokens = entries.length;
-        window.dispatchEvent(new Event('blockchain-persisted'));
-      });
-    }
-  });
-
-  let prevTokenCount = simulation.tokenStream.get().length;
-  simulation.tokenStream.subscribe(tokens => {
-    if (prevTokenCount > 0 && tokens.length === 0) {
-      tokenPanel.show();
-      blockchainPersistPromise.then(() => tokenPanel.showDownload());
-    }
-    prevTokenCount = tokens.length;
-  });
 
   setOnSelect(id => {
     const element = elementRegistry.get(id);
@@ -382,24 +303,6 @@ Object.assign(document.body.style, {
     const tree = build(root);
     treeStream.set(tree);
   }
-  // Prompt user to choose path at gateways
-  simulation.pathsStream.subscribe(data => {
-    if (!data) return;
-    const { flows: flowOptions, type } = data;
-    if (!flowOptions || !flowOptions.length) return;
-    const isInclusive = type === 'bpmn:InclusiveGateway';
-    // Access modal helper via `window` to avoid ReferenceError when used
-    // within modules or strict scopes
-    openFlowSelectionModal(flowOptions, currentTheme, isInclusive).subscribe(chosen => {
-      if (chosen && chosen.length) {
-        if (isInclusive) {
-          simulation.step(chosen.map(f => f.id));
-        } else {
-          simulation.step(chosen[0].id);
-        }
-      }
-    });
-  });
 
   // ─── theme (page background) ────────────────────────────────────────────────
   currentTheme.subscribe(applyThemeToPage);
@@ -466,8 +369,6 @@ async function appendXml(xml) {
       scheduleOverlayUpdate();
       const svg = canvasEl.querySelector('svg');
       if (svg) svg.style.height = '100%';
-      simulation.clearTokenLog();
-      simulation.reset();
     } catch (err) {
       console.error("Import error:", err);
     }
@@ -930,11 +831,6 @@ function rebuildMenu() {
   const controls = [
   // 1) avatar menu
   avatarMenu,
-
-  // Simulation controls
-  reactiveButton(new Stream("▶"), () => simulation.start(), { outline: true, title: "Play" }),
-  reactiveButton(new Stream("⏸"), () => simulation.pause(), { outline: true, title: "Pause" }),
-  reactiveButton(new Stream("⏭"), () => simulation.step(), { outline: true, title: "Step" }),
 
   // ─── Continuous Zoom In ────────────────────────────────────────────────────
   reactiveButton(
