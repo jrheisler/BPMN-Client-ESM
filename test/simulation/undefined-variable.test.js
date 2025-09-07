@@ -22,41 +22,23 @@ function buildDiagram() {
   return [start, gw, a, b, f0, f1, f2];
 }
 
-test('undefined variables evaluate to false by default', () => {
+test('undefined variables evaluate to false by default and take default flow automatically', () => {
   const diagram = buildDiagram();
   const sim = createSimulationInstance(diagram, { delay: 0 });
   sim.reset();
   sim.step(); // start -> gateway
-  sim.step(); // evaluate and pause with default flow
+  sim.step(); // evaluate and move along default
   const after = Array.from(sim.tokenStream.get(), t => t.element.id);
-  assert.deepStrictEqual(after, ['gw']);
-  const paths = sim.pathsStream.get();
-  assert.ok(paths);
-  assert.strictEqual(paths.isDefaultOnly, true);
-  assert.strictEqual(paths.flows.length, 2);
-  const f1 = paths.flows.find(f => f.flow.id === 'f1');
-  const f2 = paths.flows.find(f => f.flow.id === 'f2');
-  assert.ok(f1 && f2);
-  assert.strictEqual(f1.satisfied, false);
-  assert.strictEqual(f2.satisfied, true);
+  assert.deepStrictEqual(after, ['b']);
+  assert.strictEqual(sim.pathsStream.get(), null);
 });
 
-test('undefined variables use provided fallback but still require explicit choice', () => {
+test('undefined variables use provided fallback and auto-select satisfied flow', () => {
   const diagram = buildDiagram();
   const sim = createSimulationInstance(diagram, { delay: 0, conditionFallback: true });
   sim.reset();
   sim.step(); // start -> gateway
-  sim.step(); // evaluate and pause
-  const tokens = Array.from(sim.tokenStream.get(), t => t.element.id);
-  assert.deepStrictEqual(tokens, ['gw']);
-  const paths = sim.pathsStream.get();
-  assert.ok(paths);
-  const f1 = paths.flows.find(f => f.flow.id === 'f1');
-  const f2 = paths.flows.find(f => f.flow.id === 'f2');
-  assert.ok(f1 && f2);
-  assert.strictEqual(f1.satisfied, true);
-  assert.strictEqual(f2.satisfied, false);
-  sim.step('f1');
+  sim.step(); // evaluate and move on
   const after = Array.from(sim.tokenStream.get(), t => t.element.id);
   assert.deepStrictEqual(after, ['a']);
   assert.strictEqual(sim.pathsStream.get(), null);

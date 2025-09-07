@@ -285,6 +285,11 @@ let nextTokenId = 1;
         }
       }
 
+      const satisfied = mapped.filter(f => f.satisfied);
+      if (satisfied.length === 1) {
+        return handleDefault(token, [satisfied[0].flow]);
+      }
+
       pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: defaultOnly });
       awaitingToken = token;
       resumeAfterChoice = running;
