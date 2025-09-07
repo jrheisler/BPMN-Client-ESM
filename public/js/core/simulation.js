@@ -184,6 +184,16 @@ let nextTokenId = 1;
     return [token];
   });
 
+  elementHandlers.set('bpmn:MessageEvent', (token, api) => {
+    api.pause();
+    const to = setTimeout(() => {
+      skipHandlerFor.add(token.id);
+      api.resume();
+    }, delay);
+    api.addCleanup(() => clearTimeout(to));
+    return [token];
+  });
+
   function clearHandlerState(clearSkip = false) {
     handlerCleanups.forEach(fn => fn());
     handlerCleanups.clear();
@@ -501,14 +511,74 @@ let nextTokenId = 1;
   }
 
   function processToken(token, flowIds) {
+    // handle boundary events when token itself is boundary
+    if (token.element.type === 'bpmn:BoundaryEvent' && skipHandlerFor.has(token.id)) {
+      const bo = token.element.businessObject || {};
+      const interrupting = bo.cancelActivity !== false;
+      if (interrupting) {
+        const host =
+          token.element.host ||
+          elementRegistry.get(bo.attachedToRef?.id) ||
+          bo.attachedToRef ||
+          null;
+        if (host) {
+          for (let i = tokens.length - 1; i >= 0; i--) {
+            const t = tokens[i];
+            const attached =
+              t.element.type === 'bpmn:BoundaryEvent' &&
+              (t.element.host === host ||
+                t.element.businessObject?.attachedToRef === host ||
+                t.element.businessObject?.attachedToRef?.id === host.id);
+            if (t.element === host || attached) {
+              if (t.id !== token.id) tokens.splice(i, 1);
+            }
+          }
+        }
+      }
+    }
+
+    // spawn boundary tokens for current element (once)
+    let boundaryTokens = [];
+    if (!token._boundarySpawned) {
+      const boundaries = elementRegistry.filter
+        ? elementRegistry.filter(
+            e =>
+              e.type === 'bpmn:BoundaryEvent' &&
+              (e.host === token.element ||
+                e.businessObject?.attachedToRef === token.element ||
+                e.businessObject?.attachedToRef?.id === token.element.id)
+          )
+        : [];
+      boundaryTokens = boundaries.map(b => {
+        const next = {
+          id: nextTokenId++,
+          element: b,
+          pendingJoins: token.pendingJoins,
+          viaFlow: null,
+          context: sharedContext
+        };
+        logToken(next);
+        return next;
+      });
+      if (boundaryTokens.length) token._boundarySpawned = true;
+    }
+
     const outgoing = token.element.outgoing || [];
     const sequenceFlows = outgoing.filter(f => f.type === 'bpmn:SequenceFlow');
     const messageFlows = outgoing.filter(f => f.type === 'bpmn:MessageFlow');
 
     const messageTokens = spawnMessageTokens(token, messageFlows);
 
+    const extraTokens = messageTokens.concat(boundaryTokens);
+
     if (!skipHandlerFor.has(token.id)) {
-      const elHandler = elementHandlers.get(token.element.type);
+      let handlerKey = token.element.type;
+      const def = token.element.businessObject?.eventDefinitions?.[0];
+      if (def) {
+        const key = def.$type.replace('Definition', '');
+        if (elementHandlers.has(key)) handlerKey = key;
+      }
+      const elHandler = elementHandlers.get(handlerKey);
       if (elHandler) {
         const api = {
           pause,
@@ -519,7 +589,10 @@ let nextTokenId = 1;
         };
         const res = elHandler(token, api, flowIds);
         if (Array.isArray(res)) {
-          return { tokens: messageTokens.concat(res), waiting: false };
+          return { tokens: messageTokens.concat(res, boundaryTokens), waiting: false };
+        }
+        if (res === null) {
+          return { tokens: extraTokens, waiting: true };
         }
       }
     } else {
@@ -536,15 +609,15 @@ let nextTokenId = 1;
     if (gatewayHandler) {
       const res = gatewayHandler(token, sequenceFlows, flowIds);
       if (res === null) {
-        return { tokens: messageTokens, waiting: true };
+        return { tokens: extraTokens, waiting: true };
       }
-      return { tokens: messageTokens.concat(res), waiting: false };
+      return { tokens: messageTokens.concat(res, boundaryTokens), waiting: false };
     }
     if (/Gateway/.test(token.element.type)) {
       console.warn('Unknown gateway type', token.element.type);
     }
     const res = handleDefault(token, sequenceFlows);
-    return { tokens: messageTokens.concat(res), waiting: false };
+    return { tokens: messageTokens.concat(res, boundaryTokens), waiting: false };
   }
 
   function step(flowIds) {
