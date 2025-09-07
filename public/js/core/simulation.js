@@ -419,7 +419,7 @@ let nextTokenId = 1;
       }
     };
 
-    const ids = Array.isArray(flowIds) ? flowIds : flowIds ? [flowIds] : null;
+    let ids = Array.isArray(flowIds) ? flowIds : flowIds ? [flowIds] : null;
     if (!ids || ids.length === 0) {
       const mapped = outgoing.map(flow => ({
         flow,
@@ -440,11 +440,16 @@ let nextTokenId = 1;
           }
         }
       }
-      pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: defaultOnly });
-      awaitingToken = token;
-      resumeAfterChoice = running;
-      pause();
-      return null;
+      const satisfied = mapped.filter(f => f.satisfied);
+      if (satisfied.length === 1) {
+        ids = [satisfied[0].flow.id];
+      } else {
+        pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: defaultOnly });
+        awaitingToken = token;
+        resumeAfterChoice = running;
+        pause();
+        return null;
+      }
     }
     const joins = findInclusiveJoin(token.element);
     return ids

@@ -202,6 +202,22 @@ test('single-path diverging inclusive gateway auto forwards without confirmation
   assert.strictEqual(sim.pathsStream.get(), null);
 });
 
+test('diverging inclusive gateway auto forwards when only one condition matches', () => {
+  const diagram = buildDiagram('Diverging', 2);
+  const f1 = diagram.find(e => e.id === 'f1');
+  const f2 = diagram.find(e => e.id === 'f2');
+  f1.businessObject = { conditionExpression: { body: 'true' } };
+  f2.businessObject = { conditionExpression: { body: 'false' } };
+  const sim = createSimulationInstance(diagram, { delay: 0 });
+  sim.reset();
+  sim.step(); // move to gateway
+  sim.step(); // should auto-forward via f1
+  const token = sim.tokenStream.get()[0];
+  assert.strictEqual(token.element.id, 'task');
+  assert.strictEqual(token.viaFlow, 'f1');
+  assert.strictEqual(sim.pathsStream.get(), null);
+});
+
 test('findInclusiveJoin handles nested inclusive splits', () => {
   const elements = buildNestedDiagram();
   const map = new Map(elements.map(e => [e.id, e]));
