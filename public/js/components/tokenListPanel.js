@@ -1,7 +1,7 @@
 import { currentTheme } from '../core/theme.js';
 import { observeDOMRemoval } from '../core/stream.js';
 
-export function createTokenListPanel(logStream, themeStream = currentTheme){
+export function createTokenListPanel(logStream, themeStream = currentTheme, simulator = null){
     const panel = document.createElement('div');
     panel.classList.add('token-list-panel');
     panel.setAttribute('aria-hidden', 'true');
@@ -148,8 +148,8 @@ export function createTokenListPanel(logStream, themeStream = currentTheme){
     }
 
     clearBtn.addEventListener('click', () => {
-      if (window.simulation && typeof window.simulation.clearTokenLog === 'function') {
-        window.simulation.clearTokenLog();
+      if (simulator && typeof simulator.clearTokenLog === 'function') {
+        simulator.clearTokenLog();
       }
       if (blockchain && typeof blockchain.reset === 'function') {
         blockchain.reset();
