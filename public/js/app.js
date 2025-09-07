@@ -231,6 +231,8 @@ Object.assign(document.body.style, {
   const tokenSimulation = modeler.get('tokenSimulation');
   const isDirty = new Stream(false);
   const showSaveButton = new Stream(false);
+  document.getElementById('run-sim')
+    .addEventListener('click', () => tokenSimulation.toggle());
 
   // push every change into your XML Stream:
   eventBus.on('commandStack.changed', async () => {
