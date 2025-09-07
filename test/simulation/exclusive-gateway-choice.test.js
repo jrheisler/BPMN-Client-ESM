@@ -121,22 +121,12 @@ test('exclusive gateway exposes flows and waits for explicit choice', () => {
   assert.strictEqual(sim.pathsStream.get(), null);
 });
 
-test('exclusive gateway pauses even when only one flow is viable', () => {
+test('exclusive gateway proceeds automatically when only one flow is viable', () => {
   const diagram = buildSingleViableDiagram();
   const sim = createSimulationInstance(diagram, { delay: 0 });
   sim.reset();
   sim.step(); // start -> gateway
-  sim.step(); // evaluate and pause
-  const tokens = Array.from(sim.tokenStream.get(), t => t.element.id);
-  assert.deepStrictEqual(tokens, ['gw']);
-  const paths = sim.pathsStream.get();
-  assert.ok(paths);
-  const fA = paths.flows.find(f => f.flow.id === 'fa');
-  const fB = paths.flows.find(f => f.flow.id === 'fb');
-  assert.ok(fA && fB);
-  assert.strictEqual(fA.satisfied, true);
-  assert.strictEqual(fB.satisfied, false);
-  sim.step('fa');
+  sim.step(); // evaluate and move on
   const after = Array.from(sim.tokenStream.get(), t => t.element.id);
   assert.deepStrictEqual(after, ['a']);
   assert.strictEqual(sim.pathsStream.get(), null);

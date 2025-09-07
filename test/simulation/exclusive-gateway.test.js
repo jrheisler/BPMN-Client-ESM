@@ -38,39 +38,25 @@ function buildDefaultFlowDiagram() {
   return [start, gw, a, b, f0, f1, f2];
 }
 
-test('exclusive gateway waits for choice when a single conditional flow is viable', () => {
+test('exclusive gateway proceeds automatically when a single conditional flow is viable', () => {
   const diagram = buildSingleConditionalDiagram();
   const sim = createSimulationInstance(diagram, { delay: 0 });
   sim.reset();
   sim.step(); // start -> gateway
-  sim.step(); // gateway evaluates and pauses
-  const atGateway = Array.from(sim.tokenStream.get(), t => t.element.id);
-  assert.deepStrictEqual(atGateway, ['gw']);
-  const paths = sim.pathsStream.get();
-  assert.ok(paths);
-  assert.deepStrictEqual(paths.flows.map(f => f.flow.id), ['f1']);
-  sim.step('f1');
+  sim.step(); // gateway evaluates and moves on
   const after = Array.from(sim.tokenStream.get(), t => t.element.id);
   assert.deepStrictEqual(after, ['a']);
   assert.strictEqual(sim.pathsStream.get(), null);
 });
 
-test('exclusive gateway pauses when only default flow is available', () => {
+test('exclusive gateway proceeds automatically when only default flow is available', () => {
   const diagram = buildDefaultFlowDiagram();
   const sim = createSimulationInstance(diagram, { delay: 0 });
   sim.reset();
   sim.step(); // start -> gateway
-  sim.step(); // gateway evaluates and pauses
+  sim.step(); // gateway evaluates and moves to default
   const after = Array.from(sim.tokenStream.get(), t => t.element.id);
-  assert.deepStrictEqual(after, ['gw']);
-  const paths = sim.pathsStream.get();
-  assert.ok(paths);
-  assert.strictEqual(paths.isDefaultOnly, true);
-  assert.strictEqual(paths.flows.length, 2);
-  const f1 = paths.flows.find(f => f.flow.id === 'f1');
-  const f2 = paths.flows.find(f => f.flow.id === 'f2');
-  assert.ok(f1 && f2);
-  assert.strictEqual(f1.satisfied, false);
-  assert.strictEqual(f2.satisfied, true);
+  assert.deepStrictEqual(after, ['b']);
+  assert.strictEqual(sim.pathsStream.get(), null);
 });
 
