@@ -6,8 +6,8 @@
 
 The simulation registers basic handlers for:
 
-- `bpmn:UserTask` – pauses the simulation briefly before continuing.
-- `bpmn:TimerEvent` – waits for a short delay, then resumes automatically.
+- `bpmn:UserTask` – pauses the simulation until resumed manually.
+- `bpmn:TimerEvent` – pauses the simulation until resumed manually.
 
 All timeouts and listeners registered by handlers are cleared whenever `start` or `reset` is called.
 
