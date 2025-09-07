@@ -1,6 +1,6 @@
 import customReplaceModule from './modules/customReplaceMenuProvider.js';
 import { createRaciMatrix } from './components/raciMatrix.js';
-import { reactiveButton, dropdownStream, avatarDropdown, createDiagramOverlay } from './components/elements.js';
+import { reactiveButton, dropdownStream, avatarDropdown, createDiagramOverlay, openFlowSelectionModal } from './components/elements.js';
 import { showToast } from './components/elements.js';
 import { showProperties, hideSidebar } from './components/showProperties.js';
 import { treeStream, setSelectedId, setOnSelect, togglePanel } from './components/diagramTree.js';
@@ -228,6 +228,7 @@ Object.assign(document.body.style, {
 
   const eventBus     = modeler.get('eventBus');
   const commandStack = modeler.get('commandStack');
+  const simulator    = modeler.get('simulator');
   const isDirty = new Stream(false);
   const showSaveButton = new Stream(false);
 
@@ -258,6 +259,20 @@ Object.assign(document.body.style, {
     const element = newSelection[0];
     setSelectedId(element?.id || null);
   });
+
+  if (simulator?.on) {
+    simulator.on('decision.required', event => {
+      const { context } = event;
+      const flows = (context?.outgoing || []).map(flow => ({ flow, satisfied: true }));
+      const allowMultiple = context?.type === 'bpmn:InclusiveGateway';
+
+      openFlowSelectionModal(flows, currentTheme, allowMultiple).subscribe(selected => {
+        if (typeof context?.decide === 'function') {
+          context.decide(selected);
+        }
+      });
+    });
+  }
 
   function updateDiagramTree() {
     const registry = modeler.get('elementRegistry');
