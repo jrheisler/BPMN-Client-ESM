@@ -228,7 +228,7 @@ Object.assign(document.body.style, {
 
   const eventBus     = modeler.get('eventBus');
   const commandStack = modeler.get('commandStack');
-  const simulator    = modeler.get('simulator');
+  const tokenSimulation = modeler.get('tokenSimulation');
   const isDirty = new Stream(false);
   const showSaveButton = new Stream(false);
 
@@ -260,8 +260,8 @@ Object.assign(document.body.style, {
     setSelectedId(element?.id || null);
   });
 
-  if (simulator?.on) {
-    simulator.on('decision.required', event => {
+  if (tokenSimulation?.on) {
+    tokenSimulation.on('decision.required', event => {
       const { context } = event;
       const flows = (context?.outgoing || []).map(flow => ({ flow, satisfied: true }));
       const allowMultiple = context?.type === 'bpmn:InclusiveGateway';
