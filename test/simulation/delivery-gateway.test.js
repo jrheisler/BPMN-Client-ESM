@@ -55,6 +55,7 @@ test('token advances automatically when deliveryStatus matches a single branch',
   const sim = createSimulationInstance(diagram, { delay: 0 });
   sim.reset();
   sim.setContext({ deliveryStatus: 'successful' });
+  assert.strictEqual(sim.getContext().deliveryStatus, 'successful');
   sim.step(); // start -> gateway
   sim.step(); // gateway evaluates and moves on
   const after = Array.from(sim.tokenStream.get(), t => t.element.id);

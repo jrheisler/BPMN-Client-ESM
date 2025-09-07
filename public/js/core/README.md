@@ -29,7 +29,7 @@ Handlers receive the current token and an API with `pause`, `resume`, and `addCl
 
 ## Simulation context
 
-Conditions on sequence flows are evaluated against a mutable context object. Pass initial values when creating the simulation and update them later as required:
+Conditions on sequence flows are evaluated against a shared mutable context object. Pass initial values when creating the simulation and update them later as required:
 
 ```js
 const sim = createSimulation({
@@ -41,7 +41,7 @@ const sim = createSimulation({
 // update values at runtime
 sim.setContext({ approved: false });
 
-// read current context if needed
+// read current shared context if needed
 const ctx = sim.getContext();
 ```
 
