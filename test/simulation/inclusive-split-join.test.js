@@ -58,11 +58,17 @@ function buildSplitJoinDiagram(extraTaskOnB = false, omitDirection = false) {
 
 test('inclusive split/join with single selected path does not wait for others', () => {
   const diagram = buildSplitJoinDiagram();
+  const fa = diagram.find(e => e.id === 'fa');
+  const fb = diagram.find(e => e.id === 'fb');
+  fa.businessObject = { conditionExpression: { body: 'true' } };
+  fb.businessObject = { conditionExpression: { body: 'false' } };
   const sim = createSimulationInstance(diagram, { delay: 0 });
   sim.reset();
   sim.step(); // start -> split
-  sim.step(); // process gateway and wait for decision
-  sim.step(['fa']); // choose only path a
+  sim.step(); // gateway auto-forwards via fa
+  const atA = Array.from(sim.tokenStream.get(), t => t.element.id);
+  assert.deepStrictEqual(atA, ['a']);
+  assert.strictEqual(sim.pathsStream.get(), null);
   sim.step(); // a -> join
   const afterA = Array.from(sim.tokenStream.get(), t => t.element.id);
   assert.deepStrictEqual(afterA, ['join']);
