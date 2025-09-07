@@ -849,7 +849,15 @@ function rebuildMenu() {
 
   reactiveButton(
     new Stream('Simulate'),
-    () => tokenSimulation.toggle(),
+    () => {
+      if (typeof tokenSimulation?.toggle === 'function') {
+        tokenSimulation.toggle();
+      } else if (typeof tokenSimulation?.start === 'function') {
+        tokenSimulation.start();
+      } else {
+        showToast('Simulation is unavailable');
+      }
+    },
     { outline: true, title: 'Toggle simulation', 'aria-label': 'Toggle simulation' }
   ),
 
