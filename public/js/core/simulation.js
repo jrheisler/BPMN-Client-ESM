@@ -166,22 +166,12 @@ let nextTokenId = 1;
   // --- Default element handlers ---
   elementHandlers.set('bpmn:UserTask', (token, api) => {
     api.pause();
-    const to = setTimeout(() => {
-      skipHandlerFor.add(token.id);
-      api.resume();
-    }, delay);
-    api.addCleanup(() => clearTimeout(to));
-    return [token];
+    return null;
   });
 
   elementHandlers.set('bpmn:TimerEvent', (token, api) => {
     api.pause();
-    const to = setTimeout(() => {
-      skipHandlerFor.add(token.id);
-      api.resume();
-    }, delay);
-    api.addCleanup(() => clearTimeout(to));
-    return [token];
+    return null;
   });
 
   elementHandlers.set('bpmn:MessageEvent', (token, api) => {
@@ -193,6 +183,14 @@ let nextTokenId = 1;
     api.addCleanup(() => clearTimeout(to));
     return [token];
   });
+
+  function isManualResume(token) {
+    const el = token && token.element;
+    if (!el) return false;
+    if (el.type === 'bpmn:UserTask') return true;
+    const def = el.businessObject?.eventDefinitions?.[0];
+    return def?.$type === 'bpmn:TimerEventDefinition';
+  }
 
   function clearHandlerState(clearSkip = false) {
     handlerCleanups.forEach(fn => fn());
@@ -622,6 +620,9 @@ let nextTokenId = 1;
 
   function step(flowIds) {
     if (awaitingToken) {
+      if (isManualResume(awaitingToken)) {
+        skipHandlerFor.add(awaitingToken.id);
+      }
       const { tokens: resTokens, waiting } = processToken(awaitingToken, flowIds);
       if (waiting) return;
       tokens = tokens.filter(t => t.id !== awaitingToken.id).concat(resTokens);
@@ -737,6 +738,9 @@ let nextTokenId = 1;
 
   function resume() {
     if (running) return;
+    if (awaitingToken && isManualResume(awaitingToken)) {
+      skipHandlerFor.add(awaitingToken.id);
+    }
     clearHandlerState();
     running = true;
     schedule();
