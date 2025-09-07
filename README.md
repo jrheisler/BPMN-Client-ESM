@@ -1,6 +1,6 @@
 # Flow Control Center
 
-Flow Control Center is a browser‑based BPMN modeling and simulation client. It uses [bpmn‑js](https://github.com/bpmn-io/bpmn-js) for diagram editing and Firebase for authentication and storage. Diagrams can be simulated token by token and saved along with notes and version history.
+Flow Control Center is a browser‑based BPMN modeling and simulation client. It uses [bpmn‑js](https://github.com/bpmn-io/bpmn-js) for diagram editing and Firebase for authentication and storage. The included [bpmn.io simulator](https://github.com/bpmn-io/bpmn-js-token-simulation) plug‑in adds Play, Pause, Step, and Stop controls for interactive execution—press ▶️ to start and ⏹️ to reset tokens. Ensure the `bpmn-js-token-simulation` plug‑in is installed or loaded from a CDN before running simulations. Diagrams and their run history can be saved along with notes and version history.
 
 ## Setup
 
