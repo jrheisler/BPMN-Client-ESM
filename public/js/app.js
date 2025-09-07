@@ -231,8 +231,6 @@ Object.assign(document.body.style, {
   const tokenSimulation = modeler.get('tokenSimulation');
   const isDirty = new Stream(false);
   const showSaveButton = new Stream(false);
-  document.getElementById('run-sim')
-    .addEventListener('click', () => tokenSimulation.toggle());
 
   // push every change into your XML Stream:
   eventBus.on('commandStack.changed', async () => {
@@ -848,6 +846,12 @@ function rebuildMenu() {
   const controls = [
   // 1) avatar menu
   avatarMenu,
+
+  reactiveButton(
+    new Stream('Simulate'),
+    () => tokenSimulation.toggle(),
+    { outline: true, title: 'Toggle simulation' }
+  ),
 
   // ─── Continuous Zoom In ────────────────────────────────────────────────────
   reactiveButton(
