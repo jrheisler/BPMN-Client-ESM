@@ -850,7 +850,7 @@ function rebuildMenu() {
   reactiveButton(
     new Stream('Simulate'),
     () => tokenSimulation.toggle(),
-    { outline: true, title: 'Toggle simulation' }
+    { outline: true, title: 'Toggle simulation', 'aria-label': 'Toggle simulation' }
   ),
 
   // ─── Continuous Zoom In ────────────────────────────────────────────────────
