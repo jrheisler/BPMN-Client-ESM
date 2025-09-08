@@ -692,21 +692,11 @@ let nextTokenId = 1;
     tokens = newTokens;
     tokenStream.set(tokens);
     if (!awaitingToken) pathsStream.set(null);
+    const runnable = tokens.some(t => !awaitingToken || t.id !== awaitingToken.id);
 
-    if (!tokens.length) {
-      pause();
-      cleanup();
-      return;
-    }
-
-    if (!awaitingToken) {
-      if (resumeAfterChoice) {
-        resumeAfterChoice = false;
-        resume();
-      } else {
-        schedule();
-      }
-    }
+    if (!tokens.length) { pause(); cleanup(); return; }
+    if (runnable) { running = true; schedule(); }
+    else { pause(); }   // only the paused token remains
   }
 
   function start() {
