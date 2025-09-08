@@ -385,18 +385,16 @@ Object.assign(document.body.style, {
   // Prompt user to choose path at gateways
   simulation.pathsStream.subscribe(data => {
     if (!data) return;
-    const { flows: flowOptions, type } = data;
-    if (!flowOptions || !flowOptions.length) return;
-    const isInclusive = type === 'bpmn:InclusiveGateway';
-    // Access modal helper via `window` to avoid ReferenceError when used
-    // within modules or strict scopes
-    openFlowSelectionModal(flowOptions, currentTheme, isInclusive).subscribe(chosen => {
-      if (chosen && chosen.length) {
-        if (isInclusive) {
-          simulation.step(chosen.map(f => f.id));
-        } else {
-          simulation.step(chosen[0].id);
-        }
+    const { flows, type } = data;
+    if (!flows || !flows.length) return;
+    const allowMultiple = type === 'bpmn:InclusiveGateway';
+    // Pass full flow list (including unsatisfied) to modal so a user can force a choice
+    openFlowSelectionModal(flows, currentTheme, allowMultiple).subscribe(selection => {
+      if (!selection) return;
+      if (Array.isArray(selection)) {
+        if (selection.length) simulation.step(selection.map(f => f.id));
+      } else {
+        simulation.step(selection.id);
       }
     });
   });
