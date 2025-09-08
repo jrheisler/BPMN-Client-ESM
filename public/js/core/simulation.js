@@ -85,6 +85,7 @@ let timer = null;
 let running = false;
 let tokens = [];
 let awaitingToken = null;
+// remember whether simulation was running before pausing for a user choice
 let resumeAfterChoice = false;
 let nextTokenId = 1;
 
@@ -300,6 +301,7 @@ let nextTokenId = 1;
           isDefaultOnly: false
         });
         awaitingToken = token;
+        // remember running state to resume automatically once choice is made
         resumeAfterChoice = running;
         pause();
         return null;
@@ -330,6 +332,7 @@ let nextTokenId = 1;
         isDefaultOnly: defaultOnly
       });
       awaitingToken = token;
+      // remember running state to resume automatically once choice is made
       resumeAfterChoice = running;
       pause();
       return null;
@@ -473,6 +476,7 @@ let nextTokenId = 1;
       if (mapped.every(f => !f.satisfied)) {
         pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: false });
         awaitingToken = token;
+        // remember running state to resume automatically once choice is made
         resumeAfterChoice = running;
         pause();
         return null;
@@ -497,6 +501,7 @@ let nextTokenId = 1;
       } else {
         pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: defaultOnly });
         awaitingToken = token;
+        // remember running state to resume automatically once choice is made
         resumeAfterChoice = running;
         pause();
         return null;
@@ -531,6 +536,7 @@ let nextTokenId = 1;
     if (!flowId) {
       pathsStream.set({ flows: outgoing, type: token.element.type });
       awaitingToken = token;
+      // remember running state to resume automatically once choice is made
       resumeAfterChoice = running;
       pause();
       return null;
@@ -744,8 +750,16 @@ let nextTokenId = 1;
     const runnable = tokens.some(t => !awaitingToken || t.id !== awaitingToken.id);
 
     if (!tokens.length) { pause(); cleanup(); return; }
-    if (runnable) { running = true; schedule(); }
-    else { pause(); }   // only the paused token remains
+
+    if (runnable && (running || resumeAfterChoice)) {
+      running = true;
+      schedule();
+    } else {
+      pause();
+    }
+
+    // choice resolved -> clear auto-resume state
+    if (!awaitingToken) resumeAfterChoice = false;
   }
 
   function start() {
