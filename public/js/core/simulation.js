@@ -282,10 +282,28 @@ let nextTokenId = 1;
 
       const mapped = outgoing.map(flow => ({
         flow,
-        satisfied: evaluate(flow.businessObject?.conditionExpression, token.context)
+        satisfied: evaluate(
+          flow.businessObject?.conditionExpression,
+          token.context
+        )
       }));
       const defBo = token.element.businessObject?.default;
       const defFlow = defBo ? elementRegistry.get(defBo.id) || defBo : null;
+
+      // If no conditions are satisfied and no default flow exists, pause and
+      // prompt the user to select a path manually.
+      if (!defFlow && mapped.every(f => !f.satisfied)) {
+        pathsStream.set({
+          flows: mapped,
+          type: token.element.type,
+          isDefaultOnly: false
+        });
+        awaitingToken = token;
+        resumeAfterChoice = running;
+        pause();
+        return null;
+      }
+
       let defaultOnly = false;
       if (defFlow) {
         const defEntry = mapped.find(f => f.flow === defFlow);
@@ -305,7 +323,11 @@ let nextTokenId = 1;
         return handleDefault(token, [satisfied[0].flow]);
       }
 
-      pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: defaultOnly });
+      pathsStream.set({
+        flows: mapped,
+        type: token.element.type,
+        isDefaultOnly: defaultOnly
+      });
       awaitingToken = token;
       resumeAfterChoice = running;
       pause();
@@ -697,7 +719,6 @@ let nextTokenId = 1;
 
     tokens = newTokens;
     tokenStream.set(tokens);
-    if (!awaitingToken) pathsStream.set(null);
     const runnable = tokens.some(t => !awaitingToken || t.id !== awaitingToken.id);
 
     if (!tokens.length) { pause(); cleanup(); return; }
