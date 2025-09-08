@@ -193,6 +193,41 @@ test('exclusive gateway exposes flows and waits for explicit choice', () => {
   assert.strictEqual(sim.pathsStream.get(), null);
 });
 
+test('exclusive gateway stays at gateway if multiple flows selected', () => {
+  const diagram = buildDiagram();
+  const sim = createSimulationInstance(diagram, { delay: 0 });
+  sim.reset();
+  sim.step(); // start -> gateway
+  sim.step(); // evaluate and pause
+  const paths = sim.pathsStream.get();
+  assert.ok(paths);
+  assert.deepStrictEqual(paths.flows.map(f => f.flow.id), ['fa', 'fb']);
+
+  sim.step(['flowA', 'flowB']); // attempt invalid multiple selection
+
+  const afterTokens = Array.from(sim.tokenStream.get(), t => t.element.id);
+  assert.deepStrictEqual(afterTokens, ['gw']);
+  const afterPaths = sim.pathsStream.get();
+  assert.ok(afterPaths);
+  assert.deepStrictEqual(afterPaths.flows.map(f => f.flow.id), ['fa', 'fb']);
+});
+
+test('exclusive gateway ignores unknown flow selection', () => {
+  const diagram = buildDiagram();
+  const sim = createSimulationInstance(diagram, { delay: 0 });
+  sim.reset();
+  sim.step(); // start -> gateway
+  sim.step(); // evaluate and pause
+
+  sim.step('unknownFlow'); // attempt to follow non-existent flow
+
+  const afterTokens = Array.from(sim.tokenStream.get(), t => t.element.id);
+  assert.deepStrictEqual(afterTokens, ['gw']);
+  const afterPaths = sim.pathsStream.get();
+  assert.ok(afterPaths);
+  assert.deepStrictEqual(afterPaths.flows.map(f => f.flow.id), ['fa', 'fb']);
+});
+
 test('exclusive gateway proceeds automatically when only one flow is viable', () => {
   const diagram = buildSingleViableDiagram();
   const sim = createSimulationInstance(diagram, { delay: 0 });
