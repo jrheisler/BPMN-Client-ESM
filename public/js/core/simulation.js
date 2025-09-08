@@ -258,6 +258,7 @@ let nextTokenId = 1;
   }
 
   function handleExclusiveGateway(token, outgoing, flowId) {
+    // `flowId` is the id of the chosen sequence flow (string)
     // Determine viable flows based on conditions when no flowId is provided
     if (!flowId) {
       const evaluate = (expr, data) => {
@@ -665,7 +666,14 @@ let nextTokenId = 1;
         skipHandlerFor.add(awaitingToken.id);
       }
       const current = awaitingToken;
-      const { tokens: resTokens, waiting } = processToken(current, flowIds);
+      // Exclusive gateways expect a single flow id string
+      const chosen =
+        current.element.type === 'bpmn:ExclusiveGateway'
+          ? Array.isArray(flowIds)
+            ? flowIds[0]
+            : flowIds
+          : flowIds;
+      const { tokens: resTokens, waiting } = processToken(current, chosen);
       tokens = tokens.filter(t => t.id !== current.id);
       if (waiting) {
         newTokens.push(current, ...resTokens);
