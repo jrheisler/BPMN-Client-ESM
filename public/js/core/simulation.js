@@ -20,7 +20,7 @@ export function createSimulation(services, opts = {}) {
   const delay = opts.delay || 1000;
   const conditionFallback = Object.prototype.hasOwnProperty.call(opts, 'conditionFallback')
     ? opts.conditionFallback
-    : false;
+    : undefined;
 
   let sharedContext = { ...initialContext };
 
@@ -290,9 +290,9 @@ let nextTokenId = 1;
       const defBo = token.element.businessObject?.default;
       const defFlow = defBo ? elementRegistry.get(defBo.id) || defBo : null;
 
-      // If no conditions are satisfied and no default flow exists, pause and
-      // prompt the user to select a path manually.
-      if (!defFlow && mapped.every(f => !f.satisfied)) {
+      // If no conditions are satisfied, pause and prompt the user to
+      // select a path manually.
+      if (mapped.every(f => !f.satisfied)) {
         pathsStream.set({
           flows: mapped,
           type: token.element.type,
@@ -464,6 +464,16 @@ let nextTokenId = 1;
       }));
       const defBo = token.element.businessObject?.default;
       const defFlow = defBo ? elementRegistry.get(defBo.id) || defBo : null;
+
+      // No sequence flow satisfied -> wait for user decision
+      if (mapped.every(f => !f.satisfied)) {
+        pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: false });
+        awaitingToken = token;
+        resumeAfterChoice = running;
+        pause();
+        return null;
+      }
+
       let defaultOnly = false;
       if (defFlow) {
         const defEntry = mapped.find(f => f.flow === defFlow);

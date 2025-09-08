@@ -45,4 +45,4 @@ sim.setContext({ approved: false });
 const ctx = sim.getContext();
 ```
 
-If a condition references a variable that is not present in the context, it resolves to `false` by default. You can override this behaviour by passing `{ conditionFallback: true }` as an option.
+If a condition references a variable that is not present in the context, it resolves to `undefined` by default. This means no outgoing sequence flow is automatically chosen and the simulation will pause for a manual decision. You can override this behaviour by passing `{ conditionFallback: true }` or another value as an option.
