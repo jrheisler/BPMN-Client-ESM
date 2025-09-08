@@ -228,7 +228,13 @@ let nextTokenId = 1;
           context: sharedContext
         };
         logToken(next);
-        generated.push(next);
+        const { tokens: resTokens, waiting } = processToken(next);
+        if (waiting) {
+          if (!awaitingToken) awaitingToken = next;
+          generated.push(next, ...resTokens);
+        } else {
+          generated.push(...resTokens);
+        }
       }
     });
     return generated;
