@@ -45,4 +45,38 @@ sim.setContext({ approved: false });
 const ctx = sim.getContext();
 ```
 
-If a condition references a variable that is not present in the context, it resolves to `undefined` by default. This means no outgoing sequence flow is automatically chosen and the simulation will pause for a manual decision. You can override this behaviour by passing `{ conditionFallback: true }` or another value as an option.
+## Condition fallback
+
+During condition evaluation, missing variables from the shared context are replaced with a fallback value. The fallback is
+controlled via the `conditionFallback` option of `createSimulation` and defaults to `undefined`.
+
+* `undefined` – the simulation pauses at the gateway and waits for a manual decision.
+* any other value – unknown variables are treated as that value, potentially auto-selecting a path.
+
+Explicitly set `conditionFallback` to `undefined` when user input should be requested for unknown variables:
+
+```js
+const sim = createSimulation({
+  elementRegistry,
+  canvas,
+  context: {},
+  conditionFallback: undefined
+});
+
+sim.pathsStream.subscribe(({ flows }) => {
+  const options = flows.map((f, i) => `${i + 1}. ${f.flow.id}`).join('\n');
+  const choice = window.prompt('Choose outgoing flow:\n' + options);
+  if (choice) {
+    const index = Number(choice) - 1;
+    sim.step(flows[index].flow.id);
+  }
+});
+```
+
+When an exclusive gateway encounters a condition such as `${approved}` without `approved` in the context, the user is prompted:
+
+```
+Choose outgoing flow:
+1. f1
+2. f2
+```
