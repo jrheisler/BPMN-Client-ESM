@@ -106,6 +106,78 @@ function buildSingleViableDiagram() {
   return [start, gw, a, b, f0, fa, fb];
 }
 
+function buildContextChoiceDiagram() {
+  const start = {
+    id: 'start',
+    type: 'bpmn:StartEvent',
+    outgoing: [],
+    incoming: [],
+    businessObject: { $type: 'bpmn:StartEvent' }
+  };
+  const gw = {
+    id: 'gw',
+    type: 'bpmn:ExclusiveGateway',
+    businessObject: { gatewayDirection: 'Diverging' },
+    incoming: [],
+    outgoing: []
+  };
+  const existing = { id: 'existing', type: 'bpmn:Task', incoming: [], outgoing: [] };
+  const newcomer = { id: 'new', type: 'bpmn:Task', incoming: [], outgoing: [] };
+
+  const f0 = { id: 'f0', source: start, target: gw };
+  start.outgoing = [f0];
+  gw.incoming = [f0];
+
+  const fExisting = {
+    id: 'fExisting',
+    source: gw,
+    target: existing,
+    businessObject: { conditionExpression: { body: '${existingCustomer === true}' } }
+  };
+  const fNew = {
+    id: 'fNew',
+    source: gw,
+    target: newcomer,
+    businessObject: { conditionExpression: { body: '${existingCustomer === false}' } }
+  };
+
+  gw.outgoing = [fExisting, fNew];
+  existing.incoming = [fExisting];
+  newcomer.incoming = [fNew];
+
+  return [start, gw, existing, newcomer, f0, fExisting, fNew];
+}
+
+test('exclusive gateway waits for context variable choice', () => {
+  const diagram = buildContextChoiceDiagram();
+  const sim = createSimulationInstance(diagram, { delay: 0 });
+  sim.reset();
+  sim.step(); // start -> gateway
+  sim.step(); // evaluate and pause
+  const paths = sim.pathsStream.get();
+  assert.ok(paths);
+  assert.deepStrictEqual(paths.flows.map(f => f.flow.id), ['fExisting', 'fNew']);
+  // token remains at gateway awaiting user input
+  assert.deepStrictEqual(Array.from(sim.tokenStream.get(), t => t.element.id), ['gw']);
+
+  sim.setContext({ existingCustomer: true });
+  sim.step('fExisting');
+  let after = Array.from(sim.tokenStream.get(), t => t.element.id);
+  assert.deepStrictEqual(after, ['existing']);
+  assert.strictEqual(sim.pathsStream.get(), null);
+
+  sim.reset();
+  sim.step();
+  sim.step();
+  assert.ok(sim.pathsStream.get());
+  sim.setContext({ existingCustomer: false });
+  sim.step('fNew');
+  after = Array.from(sim.tokenStream.get(), t => t.element.id);
+  assert.deepStrictEqual(after, ['new']);
+  assert.strictEqual(sim.pathsStream.get(), null);
+  sim.stop();
+});
+
 test('exclusive gateway exposes flows and waits for explicit choice', () => {
   const diagram = buildDiagram();
   const sim = createSimulationInstance(diagram, { delay: 0 });
