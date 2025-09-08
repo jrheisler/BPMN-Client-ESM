@@ -619,7 +619,7 @@ let nextTokenId = 1;
   }
 
   function step(flowIds) {
-    if (awaitingToken) {
+    if (awaitingToken && (!running || flowIds)) {
       if (isManualResume(awaitingToken)) {
         skipHandlerFor.add(awaitingToken.id);
       }
@@ -649,6 +649,10 @@ let nextTokenId = 1;
     const processed = new Set();
 
     for (const token of tokens) {
+      if (awaitingToken && running && token.id === awaitingToken.id && !flowIds) {
+        newTokens.push(token);
+        continue;
+      }
       if (processed.has(token.id)) continue;
       const el = token.element;
       const incomingCount = (el.incoming || []).length;
@@ -672,24 +676,20 @@ let nextTokenId = 1;
         }
         const { tokens: resTokens, waiting } = processToken(merged);
         if (waiting) {
-          awaitingToken = merged;
+          if (!awaitingToken) awaitingToken = merged;
           newTokens.push(merged);
           newTokens.push(...resTokens);
-          tokens = newTokens.concat(tokens.filter(t => !processed.has(t.id)));
-          tokenStream.set(tokens);
-          return;
+          continue;
         }
         newTokens.push(...resTokens);
       } else {
         processed.add(token.id);
         const { tokens: resTokens, waiting } = processToken(token);
         if (waiting) {
-          awaitingToken = token;
+          if (!awaitingToken) awaitingToken = token;
           newTokens.push(token);
           newTokens.push(...resTokens);
-          tokens = newTokens.concat(tokens.filter(t => !processed.has(t.id)));
-          tokenStream.set(tokens);
-          return;
+          continue;
         }
         newTokens.push(...resTokens);
       }
@@ -697,7 +697,7 @@ let nextTokenId = 1;
 
     tokens = newTokens;
     tokenStream.set(tokens);
-    pathsStream.set(null);
+    if (!awaitingToken) pathsStream.set(null);
 
     if (!tokens.length) {
       pause();
