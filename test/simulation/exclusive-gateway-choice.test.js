@@ -339,3 +339,15 @@ test('simulation allows choice when all gateway conditions are unsatisfied', () 
   assert.strictEqual(sim.pathsStream.get(), null);
 });
 
+test('manual step after exclusive gateway does not auto resume', async () => {
+  const diagram = buildDiagram();
+  const sim = createSimulationInstance(diagram, { delay: 1 });
+  sim.reset();
+  sim.step(); // start -> gateway
+  sim.step(); // evaluate and pause
+  sim.step('fa'); // choose a path while paused
+  await new Promise(r => setTimeout(r, 5));
+  const after = Array.from(sim.tokenStream.get(), t => t.element.id);
+  assert.deepStrictEqual(after, ['a']);
+});
+
