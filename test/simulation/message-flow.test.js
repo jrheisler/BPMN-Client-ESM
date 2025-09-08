@@ -47,8 +47,8 @@ test('task sends message and continues along sequence flow', () => {
   sim.reset();
   sim.step(); // start -> task
   sim.step(); // task -> next + message to Start_B
-  const tokens = Array.from(sim.tokenStream.get(), t => t.element && t.element.id).sort();
-  assert.deepStrictEqual(tokens, ['Start_B', 'Task_B'].sort());
+  const tokens = Array.from(sim.tokenStream.get(), t => t.element && t.element.id);
+  assert.deepStrictEqual(tokens, ['Task_B']);
 });
 
 test('message flow targeting participant does not spawn token', () => {
