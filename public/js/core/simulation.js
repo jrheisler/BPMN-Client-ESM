@@ -642,6 +642,10 @@ let nextTokenId = 1;
 
     for (const token of tokens) {
       if (processed.has(token.id)) continue;
+      if (awaitingToken && token.id === awaitingToken.id && !skipHandlerFor.has(token.id) && !flowIds) {
+        newTokens.push(token);
+        continue;
+      }
       const el = token.element;
       const incomingCount = (el.incoming || []).length;
       const type = el.type;
