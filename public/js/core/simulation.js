@@ -348,7 +348,10 @@ let nextTokenId = 1;
       logToken(next);
       return [next];
     }
-    return [];
+
+    // invalid choice -> keep waiting
+    awaitingToken = token;
+    return null;
   }
 
   function handleParallelGateway(token, outgoing) {
@@ -676,6 +679,7 @@ let nextTokenId = 1;
       const { tokens: resTokens, waiting } = processToken(current, chosen);
       tokens = tokens.filter(t => t.id !== current.id);
       if (waiting) {
+        awaitingToken = current;
         newTokens.push(current, ...resTokens);
       } else {
         awaitingToken = null;
