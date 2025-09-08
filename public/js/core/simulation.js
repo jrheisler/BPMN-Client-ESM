@@ -619,40 +619,28 @@ let nextTokenId = 1;
   }
 
   function step(flowIds) {
+    const newTokens = [];
+    const processed = new Set();
+
     if (awaitingToken && (!running || flowIds)) {
       if (isManualResume(awaitingToken)) {
         skipHandlerFor.add(awaitingToken.id);
       }
-      const { tokens: resTokens, waiting } = processToken(awaitingToken, flowIds);
-      if (waiting) return;
-      tokens = tokens.filter(t => t.id !== awaitingToken.id).concat(resTokens);
-      awaitingToken = null;
-      pathsStream.set(null);
-      tokenStream.set(tokens);
-      if (!tokens.length) {
-        pause();
-        cleanup();
-        return;
-      }
-      if (resumeAfterChoice) {
-        resumeAfterChoice = false;
-        resume();
+      const current = awaitingToken;
+      const { tokens: resTokens, waiting } = processToken(current, flowIds);
+      tokens = tokens.filter(t => t.id !== current.id);
+      if (waiting) {
+        newTokens.push(current, ...resTokens);
       } else {
-        schedule();
+        awaitingToken = null;
+        pathsStream.set(null);
+        newTokens.push(...resTokens);
       }
-      return;
     }
 
-    if (!tokens.length) return;
-
-    const newTokens = [];
-    const processed = new Set();
+    if (!tokens.length && !newTokens.length) return;
 
     for (const token of tokens) {
-      if (awaitingToken && running && token.id === awaitingToken.id && !flowIds) {
-        newTokens.push(token);
-        continue;
-      }
       if (processed.has(token.id)) continue;
       const el = token.element;
       const incomingCount = (el.incoming || []).length;
@@ -681,6 +669,7 @@ let nextTokenId = 1;
           newTokens.push(...resTokens);
           continue;
         }
+        if (awaitingToken && merged.id === awaitingToken.id) awaitingToken = null;
         newTokens.push(...resTokens);
       } else {
         processed.add(token.id);
@@ -691,6 +680,7 @@ let nextTokenId = 1;
           newTokens.push(...resTokens);
           continue;
         }
+        if (awaitingToken && token.id === awaitingToken.id) awaitingToken = null;
         newTokens.push(...resTokens);
       }
     }
@@ -705,7 +695,14 @@ let nextTokenId = 1;
       return;
     }
 
-    schedule();
+    if (!awaitingToken) {
+      if (resumeAfterChoice) {
+        resumeAfterChoice = false;
+        resume();
+      } else {
+        schedule();
+      }
+    }
   }
 
   function start() {
