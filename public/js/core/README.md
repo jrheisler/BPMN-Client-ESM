@@ -80,3 +80,29 @@ Choose outgoing flow:
 1. f1
 2. f2
 ```
+
+## Simulation control
+
+The simulation exposes methods such as `start`, `pause`, and `step` to drive
+execution. Use `step(flowId)` when a gateway waits for user input to select the
+next paths.
+
+### Selecting outgoing flows
+
+`step` expects the IDs of the sequence flows that should be taken:
+
+* **Exclusive gateways** – supply a single flow ID as a string:
+
+  ```js
+  sim.step('Flow_1');
+  ```
+
+* **Inclusive gateways** – provide an array of flow IDs representing all chosen
+  paths:
+
+  ```js
+  sim.step(['Flow_1', 'Flow_2']);
+  ```
+
+If any provided ID does not match one of the available outgoing flows, the
+engine ignores the call and continues waiting for a valid choice.
