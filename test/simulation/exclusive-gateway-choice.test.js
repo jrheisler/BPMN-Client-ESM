@@ -148,6 +148,60 @@ function buildContextChoiceDiagram() {
   return [start, gw, existing, newcomer, f0, fExisting, fNew];
 }
 
+function buildAutoResumeDiagram() {
+  const start = {
+    id: 'start',
+    type: 'bpmn:StartEvent',
+    outgoing: [],
+    incoming: [],
+    businessObject: { $type: 'bpmn:StartEvent' }
+  };
+  const gw = {
+    id: 'gw',
+    type: 'bpmn:ExclusiveGateway',
+    businessObject: { gatewayDirection: 'Diverging' },
+    incoming: [],
+    outgoing: []
+  };
+  const a = { id: 'a', type: 'bpmn:Task', incoming: [], outgoing: [] };
+  const b = { id: 'b', type: 'bpmn:Task', incoming: [], outgoing: [] };
+  const end = {
+    id: 'end',
+    type: 'bpmn:EndEvent',
+    incoming: [],
+    outgoing: [],
+    businessObject: { $type: 'bpmn:EndEvent' }
+  };
+
+  const f0 = { id: 'f0', source: start, target: gw };
+  start.outgoing = [f0];
+  gw.incoming = [f0];
+
+  const fa = {
+    id: 'fa',
+    source: gw,
+    target: a,
+    businessObject: { conditionExpression: { body: '${true}' } }
+  };
+  const fb = {
+    id: 'fb',
+    source: gw,
+    target: b,
+    businessObject: { conditionExpression: { body: '${true}' } }
+  };
+  gw.outgoing = [fa, fb];
+  a.incoming = [fa];
+  b.incoming = [fb];
+
+  const faEnd = { id: 'faEnd', source: a, target: end };
+  const fbEnd = { id: 'fbEnd', source: b, target: end };
+  a.outgoing = [faEnd];
+  b.outgoing = [fbEnd];
+  end.incoming = [faEnd, fbEnd];
+
+  return [start, gw, a, b, end, f0, fa, fb, faEnd, fbEnd];
+}
+
 test('exclusive gateway waits for context variable choice', () => {
   const diagram = buildContextChoiceDiagram();
   const sim = createSimulationInstance(diagram, { delay: 0 });
@@ -349,5 +403,22 @@ test('manual step after exclusive gateway does not auto resume', async () => {
   await new Promise(r => setTimeout(r, 5));
   const after = Array.from(sim.tokenStream.get(), t => t.element.id);
   assert.deepStrictEqual(after, ['a']);
+});
+
+test('exclusive gateway auto-resumes when running before choice', async () => {
+  const diagram = buildAutoResumeDiagram();
+  const sim = createSimulationInstance(diagram, { delay: 1 });
+  sim.reset();
+  sim.resume();
+  sim.step(); // start -> gateway
+  sim.step(); // evaluate and pause while running
+  assert.ok(sim.pathsStream.get());
+  sim.step('fa');
+  const afterChoice = Array.from(sim.tokenStream.get(), t => t.element.id);
+  assert.deepStrictEqual(afterChoice, ['a']);
+  await new Promise(r => setTimeout(r, 5));
+  const final = Array.from(sim.tokenStream.get(), t => t.element.id);
+  assert.deepStrictEqual(final, []);
+  sim.stop();
 });
 
