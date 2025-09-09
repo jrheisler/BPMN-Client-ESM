@@ -1,6 +1,7 @@
 // public/js/core/simulation.js
 
 import { Stream } from './stream.js';
+import { evaluate as expressionEvaluate } from './expression/index.js';
 
 // Sandboxed expression evaluator supporting a subset of JS syntax
 // (boolean, comparison and arithmetic operators). Identifiers not present
@@ -306,9 +307,7 @@ function tokenize(input) {
 export function createSimulation(services, opts = {}) {
   const { elementRegistry, canvas, context: initialContext = {} } = services;
   const delay = opts.delay || 1000;
-  const conditionFallback = Object.prototype.hasOwnProperty.call(opts, 'conditionFallback')
-    ? opts.conditionFallback
-    : undefined;
+  // expressions are expected to throw on unknown variables or evaluation errors
 
   let sharedContext = { ...initialContext };
 
@@ -331,13 +330,13 @@ export function createSimulation(services, opts = {}) {
   function evaluate(expr, data) {
     if (!expr) return true;
     const raw = (expr.body || expr.value || '').toString().trim();
-    const js = raw.replace(/^\$\{?|\}$/g, '');
-    if (!js) return true;
+    const inner = raw.replace(/^\$\{?|\}$/g, '');
+    if (!inner) return true;
     try {
-      return !!safeEval(js, data || {}, conditionFallback);
+      return !!expressionEvaluate(inner, data || {}, expr.language);
     } catch (err) {
-      console.warn('Failed to evaluate condition', js, err);
-      return conditionFallback;
+      console.warn('Failed to evaluate condition', inner, err);
+      throw err;
     }
   }
 
@@ -666,13 +665,19 @@ const boundaryTokenMap = new Map();
     // `flowId` is the id of the chosen sequence flow (string)
     // Determine viable flows based on conditions when no flowId is provided
     if (!flowId) {
-      const mapped = outgoing.map(flow => ({
-        flow,
-        satisfied: evaluate(
-          flow.businessObject?.conditionExpression,
-          token.context
-        )
-      }));
+      const mapped = outgoing.map(flow => {
+        try {
+          return {
+            flow,
+            satisfied: evaluate(
+              flow.businessObject?.conditionExpression,
+              token.context
+            )
+          };
+        } catch (err) {
+          return { flow, satisfied: false, error: err };
+        }
+      });
       const defBo = token.element.businessObject?.default;
       const defFlow = defBo ? elementRegistry.get(defBo.id) || defBo : null;
 
@@ -698,8 +703,7 @@ const boundaryTokenMap = new Map();
         if (defEntry) {
           if (others.length) {
             defEntry.satisfied = false;
-          } else {
-            defEntry.satisfied = true;
+          } else if (defEntry.satisfied) {
             defaultOnly = true;
           }
         }
@@ -828,10 +832,16 @@ const boundaryTokenMap = new Map();
     }
     let ids = Array.isArray(flowIds) ? flowIds : flowIds ? [flowIds] : null;
     if (!ids || ids.length === 0) {
-      const mapped = outgoing.map(flow => ({
-        flow,
-        satisfied: evaluate(flow.businessObject?.conditionExpression, token.context)
-      }));
+      const mapped = outgoing.map(flow => {
+        try {
+          return {
+            flow,
+            satisfied: evaluate(flow.businessObject?.conditionExpression, token.context)
+          };
+        } catch (err) {
+          return { flow, satisfied: false, error: err };
+        }
+      });
       const defBo = token.element.businessObject?.default;
       const defFlow = defBo ? elementRegistry.get(defBo.id) || defBo : null;
 
@@ -853,8 +863,7 @@ const boundaryTokenMap = new Map();
         if (defEntry) {
           if (others.length) {
             defEntry.satisfied = false;
-          } else {
-            defEntry.satisfied = true;
+          } else if (defEntry.satisfied) {
             defaultOnly = true;
           }
         }
@@ -876,7 +885,11 @@ const boundaryTokenMap = new Map();
       .map((id, idx) => {
         const flow = elementRegistry.get(id);
         if (!flow) return null;
-        if (!evaluate(flow.businessObject?.conditionExpression, token.context)) return null;
+        try {
+          if (!evaluate(flow.businessObject?.conditionExpression, token.context)) return null;
+        } catch (err) {
+          return null;
+        }
         const pendingJoins = { ...(token.pendingJoins || {}) };
         if (joins && joins.length) {
           joins.forEach(join => {

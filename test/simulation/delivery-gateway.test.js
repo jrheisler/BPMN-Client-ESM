@@ -63,14 +63,14 @@ test('token advances automatically when deliveryStatus matches a single branch',
   assert.strictEqual(sim.pathsStream.get(), null);
 });
 
-test('token automatically takes fallback branch when deliveryStatus is unset', () => {
+test('gateway waits for choice when deliveryStatus is unset', () => {
   const diagram = buildDeliveryCheckDiagram();
   const sim = createSimulationInstance(diagram, { delay: 0 });
   sim.reset();
   sim.step(); // start -> gateway
-  sim.step(); // gateway evaluates and moves to fallback
+  sim.step(); // evaluate and pause awaiting user choice
   const after = Array.from(sim.tokenStream.get(), t => t.element.id);
-  assert.deepStrictEqual(after, ['Task_Investigate']);
-  assert.strictEqual(sim.pathsStream.get(), null);
+  assert.deepStrictEqual(after, ['Gateway_DeliveryCheck']);
+  assert.ok(sim.pathsStream.get());
 });
 
