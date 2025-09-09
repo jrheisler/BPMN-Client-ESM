@@ -148,15 +148,46 @@ let nextTokenId = 1;
     saveTokenLog();
   }
 
-  function getStart() {
+  function getStart(startId) {
     const all = elementRegistry.filter
-      ? elementRegistry.filter(e => e.type === 'bpmn:StartEvent' || e.businessObject?.$type === 'bpmn:StartEvent')
+      ? elementRegistry.filter(
+          e =>
+            e.type === 'bpmn:StartEvent' ||
+            e.businessObject?.$type === 'bpmn:StartEvent'
+        )
       : [];
-    const start = all[0] || null;
-    if (!start) {
-      console.warn('No StartEvent found in diagram');
+
+    if (startId) {
+      const found = elementRegistry.get(startId);
+      if (
+        found &&
+        (found.type === 'bpmn:StartEvent' ||
+          found.businessObject?.$type === 'bpmn:StartEvent')
+      ) {
+        return found;
+      }
     }
-    return start;
+
+    if (!all.length) {
+      console.warn('No StartEvent found in diagram');
+      return null;
+    }
+
+    if (all.length === 1) return all[0];
+
+    const withoutIncoming = all.filter(e => !e.incoming || !e.incoming.length);
+    if (withoutIncoming.length === 1) return withoutIncoming[0];
+
+    const noneDefined = withoutIncoming.filter(
+      e => !(e.businessObject?.eventDefinitions?.length)
+    );
+
+    if (noneDefined.length === 1) return noneDefined[0];
+
+    console.warn(
+      'Multiple StartEvents found in diagram. Provide start event id to start()'
+    );
+    return null;
   }
 
   function schedule() {
@@ -769,7 +800,7 @@ let nextTokenId = 1;
     if (!awaitingToken) resumeAfterChoice = false;
   }
 
-  function start() {
+  function start(startId) {
     if (tokens.length || running) {
       stop();
     }
@@ -788,7 +819,13 @@ let nextTokenId = 1;
     previousFlowIds = new Set();
 
     sharedContext = { ...initialContext };
-    const startEl = getStart();
+    const startEl = getStart(startId);
+    if (!startEl) {
+      tokens = [];
+      tokenStream.set(tokens);
+      running = false;
+      return;
+    }
     const t = { id: nextTokenId++, element: startEl, viaFlow: null, context: sharedContext };
     tokens = [t];
     tokenStream.set(tokens);
@@ -820,12 +857,18 @@ let nextTokenId = 1;
     cleanup();
   }
 
-  function reset() {
+  function reset(startId) {
     pause();
     cleanup();
     clearTokenLog();
     sharedContext = { ...initialContext };
-    const startEl = getStart();
+    const startEl = getStart(startId);
+    if (!startEl) {
+      tokens = [];
+      tokenStream.set(tokens);
+      pathsStream.set(null);
+      return;
+    }
     const t = { id: nextTokenId++, element: startEl, viaFlow: null, context: sharedContext };
     tokens = [t];
     tokenStream.set(tokens);
