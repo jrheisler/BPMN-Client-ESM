@@ -39,7 +39,12 @@ function buildTimerStartDiagram() {
     outgoing: [],
     businessObject: {
       $type: 'bpmn:StartEvent',
-      eventDefinitions: [{ $type: 'bpmn:TimerEventDefinition' }]
+      eventDefinitions: [
+        {
+          $type: 'bpmn:TimerEventDefinition',
+          timeDuration: { body: 'PT0.01S' }
+        }
+      ]
     }
   };
   const after = { id: 'After', type: 'bpmn:UserTask', incoming: [], outgoing: [] };
@@ -60,18 +65,14 @@ test('message start event proceeds automatically', async () => {
   assert.deepStrictEqual(ids, ['TaskMessage']);
 });
 
-// Timer start event requires manual resume
+// Timer start event resumes after specified duration
 
-test('timer start event waits for manual trigger', async () => {
+test('timer start event proceeds after duration', async () => {
   const diagram = buildTimerStartDiagram();
   const sim = createSimulationInstance(diagram, { delay: 1 });
   sim.start('StartTimer');
-  await new Promise(r => setTimeout(r, 20));
-  let ids = Array.from(sim.tokenStream.get(), t => t.element && t.element.id);
-  assert.deepStrictEqual(ids, ['StartTimer']);
-  sim.resume();
-  await new Promise(r => setTimeout(r, 20));
-  ids = Array.from(sim.tokenStream.get(), t => t.element && t.element.id);
+  await new Promise(r => setTimeout(r, 30));
+  const ids = Array.from(sim.tokenStream.get(), t => t.element && t.element.id);
   assert.deepStrictEqual(ids, ['After']);
 });
 

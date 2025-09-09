@@ -202,9 +202,52 @@ let nextTokenId = 1;
     return null;
   });
 
-  elementHandlers.set('bpmn:TimerEvent', (token, api) => {
-    api.pause();
+  function parseISODuration(str) {
+    const re = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/;
+    const m = re.exec(str);
+    if (!m) return null;
+    const [, d, h, m_, s] = m;
+    const days = parseFloat(d || 0);
+    const hours = parseFloat(h || 0);
+    const mins = parseFloat(m_ || 0);
+    const secs = parseFloat(s || 0);
+    return ((days * 24 + hours) * 60 + mins) * 60 * 1000 + secs * 1000;
+  }
+
+  function getTimerDelay(def) {
+    const getVal = v => (v && (v.body || v.value || '').toString().trim()) || '';
+    if (def.timeDuration) {
+      return parseISODuration(getVal(def.timeDuration));
+    }
+    if (def.timeDate) {
+      const ts = Date.parse(getVal(def.timeDate));
+      if (!isNaN(ts)) {
+        return Math.max(0, ts - Date.now());
+      }
+      return null;
+    }
+    if (def.timeCycle) {
+      const expr = getVal(def.timeCycle);
+      const parts = expr.split('/');
+      const last = parts[parts.length - 1];
+      return parseISODuration(last);
+    }
     return null;
+  }
+
+  elementHandlers.set('bpmn:TimerEvent', (token, api) => {
+    const def = token.element.businessObject?.eventDefinitions?.[0];
+    const delayMs = def ? getTimerDelay(def) : null;
+    api.pause();
+    if (delayMs == null) {
+      return null;
+    }
+    const to = setTimeout(() => {
+      skipHandlerFor.add(token.id);
+      api.resume();
+    }, delayMs);
+    api.addCleanup(() => clearTimeout(to));
+    return [token];
   });
 
   elementHandlers.set('bpmn:MessageEvent', (token, api) => {
@@ -220,9 +263,7 @@ let nextTokenId = 1;
   function isManualResume(token) {
     const el = token && token.element;
     if (!el) return false;
-    if (el.type === 'bpmn:UserTask') return true;
-    const def = el.businessObject?.eventDefinitions?.[0];
-    return def?.$type === 'bpmn:TimerEventDefinition';
+    return el.type === 'bpmn:UserTask';
   }
 
   function clearHandlerState(clearSkip = false) {
