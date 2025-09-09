@@ -41,7 +41,7 @@ function buildDiagram(targetParticipant = false) {
   return [startA, task, next, msgTarget, f0, fSeq, m1];
 }
 
-test('task sends message and continues along sequence flow', () => {
+test('message flow to start event without message definition is ignored', () => {
   const diagram = buildDiagram(false);
   const sim = createSimulationInstance(diagram, { delay: 0 });
   sim.reset();
