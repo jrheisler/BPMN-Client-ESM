@@ -232,6 +232,23 @@ test('exclusive gateway waits for context variable choice', () => {
   sim.stop();
 });
 
+test('exclusive gateway allows manual choice when context variable undefined', () => {
+  const diagram = buildContextChoiceDiagram();
+  const sim = createSimulationInstance(diagram, { delay: 0 });
+  sim.reset();
+  sim.step(); // start -> gateway
+  sim.step(); // evaluate and pause with undefined context
+  const paths = sim.pathsStream.get();
+  assert.ok(paths);
+  assert.deepStrictEqual(paths.flows.map(f => f.flow.id), ['fExisting', 'fNew']);
+  assert.deepStrictEqual(Array.from(sim.tokenStream.get(), t => t.element.id), ['gw']);
+
+  sim.step('fExisting'); // choose a flow without defining context
+  const after = Array.from(sim.tokenStream.get(), t => t.element.id);
+  assert.deepStrictEqual(after, ['existing']);
+  assert.strictEqual(sim.pathsStream.get(), null);
+});
+
 test('exclusive gateway exposes flows and waits for explicit choice', () => {
   const diagram = buildDiagram();
   const sim = createSimulationInstance(diagram, { delay: 0 });
