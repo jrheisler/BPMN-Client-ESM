@@ -391,6 +391,9 @@ let awaitingToken = null;
 let resumeAfterChoice = false;
 let nextTokenId = 1;
 
+// Map host token id -> array of attached boundary token ids
+const boundaryTokenMap = new Map();
+
 // Map of BPMN element type -> handler(token, api)
   const elementHandlers = new Map();
 
@@ -445,7 +448,10 @@ let nextTokenId = 1;
         skipHandlerFor.add(t.id);
       }
     });
-    resume();
+    if (!running) {
+      schedule();
+      running = true;
+    }
   }
 
   // Visual highlighting of the active elements
@@ -618,6 +624,7 @@ let nextTokenId = 1;
     resumeAfterChoice = false;
     pathsStream.set(null);
     messageListeners.clear();
+    boundaryTokenMap.clear();
     tokens = [];
     tokenStream.set(tokens);
     previousElementIds.forEach(id => {
@@ -914,6 +921,40 @@ let nextTokenId = 1;
     return generated;
   }
 
+  function trackBoundary(hostId, tokenId) {
+    let list = boundaryTokenMap.get(hostId);
+    if (!list) {
+      list = [];
+      boundaryTokenMap.set(hostId, list);
+    }
+    list.push(tokenId);
+  }
+
+  function cleanupBoundaryTokens(hostId) {
+    const ids = boundaryTokenMap.get(hostId);
+    if (!ids || !ids.length) return;
+    const idSet = new Set(ids);
+    for (let i = tokens.length - 1; i >= 0; i--) {
+      if (idSet.has(tokens[i].id)) {
+        tokens.splice(i, 1);
+      }
+    }
+    boundaryTokenMap.delete(hostId);
+  }
+
+  function removeBoundaryTokenRef(tokenId) {
+    for (const [hostId, list] of boundaryTokenMap) {
+      const idx = list.indexOf(tokenId);
+      if (idx !== -1) {
+        list.splice(idx, 1);
+        if (!list.length) {
+          boundaryTokenMap.delete(hostId);
+        }
+        break;
+      }
+    }
+  }
+
   function processToken(token, flowIds) {
     // track spawned boundary tokens per host token
     let boundaryTokens = [];
@@ -927,6 +968,11 @@ let nextTokenId = 1;
         elementRegistry.get(bo.attachedToRef?.id) ||
         bo.attachedToRef ||
         null;
+      const hostToken =
+        host
+          ? tokens.find(t => t.element === host) ||
+            (awaitingToken && awaitingToken.element === host ? awaitingToken : null)
+          : null;
       if (interrupting) {
         if (host) {
           for (let i = tokens.length - 1; i >= 0; i--) {
@@ -940,29 +986,30 @@ let nextTokenId = 1;
               if (t.id !== token.id) tokens.splice(i, 1);
             }
           }
+          if (hostToken) {
+            boundaryTokenMap.delete(hostToken.id);
+          }
         }
-      } else if (host) {
-        const hostToken =
-          tokens.find(t => t.element === host) ||
-          (awaitingToken && awaitingToken.element === host ? awaitingToken : null);
-        if (hostToken) {
-          hostToken._boundaryCounts = hostToken._boundaryCounts || {};
-          const bid = token.element.id;
-          hostToken._boundaryCounts[bid] = Math.max(
-            0,
-            (hostToken._boundaryCounts[bid] || 1) - 1
-          );
-          const next = {
-            id: nextTokenId++,
-            element: token.element,
-            pendingJoins: hostToken.pendingJoins,
-            viaFlow: null,
-            context: sharedContext
-          };
-          logToken(next);
-          boundaryTokens.push(next);
-          hostToken._boundaryCounts[bid] = (hostToken._boundaryCounts[bid] || 0) + 1;
-        }
+        removeBoundaryTokenRef(token.id);
+      } else if (host && hostToken) {
+        hostToken._boundaryCounts = hostToken._boundaryCounts || {};
+        const bid = token.element.id;
+        hostToken._boundaryCounts[bid] = Math.max(
+          0,
+          (hostToken._boundaryCounts[bid] || 1) - 1
+        );
+        const next = {
+          id: nextTokenId++,
+          element: token.element,
+          pendingJoins: hostToken.pendingJoins,
+          viaFlow: null,
+          context: sharedContext
+        };
+        logToken(next);
+        boundaryTokens.push(next);
+        trackBoundary(hostToken.id, next.id);
+        hostToken._boundaryCounts[bid] = (hostToken._boundaryCounts[bid] || 0) + 1;
+        removeBoundaryTokenRef(token.id);
       }
     }
 
@@ -990,6 +1037,7 @@ let nextTokenId = 1;
           };
           logToken(next);
           boundaryTokens.push(next);
+          trackBoundary(token.id, next.id);
           token._boundaryCounts[b.id] = cnt + 1;
         }
       }
@@ -1021,7 +1069,18 @@ let nextTokenId = 1;
         };
         const res = elHandler(token, api, flowIds);
         if (Array.isArray(res)) {
-          return { tokens: messageTokens.concat(res, boundaryTokens), waiting: false };
+          const out = messageTokens.concat(res, boundaryTokens);
+          if (token.element.type === 'bpmn:BoundaryEvent') {
+            if (!out.some(t => t.id === token.id && t.element === token.element)) {
+              removeBoundaryTokenRef(token.id);
+            }
+          } else {
+            const still = out.find(t => t.id === token.id);
+            if (!still || still.element !== token.element) {
+              cleanupBoundaryTokens(token.id);
+            }
+          }
+          return { tokens: out, waiting: false };
         }
         if (res === null) {
           return { tokens: extraTokens, waiting: true };
@@ -1043,13 +1102,35 @@ let nextTokenId = 1;
       if (res === null) {
         return { tokens: extraTokens, waiting: true };
       }
-      return { tokens: messageTokens.concat(res, boundaryTokens), waiting: false };
+      const out = messageTokens.concat(res, boundaryTokens);
+      if (token.element.type === 'bpmn:BoundaryEvent') {
+        if (!out.some(t => t.id === token.id && t.element === token.element)) {
+          removeBoundaryTokenRef(token.id);
+        }
+      } else {
+        const still = out.find(t => t.id === token.id);
+        if (!still || still.element !== token.element) {
+          cleanupBoundaryTokens(token.id);
+        }
+      }
+      return { tokens: out, waiting: false };
     }
     if (/Gateway/.test(token.element.type)) {
       console.warn('Unknown gateway type', token.element.type);
     }
     const res = handleDefault(token, sequenceFlows);
-    return { tokens: messageTokens.concat(res, boundaryTokens), waiting: false };
+    const out = messageTokens.concat(res, boundaryTokens);
+    if (token.element.type === 'bpmn:BoundaryEvent') {
+      if (!out.some(t => t.id === token.id && t.element === token.element)) {
+        removeBoundaryTokenRef(token.id);
+      }
+    } else {
+      const still = out.find(t => t.id === token.id);
+      if (!still || still.element !== token.element) {
+        cleanupBoundaryTokens(token.id);
+      }
+    }
+    return { tokens: out, waiting: false };
   }
 
   function registerMessageStartEvents() {
@@ -1221,6 +1302,7 @@ let nextTokenId = 1;
     clearTokenLog();
     pathsStream.set(null);
     awaitingToken = null;
+    boundaryTokenMap.clear();
     previousElementIds.forEach(id => {
       if (elementRegistry.get(id)) canvas.removeMarker(id, 'active');
     });
