@@ -2,6 +2,7 @@
 
 import { Stream } from './stream.js';
 import { evaluate as expressionEvaluate } from './expression/index.js';
+import { createMessageBroker } from './message-broker.js';
 
 // Sandboxed expression evaluator supporting a subset of JS syntax
 // (boolean, comparison and arithmetic operators). Identifiers not present
@@ -393,6 +394,8 @@ let nextTokenId = 1;
 // Map host token id -> array of attached boundary token ids
 const boundaryTokenMap = new Map();
 
+  const messageBroker = createMessageBroker();
+
 // Map of BPMN element type -> handler(token, api)
   const elementHandlers = new Map();
 
@@ -402,51 +405,44 @@ const boundaryTokenMap = new Map();
   // Token ids that should skip their element handler on next step
   const skipHandlerFor = new Set();
 
-  // Message listeners keyed by target element id
-  const messageListeners = new Map();
+  function triggerMessage(id, correlationKey) {
+    const el = elementRegistry.get(id);
+    const isMessageStart =
+      el &&
+      el.type === 'bpmn:StartEvent' &&
+      el.businessObject?.eventDefinitions?.some(
+        d => d.$type === 'bpmn:MessageEventDefinition'
+      );
 
-  function addMessageListener(id, cb, { once = false } = {}) {
-    const entry = { cb, once };
-    let list = messageListeners.get(id);
-    if (!list) {
-      list = [];
-      messageListeners.set(id, list);
+    if (isMessageStart) {
+      const def = el.businessObject.eventDefinitions.find(
+        d => d.$type === 'bpmn:MessageEventDefinition'
+      );
+      const name = def.messageRef?.name;
+      const corr =
+        correlationKey !== undefined
+          ? correlationKey
+          : evaluate(el.businessObject?.correlationKey, sharedContext);
+      const msg = messageBroker.consume(name, corr);
+      if (msg) {
+        const next = {
+          id: nextTokenId++,
+          element: el,
+          viaFlow: msg.flowId || null,
+          context: sharedContext
+        };
+        skipHandlerFor.add(next.id);
+        logToken(next);
+        tokens.push(next);
+      }
+    } else {
+      tokens.forEach(t => {
+        if (t.element && t.element.id === id) {
+          skipHandlerFor.add(t.id);
+        }
+      });
     }
-    list.push(entry);
-    return () => {
-      const arr = messageListeners.get(id);
-      if (!arr) return;
-      const idx = arr.indexOf(entry);
-      if (idx !== -1) arr.splice(idx, 1);
-      if (!arr.length) messageListeners.delete(id);
-    };
-  }
 
-  function emitMessage(flow) {
-    const target = flow.target;
-    if (!target) return [];
-    const list = messageListeners.get(target.id);
-    if (!list || !list.length) return [];
-    const generated = [];
-    // clone to avoid issues if callbacks modify list
-    list.slice().forEach(entry => {
-      const res = entry.cb(flow);
-      if (Array.isArray(res)) generated.push(...res);
-      if (entry.once) {
-        const idx = list.indexOf(entry);
-        if (idx !== -1) list.splice(idx, 1);
-      }
-    });
-    if (!list.length) messageListeners.delete(target.id);
-    return generated;
-  }
-
-  function triggerMessage(id) {
-    tokens.forEach(t => {
-      if (t.element && t.element.id === id) {
-        skipHandlerFor.add(t.id);
-      }
-    });
     if (!running) {
       schedule();
       running = true;
@@ -591,19 +587,10 @@ const boundaryTokenMap = new Map();
     return [token];
   });
 
-  elementHandlers.set('bpmn:MessageEvent', (token, api) => {
-    api.pause();
-    const off = addMessageListener(
-      token.element.id,
-      () => {
-        skipHandlerFor.add(token.id);
-        api.resume();
-      },
-      { once: true }
-    );
-    api.addCleanup(off);
-    return [token];
-  });
+    elementHandlers.set('bpmn:MessageEvent', (token, api) => {
+      api.pause();
+      return [token];
+    });
 
   function isManualResume(token) {
     const el = token && token.element;
@@ -622,8 +609,8 @@ const boundaryTokenMap = new Map();
     awaitingToken = null;
     resumeAfterChoice = false;
     pathsStream.set(null);
-    messageListeners.clear();
     boundaryTokenMap.clear();
+    messageBroker.clear();
     tokens = [];
     tokenStream.set(tokens);
     previousElementIds.forEach(id => {
@@ -637,11 +624,13 @@ const boundaryTokenMap = new Map();
   }
 
   function spawnMessageTokens(token, flows) {
-    const generated = [];
     flows.forEach(flow => {
-      generated.push(...emitMessage(flow));
+      const name = flow.businessObject?.messageRef?.name;
+      if (!name) return;
+      const corr = evaluate(flow.businessObject?.correlationKey, token.context);
+      messageBroker.publish(name, corr, { flowId: flow.id });
     });
-    return generated;
+    return [];
   }
 
   function handleDefault(token, sequenceFlows) {
@@ -1146,35 +1135,7 @@ const boundaryTokenMap = new Map();
     return { tokens: out, waiting: false };
   }
 
-  function registerMessageStartEvents() {
-    const starts = elementRegistry.filter
-      ? elementRegistry.filter(
-          e =>
-            e.type === 'bpmn:StartEvent' &&
-            e.businessObject?.eventDefinitions?.some(
-              d => d.$type === 'bpmn:MessageEventDefinition'
-            )
-        )
-      : [];
-    starts.forEach(startEl => {
-      addMessageListener(startEl.id, flow => {
-        const next = {
-          id: nextTokenId++,
-          element: startEl,
-          viaFlow: flow.id,
-          context: sharedContext
-        };
-        skipHandlerFor.add(next.id);
-        logToken(next);
-        const { tokens: resTokens, waiting } = processToken(next);
-        if (waiting) {
-          if (!awaitingToken) awaitingToken = next;
-          return [next, ...resTokens];
-        }
-        return resTokens;
-      });
-    });
-  }
+  function registerMessageStartEvents() {}
 
   function step(flowIds) {
     const newTokens = [];
