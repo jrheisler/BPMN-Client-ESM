@@ -119,3 +119,14 @@ test('non-interrupting message boundary can trigger multiple times', () => {
   const count = ids.filter(id => id === 'OnMessage').length;
   assert.equal(count, 2);
 });
+
+test('boundary token removed when host completes without activation', () => {
+  const diagram = buildTimerDiagram();
+  const sim = createSimulationInstance(diagram, { delay: 0 });
+  sim.reset();
+  sim.step(); // start -> task
+  sim.step(); // spawn boundary token and pause user task
+  sim.step(); // manually complete user task
+  const ids = sim.tokenStream.get().map(t => t.element && t.element.id);
+  assert.deepStrictEqual(ids, ['After']);
+});
