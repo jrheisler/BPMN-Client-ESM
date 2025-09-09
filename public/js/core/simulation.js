@@ -36,7 +36,8 @@ export function createSimulation(services, opts = {}) {
   // Stream of currently active tokens [{ id, element }]
   const tokenStream = new Stream([]);
   const tokenLogStream = new Stream([]);
-  // Stream of available sequence flows when waiting on a gateway decision
+  // Stream of available sequence flows when waiting on a gateway decision.
+  // This acts as the signal to prompt the user for input on which path to take.
   const pathsStream = new Stream(null);
 
   const TOKEN_LOG_STORAGE_KEY = 'simulationTokenLog';
@@ -292,15 +293,15 @@ let nextTokenId = 1;
       const defBo = token.element.businessObject?.default;
       const defFlow = defBo ? elementRegistry.get(defBo.id) || defBo : null;
 
-      // If no conditions are satisfied, pause and prompt the user to
-      // select a path manually.
+      // If no conditions are satisfied, prompt the user to select a path
+      // manually. `pathsStream` signals the UI to request input.
       if (mapped.every(f => !f.satisfied)) {
         pathsStream.set({
           flows: mapped,
           type: token.element.type,
           isDefaultOnly: false
         });
-        awaitingToken = token;
+        awaitingToken = token; // keep token so the process can resume
         // remember running state to resume automatically once choice is made
         resumeAfterChoice = running;
         pause();
@@ -331,7 +332,7 @@ let nextTokenId = 1;
         type: token.element.type,
         isDefaultOnly: defaultOnly
       });
-      awaitingToken = token;
+      awaitingToken = token; // keep token so the process can resume
       // remember running state to resume automatically once choice is made
       resumeAfterChoice = running;
       pause();
@@ -472,10 +473,11 @@ let nextTokenId = 1;
       const defBo = token.element.businessObject?.default;
       const defFlow = defBo ? elementRegistry.get(defBo.id) || defBo : null;
 
-      // No sequence flow satisfied -> wait for user decision
+      // No sequence flow satisfied -> wait for user decision. `pathsStream`
+      // signals the UI to request input and the token is kept for resuming.
       if (mapped.every(f => !f.satisfied)) {
         pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: false });
-        awaitingToken = token;
+        awaitingToken = token; // keep token so the process can resume
         // remember running state to resume automatically once choice is made
         resumeAfterChoice = running;
         pause();
@@ -500,7 +502,7 @@ let nextTokenId = 1;
         ids = [satisfied[0].flow.id];
       } else {
         pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: defaultOnly });
-        awaitingToken = token;
+        awaitingToken = token; // keep token so the process can resume
         // remember running state to resume automatically once choice is made
         resumeAfterChoice = running;
         pause();
