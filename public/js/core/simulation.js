@@ -439,6 +439,15 @@ let nextTokenId = 1;
     return generated;
   }
 
+  function triggerMessage(id) {
+    tokens.forEach(t => {
+      if (t.element && t.element.id === id) {
+        skipHandlerFor.add(t.id);
+      }
+    });
+    resume();
+  }
+
   // Visual highlighting of the active elements
   let previousElementIds = new Set();
   let previousFlowIds = new Set();
@@ -906,16 +915,19 @@ let nextTokenId = 1;
   }
 
   function processToken(token, flowIds) {
+    // track spawned boundary tokens per host token
+    let boundaryTokens = [];
+
     // handle boundary events when token itself is boundary
     if (token.element.type === 'bpmn:BoundaryEvent' && skipHandlerFor.has(token.id)) {
       const bo = token.element.businessObject || {};
       const interrupting = bo.cancelActivity !== false;
+      const host =
+        token.element.host ||
+        elementRegistry.get(bo.attachedToRef?.id) ||
+        bo.attachedToRef ||
+        null;
       if (interrupting) {
-        const host =
-          token.element.host ||
-          elementRegistry.get(bo.attachedToRef?.id) ||
-          bo.attachedToRef ||
-          null;
         if (host) {
           for (let i = tokens.length - 1; i >= 0; i--) {
             const t = tokens[i];
@@ -929,12 +941,33 @@ let nextTokenId = 1;
             }
           }
         }
+      } else if (host) {
+        const hostToken =
+          tokens.find(t => t.element === host) ||
+          (awaitingToken && awaitingToken.element === host ? awaitingToken : null);
+        if (hostToken) {
+          hostToken._boundaryCounts = hostToken._boundaryCounts || {};
+          const bid = token.element.id;
+          hostToken._boundaryCounts[bid] = Math.max(
+            0,
+            (hostToken._boundaryCounts[bid] || 1) - 1
+          );
+          const next = {
+            id: nextTokenId++,
+            element: token.element,
+            pendingJoins: hostToken.pendingJoins,
+            viaFlow: null,
+            context: sharedContext
+          };
+          logToken(next);
+          boundaryTokens.push(next);
+          hostToken._boundaryCounts[bid] = (hostToken._boundaryCounts[bid] || 0) + 1;
+        }
       }
     }
 
-    // spawn boundary tokens for current element (once)
-    let boundaryTokens = [];
-    if (!token._boundarySpawned) {
+    // spawn boundary tokens for current element (per boundary)
+    if (token.element.type !== 'bpmn:BoundaryEvent') {
       const boundaries = elementRegistry.filter
         ? elementRegistry.filter(
             e =>
@@ -944,18 +977,22 @@ let nextTokenId = 1;
                 e.businessObject?.attachedToRef?.id === token.element.id)
           )
         : [];
-      boundaryTokens = boundaries.map(b => {
-        const next = {
-          id: nextTokenId++,
-          element: b,
-          pendingJoins: token.pendingJoins,
-          viaFlow: null,
-          context: sharedContext
-        };
-        logToken(next);
-        return next;
-      });
-      if (boundaryTokens.length) token._boundarySpawned = true;
+      for (const b of boundaries) {
+        token._boundaryCounts = token._boundaryCounts || {};
+        const cnt = token._boundaryCounts[b.id] || 0;
+        if (cnt < 1) {
+          const next = {
+            id: nextTokenId++,
+            element: b,
+            pendingJoins: token.pendingJoins,
+            viaFlow: null,
+            context: sharedContext
+          };
+          logToken(next);
+          boundaryTokens.push(next);
+          token._boundaryCounts[b.id] = cnt + 1;
+        }
+      }
     }
 
     const outgoing = token.element.outgoing || [];
@@ -1294,6 +1331,7 @@ let nextTokenId = 1;
     tokenLogStream,
     pathsStream,
     elementHandlers,
+    triggerMessage,
     setContext,
     getContext
   };
