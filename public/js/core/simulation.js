@@ -606,28 +606,29 @@ let nextTokenId = 1;
       .filter(Boolean);
   }
 
-  function handleEventBasedGateway(token, outgoing, flowId) {
-    if (!flowId) {
-      pathsStream.set({ flows: outgoing, type: token.element.type });
-      awaitingToken = token;
-      // remember running state to resume automatically once choice is made
-      resumeAfterChoice = running;
-      pause();
-      return null;
-    }
-    const flow = elementRegistry.get(flowId);
-    if (flow) {
+  function handleEventBasedGateway(token, outgoing) {
+    const generated = [];
+    outgoing.forEach(flow => {
+      const target = flow.target;
+      if (!target) return;
       const next = {
-        id: token.id,
-        element: flow.target,
+        id: nextTokenId++,
+        element: target,
         pendingJoins: token.pendingJoins,
         viaFlow: flow.id,
-        context: sharedContext
+        context: sharedContext,
+        gatewayOf: token.id
       };
       logToken(next);
-      return [next];
-    }
-    return [];
+      const { tokens: resTokens, waiting } = processToken(next);
+      if (waiting) {
+        if (!awaitingToken) awaitingToken = next;
+        generated.push(next, ...resTokens);
+      } else {
+        generated.push(...resTokens);
+      }
+    });
+    return generated;
   }
 
   function processToken(token, flowIds) {
@@ -744,6 +745,24 @@ let nextTokenId = 1;
     const newTokens = [];
     const processed = new Set();
 
+    const gatewayWinners = new Map();
+    for (const t of tokens) {
+      if (t.gatewayOf && skipHandlerFor.has(t.id)) {
+        if (!gatewayWinners.has(t.gatewayOf)) {
+          gatewayWinners.set(t.gatewayOf, t.id);
+        }
+      }
+    }
+    const cancelled = new Set();
+    for (const t of tokens) {
+      if (t.gatewayOf) {
+        const win = gatewayWinners.get(t.gatewayOf);
+        if (win && t.id !== win) {
+          cancelled.add(t.id);
+        }
+      }
+    }
+
     if (awaitingToken && (!running || flowIds)) {
       if (isManualResume(awaitingToken)) {
         skipHandlerFor.add(awaitingToken.id);
@@ -776,7 +795,10 @@ let nextTokenId = 1;
     if (!tokens.length && !newTokens.length) return;
 
     for (const token of tokens) {
-      if (processed.has(token.id)) continue;
+      if (processed.has(token.id) || cancelled.has(token.id)) {
+        skipHandlerFor.delete(token.id);
+        continue;
+      }
       if (awaitingToken && token.id === awaitingToken.id && !skipHandlerFor.has(token.id) && !flowIds) {
         newTokens.push(token);
         continue;
@@ -813,6 +835,14 @@ let nextTokenId = 1;
       } else {
         processed.add(token.id);
         const { tokens: resTokens, waiting } = processToken(token);
+        if (!waiting && token.gatewayOf) {
+          for (const t of tokens) {
+            if (t.gatewayOf === token.gatewayOf && t.id !== token.id) {
+              cancelled.add(t.id);
+              processed.add(t.id);
+            }
+          }
+        }
         if (waiting) {
           if (!awaitingToken) awaitingToken = token;
           newTokens.push(token);
