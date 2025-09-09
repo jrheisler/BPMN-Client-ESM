@@ -12,7 +12,7 @@ function buildDiagram() {
   };
   const gw = {
     id: 'gw',
-    type: 'bpmn:ExclusiveGateway',
+    type: 'bpmn:InclusiveGateway',
     businessObject: { gatewayDirection: 'Diverging' },
     incoming: [],
     outgoing: []
@@ -28,13 +28,13 @@ function buildDiagram() {
     id: 'f1',
     source: gw,
     target: a,
-    businessObject: { conditionExpression: { body: '${flag}' } }
+    businessObject: { conditionExpression: { body: '${x}' } }
   };
   const f2 = {
     id: 'f2',
     source: gw,
     target: b,
-    businessObject: { conditionExpression: { body: '${other}' } }
+    businessObject: { conditionExpression: { body: '${y}' } }
   };
   gw.outgoing = [f1, f2];
   a.incoming = [f1];
@@ -43,13 +43,14 @@ function buildDiagram() {
   return [start, gw, a, b, f0, f1, f2];
 }
 
-test('unknown variables throw and require manual path selection', () => {
+test('inclusive gateway waits for choice when expressions fail', () => {
   const diagram = buildDiagram();
   const sim = createSimulationInstance(diagram, { delay: 0 });
   sim.reset();
   sim.step(); // start -> gateway
   sim.step(); // evaluate and pause awaiting user choice
-  const after = Array.from(sim.tokenStream.get(), t => t.element.id);
-  assert.deepStrictEqual(after, ['gw']);
+  const tokens = Array.from(sim.tokenStream.get(), t => t.element.id);
+  assert.deepStrictEqual(tokens, ['gw']);
   assert.ok(sim.pathsStream.get());
 });
+
