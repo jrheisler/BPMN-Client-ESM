@@ -63,6 +63,18 @@ const sim = createSimulation({
   conditionFallback: undefined
 });
 
+```
+
+## Gateways with unsatisfied conditions
+
+If none of a gateway's outgoing sequence flow conditions evaluate to `true`,
+the simulation pauses and emits the available choices through `pathsStream`.
+Subscribe to this stream to present options to the user and call
+`simulation.step(flowId)` with the selected flow to continue. The engine
+automatically resumes when it was running before the pause, tracked internally
+via `resumeAfterChoice`.
+
+```js
 sim.pathsStream.subscribe(({ flows }) => {
   const options = flows.map((f, i) => `${i + 1}. ${f.flow.id}`).join('\n');
   const choice = window.prompt('Choose outgoing flow:\n' + options);
@@ -73,7 +85,8 @@ sim.pathsStream.subscribe(({ flows }) => {
 });
 ```
 
-When an exclusive gateway encounters a condition such as `${approved}` without `approved` in the context, the user is prompted:
+When an exclusive gateway encounters a condition such as `${approved}` without
+`approved` defined in the context, the user is prompted:
 
 ```
 Choose outgoing flow:
