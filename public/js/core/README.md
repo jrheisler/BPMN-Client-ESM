@@ -100,6 +100,19 @@ The simulation exposes methods such as `start`, `pause`, and `step` to drive
 execution. Use `step(flowId)` when a gateway waits for user input to select the
 next paths.
 
+### Start events
+
+`start(startId)` and `reset(startId)` accept an optional BPMN start event ID.
+When provided, only the matching start event is initialized. Without an ID,
+the simulation creates a token for every start event without incoming flows,
+allowing multiple starts to run in parallel.
+
+```js
+sim.start('StartEvent_1');
+// or reset to a specific start
+sim.reset('StartEvent_1');
+```
+
 ### Selecting outgoing flows
 
 `step` expects the IDs of the sequence flows that should be taken:

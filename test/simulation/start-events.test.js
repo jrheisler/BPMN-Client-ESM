@@ -76,14 +76,17 @@ test('timer start event proceeds after duration', async () => {
   assert.deepStrictEqual(ids, ['After']);
 });
 
-// When multiple start events exist, default to the one without event definition
+// When multiple start events exist, tokens are created for each start event
 
-test('defaults to none start event when multiple start nodes exist', async () => {
+test('starts all start events when none specified', async () => {
   const diagram = buildMultiStartDiagram();
   const sim = createSimulationInstance(diagram, { delay: 1 });
   sim.start();
   await new Promise(r => setTimeout(r, 20));
-  const ids = Array.from(sim.tokenStream.get(), t => t.element && t.element.id);
-  assert.deepStrictEqual(ids, ['TaskNone']);
+  const ids = Array.from(
+    sim.tokenStream.get(),
+    t => t.element && t.element.id
+  ).sort();
+  assert.deepStrictEqual(ids, ['TaskMessage', 'TaskNone']);
 });
 

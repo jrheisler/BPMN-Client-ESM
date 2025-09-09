@@ -216,6 +216,26 @@ Object.assign(document.body.style, {
   window.simulation = simulation;
   const overlays        = modeler.get('overlays');
 
+  function chooseStartEvent() {
+    const all = elementRegistry.filter
+      ? elementRegistry.filter(
+          e =>
+            e.type === 'bpmn:StartEvent' ||
+            e.businessObject?.$type === 'bpmn:StartEvent'
+        )
+      : [];
+    const eligible = all.filter(e => !e.incoming || !e.incoming.length);
+    if (eligible.length <= 1) return eligible[0]?.id;
+    const options = eligible
+      .map(e =>
+        `${e.id}${e.businessObject?.name ? ' - ' + e.businessObject.name : ''}`
+      )
+      .join('\n');
+    const choice = window.prompt('Select start event id:\n' + options);
+    const match = eligible.find(e => e.id === choice);
+    return match ? match.id : undefined;
+  }
+
   const { scheduleOverlayUpdate } = initAddOnOverlays({ overlays, elementRegistry, typeIcons });
   const { loadAddOnData, applyAddOnsToElements, syncAddOnStoreFromElements } =
     initAddOnFiltering({
@@ -465,7 +485,7 @@ async function appendXml(xml) {
       const svg = canvasEl.querySelector('svg');
       if (svg) svg.style.height = '100%';
       simulation.clearTokenLog();
-      simulation.reset();
+      simulation.reset(chooseStartEvent());
     } catch (err) {
       console.error("Import error:", err);
     }
@@ -930,7 +950,10 @@ function rebuildMenu() {
   avatarMenu,
 
   // Simulation controls
-  reactiveButton(new Stream("▶"), () => simulation.start(), { outline: true, title: "Play" }),
+  reactiveButton(new Stream("▶"), () => simulation.start(chooseStartEvent()), {
+    outline: true,
+    title: "Play"
+  }),
   reactiveButton(new Stream("⏸"), () => simulation.pause(), { outline: true, title: "Pause" }),
   reactiveButton(new Stream("⏭"), () => simulation.step(), { outline: true, title: "Step" }),
 

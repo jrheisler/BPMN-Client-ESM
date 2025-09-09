@@ -504,30 +504,17 @@ let nextTokenId = 1;
         (found.type === 'bpmn:StartEvent' ||
           found.businessObject?.$type === 'bpmn:StartEvent')
       ) {
-        return found;
+        return [found];
       }
+      console.warn('StartEvent with id ' + startId + ' not found');
+      return [];
     }
 
-    if (!all.length) {
+    const eligible = all.filter(e => !e.incoming || !e.incoming.length);
+    if (!eligible.length) {
       console.warn('No StartEvent found in diagram');
-      return null;
     }
-
-    if (all.length === 1) return all[0];
-
-    const withoutIncoming = all.filter(e => !e.incoming || !e.incoming.length);
-    if (withoutIncoming.length === 1) return withoutIncoming[0];
-
-    const noneDefined = withoutIncoming.filter(
-      e => !(e.businessObject?.eventDefinitions?.length)
-    );
-
-    if (noneDefined.length === 1) return noneDefined[0];
-
-    console.warn(
-      'Multiple StartEvents found in diagram. Provide start event id to start()'
-    );
-    return null;
+    return eligible;
   }
 
   function schedule() {
@@ -1207,24 +1194,31 @@ let nextTokenId = 1;
     previousFlowIds = new Set();
 
     sharedContext = { ...initialContext };
-    const startEl = getStart(startId);
-    if (!startEl) {
+    const startEls = getStart(startId);
+    if (!startEls.length) {
       tokens = [];
       tokenStream.set(tokens);
       running = false;
       return;
     }
-    const t = { id: nextTokenId++, element: startEl, viaFlow: null, context: sharedContext };
-    if (
-      startEl.businessObject?.eventDefinitions?.some(
-        d => d.$type === 'bpmn:MessageEventDefinition'
-      )
-    ) {
-      skipHandlerFor.add(t.id);
-    }
-    tokens = [t];
+    tokens = startEls.map(startEl => {
+      const t = {
+        id: nextTokenId++,
+        element: startEl,
+        viaFlow: null,
+        context: sharedContext
+      };
+      if (
+        startEl.businessObject?.eventDefinitions?.some(
+          d => d.$type === 'bpmn:MessageEventDefinition'
+        )
+      ) {
+        skipHandlerFor.add(t.id);
+      }
+      return t;
+    });
     tokenStream.set(tokens);
-    logToken(t);
+    tokens.forEach(logToken);
     registerMessageStartEvents();
     running = true;
     schedule();
@@ -1258,25 +1252,32 @@ let nextTokenId = 1;
     cleanup();
     clearTokenLog();
     sharedContext = { ...initialContext };
-    const startEl = getStart(startId);
-    if (!startEl) {
+    const startEls = getStart(startId);
+    if (!startEls.length) {
       tokens = [];
       tokenStream.set(tokens);
       pathsStream.set(null);
       registerMessageStartEvents();
       return;
     }
-    const t = { id: nextTokenId++, element: startEl, viaFlow: null, context: sharedContext };
-    if (
-      startEl.businessObject?.eventDefinitions?.some(
-        d => d.$type === 'bpmn:MessageEventDefinition'
-      )
-    ) {
-      skipHandlerFor.add(t.id);
-    }
-    tokens = [t];
+    tokens = startEls.map(startEl => {
+      const t = {
+        id: nextTokenId++,
+        element: startEl,
+        viaFlow: null,
+        context: sharedContext
+      };
+      if (
+        startEl.businessObject?.eventDefinitions?.some(
+          d => d.$type === 'bpmn:MessageEventDefinition'
+        )
+      ) {
+        skipHandlerFor.add(t.id);
+      }
+      return t;
+    });
     tokenStream.set(tokens);
-    logToken(t);
+    tokens.forEach(logToken);
     pathsStream.set(null);
     registerMessageStartEvents();
   }
