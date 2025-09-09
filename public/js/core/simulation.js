@@ -693,7 +693,12 @@ let nextTokenId = 1;
         awaitingToken = null;
         pathsStream.set(null);
         newTokens.push(...resTokens);
+        if (resumeAfterChoice) {
+          running = true;
+          schedule();
+        }
       }
+      resumeAfterChoice = false;
     }
 
     if (!tokens.length && !newTokens.length) return;
