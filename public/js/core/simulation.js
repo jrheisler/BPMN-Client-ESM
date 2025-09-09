@@ -923,6 +923,118 @@ const boundaryTokenMap = new Map();
     return generated;
   }
 
+  function resolveLoopCount(el, ctx) {
+    const lc = el.businessObject?.loopCharacteristics;
+    if (!lc) return 1;
+    if (lc.loopCardinality) {
+      try {
+        const raw = (lc.loopCardinality.body || lc.loopCardinality.value || '')
+          .toString()
+          .trim();
+        const inner = raw.replace(/^\$\{?|\}$/g, '');
+        if (inner) {
+          const val = expressionEvaluate(inner, ctx || {}, lc.loopCardinality.language);
+          const num = Number(val);
+          if (!isNaN(num)) return num;
+        }
+      } catch (err) {}
+    }
+    return 1;
+  }
+
+  function spawnChildTokens(parentToken, startEls) {
+    return startEls.map(startEl => {
+      const next = {
+        id: nextTokenId++,
+        element: startEl,
+        pendingJoins: parentToken.pendingJoins,
+        viaFlow: null,
+        context: sharedContext,
+        parent: parentToken.id
+      };
+      logToken(next);
+      return next;
+    });
+  }
+
+  elementHandlers.set('bpmn:SubProcess', token => {
+    const count = resolveLoopCount(token.element, token.context);
+    token._children = token._children || [];
+    const alive = new Set(tokens.map(t => t.id));
+    if (awaitingToken) alive.add(awaitingToken.id);
+    token._children = token._children.filter(id => alive.has(id));
+    if (!token._spawned) {
+      const starts = elementRegistry.filter
+        ? elementRegistry.filter(
+            e => e.type === 'bpmn:StartEvent' && e.parent === token.element
+          )
+        : [];
+      if (!starts.length || count <= 0) {
+        const flows = (token.element.outgoing || []).filter(
+          f => f.type === 'bpmn:SequenceFlow'
+        );
+        return handleDefault(token, flows);
+      }
+      const spawned = [];
+      for (let i = 0; i < count; i++) {
+        const kids = spawnChildTokens(token, starts);
+        kids.forEach(k => token._children.push(k.id));
+        spawned.push(...kids);
+      }
+      token._spawned = true;
+      return [token, ...spawned];
+    }
+    if (token._children.length) {
+      return [token];
+    }
+    token._spawned = false;
+    const flows = (token.element.outgoing || []).filter(
+      f => f.type === 'bpmn:SequenceFlow'
+    );
+    return handleDefault(token, flows);
+  });
+
+  elementHandlers.set('bpmn:CallActivity', token => {
+    const count = resolveLoopCount(token.element, token.context);
+    token._children = token._children || [];
+    const alive = new Set(tokens.map(t => t.id));
+    if (awaitingToken) alive.add(awaitingToken.id);
+    token._children = token._children.filter(id => alive.has(id));
+    if (!token._spawned) {
+      const calledId =
+        token.element.businessObject?.calledElement?.id ||
+        token.element.businessObject?.calledElement;
+      const proc = calledId && elementRegistry.get(calledId);
+      const starts = elementRegistry.filter
+        ? elementRegistry.filter(
+            e => e.type === 'bpmn:StartEvent' && e.parent === proc
+          )
+        : [];
+      if (!starts.length || count <= 0) {
+        const flows = (token.element.outgoing || []).filter(
+          f => f.type === 'bpmn:SequenceFlow'
+        );
+        return handleDefault(token, flows);
+      }
+      const spawned = [];
+      for (let i = 0; i < count; i++) {
+        const kids = spawnChildTokens(token, starts);
+        kids.forEach(k => token._children.push(k.id));
+        spawned.push(...kids);
+      }
+      token._spawned = true;
+      return [token, ...spawned];
+    }
+    if (token._children.length) {
+      return [token];
+    }
+    token._spawned = false;
+    const flows = (token.element.outgoing || []).filter(
+      f => f.type === 'bpmn:SequenceFlow'
+    );
+    return handleDefault(token, flows);
+  });
+
   function trackBoundary(hostId, tokenId) {
     let list = boundaryTokenMap.get(hostId);
     if (!list) {
