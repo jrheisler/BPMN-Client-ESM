@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createSimulationInstance } from '../helpers/simulation.js';
 
-function buildDiagram() {
+function buildDiagram(correlated = true) {
   const startA = {
     id: 'Start_A',
     type: 'bpmn:StartEvent',
@@ -19,7 +19,12 @@ function buildDiagram() {
     outgoing: [],
     businessObject: {
       $type: 'bpmn:StartEvent',
-      eventDefinitions: [{ $type: 'bpmn:MessageEventDefinition' }]
+      eventDefinitions: [
+        {
+          $type: 'bpmn:MessageEventDefinition',
+          messageRef: { name: 'ping' }
+        }
+      ]
     }
   };
   const nextB = { id: 'Task_B', type: 'bpmn:Task', incoming: [], outgoing: [] };
@@ -32,7 +37,15 @@ function buildDiagram() {
   startB.outgoing = [f1];
   nextB.incoming = [f1];
 
-  const m1 = { id: 'm1', type: 'bpmn:MessageFlow', source: userTask, target: startB };
+  const m1 = {
+    id: 'm1',
+    type: 'bpmn:MessageFlow',
+    source: userTask,
+    target: startB,
+    businessObject: {
+      messageRef: { name: correlated ? 'ping' : 'other' }
+    }
+  };
   userTask.outgoing = [m1];
   startB.incoming = [m1];
 
@@ -44,7 +57,21 @@ test('user task sends message and both paths continue', () => {
   const sim = createSimulationInstance(diagram, { delay: 0 });
   sim.reset();
   sim.step(); // Start_A -> Task_A
-  sim.step(); // message to Start_B processed -> Task_B while Task_A pauses
+  sim.step(); // message queued
+  sim.triggerMessage('Start_B');
+  sim.step(); // consume message -> Task_B while Task_A pauses
   const tokens = Array.from(sim.tokenStream.get(), t => t.element && t.element.id).sort();
   assert.deepStrictEqual(tokens, ['Task_A', 'Task_B'].sort());
+});
+
+test('uncorrelated message does not start target', () => {
+  const diagram = buildDiagram(false);
+  const sim = createSimulationInstance(diagram, { delay: 0 });
+  sim.reset();
+  sim.step(); // Start_A -> Task_A
+  sim.step(); // message queued
+  sim.triggerMessage('Start_B');
+  sim.step();
+  const tokens = Array.from(sim.tokenStream.get(), t => t.element && t.element.id).sort();
+  assert.deepStrictEqual(tokens, ['Task_A']);
 });
