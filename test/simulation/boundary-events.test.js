@@ -53,7 +53,7 @@ function buildMessageDiagram() {
   };
   const task = { id: 'UserTask', type: 'bpmn:UserTask', incoming: [], outgoing: [] };
   const after = { id: 'After', type: 'bpmn:Task', incoming: [], outgoing: [] };
-  const messageTarget = { id: 'OnMessage', type: 'bpmn:Task', incoming: [], outgoing: [] };
+  const messageTarget = { id: 'OnMessage', type: 'bpmn:UserTask', incoming: [], outgoing: [] };
 
   const f0 = { id: 'f0', type: 'bpmn:SequenceFlow', source: start, target: task };
   start.outgoing = [f0];
@@ -84,6 +84,7 @@ function buildMessageDiagram() {
   return [start, task, after, messageTarget, boundary, f0, f1, bf];
 }
 
+
 test('task spawns interrupting timer boundary token', () => {
   const diagram = buildTimerDiagram();
   const sim = createSimulationInstance(diagram, { delay: 0 });
@@ -102,4 +103,19 @@ test('task spawns non-interrupting message boundary token', () => {
   sim.step();
   const tokens = Array.from(sim.tokenStream.get(), t => t.element && t.element.id).sort();
   assert.deepStrictEqual(tokens, ['BoundaryMessage', 'UserTask'].sort());
+});
+
+test('non-interrupting message boundary can trigger multiple times', () => {
+  const diagram = buildMessageDiagram();
+  const sim = createSimulationInstance(diagram, { delay: 0 });
+  sim.reset();
+  sim.step();
+  sim.step();
+  sim.triggerMessage('BoundaryMessage');
+  sim.step();
+  sim.triggerMessage('BoundaryMessage');
+  sim.step();
+  const ids = sim.tokenStream.get().map(t => t.element && t.element.id);
+  const count = ids.filter(id => id === 'OnMessage').length;
+  assert.equal(count, 2);
 });
