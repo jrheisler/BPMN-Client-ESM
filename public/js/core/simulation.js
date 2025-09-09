@@ -400,6 +400,45 @@ let nextTokenId = 1;
   // Token ids that should skip their element handler on next step
   const skipHandlerFor = new Set();
 
+  // Message listeners keyed by target element id
+  const messageListeners = new Map();
+
+  function addMessageListener(id, cb, { once = false } = {}) {
+    const entry = { cb, once };
+    let list = messageListeners.get(id);
+    if (!list) {
+      list = [];
+      messageListeners.set(id, list);
+    }
+    list.push(entry);
+    return () => {
+      const arr = messageListeners.get(id);
+      if (!arr) return;
+      const idx = arr.indexOf(entry);
+      if (idx !== -1) arr.splice(idx, 1);
+      if (!arr.length) messageListeners.delete(id);
+    };
+  }
+
+  function emitMessage(flow) {
+    const target = flow.target;
+    if (!target) return [];
+    const list = messageListeners.get(target.id);
+    if (!list || !list.length) return [];
+    const generated = [];
+    // clone to avoid issues if callbacks modify list
+    list.slice().forEach(entry => {
+      const res = entry.cb(flow);
+      if (Array.isArray(res)) generated.push(...res);
+      if (entry.once) {
+        const idx = list.indexOf(entry);
+        if (idx !== -1) list.splice(idx, 1);
+      }
+    });
+    if (!list.length) messageListeners.delete(target.id);
+    return generated;
+  }
+
   // Visual highlighting of the active elements
   let previousElementIds = new Set();
   let previousFlowIds = new Set();
@@ -553,11 +592,15 @@ let nextTokenId = 1;
 
   elementHandlers.set('bpmn:MessageEvent', (token, api) => {
     api.pause();
-    const to = setTimeout(() => {
-      skipHandlerFor.add(token.id);
-      api.resume();
-    }, delay);
-    api.addCleanup(() => clearTimeout(to));
+    const off = addMessageListener(
+      token.element.id,
+      () => {
+        skipHandlerFor.add(token.id);
+        api.resume();
+      },
+      { once: true }
+    );
+    api.addCleanup(off);
     return [token];
   });
 
@@ -578,6 +621,7 @@ let nextTokenId = 1;
     awaitingToken = null;
     resumeAfterChoice = false;
     pathsStream.set(null);
+    messageListeners.clear();
     tokens = [];
     tokenStream.set(tokens);
     previousElementIds.forEach(id => {
@@ -593,24 +637,7 @@ let nextTokenId = 1;
   function spawnMessageTokens(token, flows) {
     const generated = [];
     flows.forEach(flow => {
-      const target = flow.target;
-      if (target && (/Event$/.test(target.type) || /Task$/.test(target.type))) {
-        const next = {
-          id: nextTokenId++,
-          element: target,
-          pendingJoins: token.pendingJoins,
-          viaFlow: flow.id,
-          context: sharedContext
-        };
-        logToken(next);
-        const { tokens: resTokens, waiting } = processToken(next);
-        if (waiting) {
-          if (!awaitingToken) awaitingToken = next;
-          generated.push(next, ...resTokens);
-        } else {
-          generated.push(...resTokens);
-        }
-      }
+      generated.push(...emitMessage(flow));
     });
     return generated;
   }
@@ -1001,6 +1028,36 @@ let nextTokenId = 1;
     return { tokens: messageTokens.concat(res, boundaryTokens), waiting: false };
   }
 
+  function registerMessageStartEvents() {
+    const starts = elementRegistry.filter
+      ? elementRegistry.filter(
+          e =>
+            e.type === 'bpmn:StartEvent' &&
+            e.businessObject?.eventDefinitions?.some(
+              d => d.$type === 'bpmn:MessageEventDefinition'
+            )
+        )
+      : [];
+    starts.forEach(startEl => {
+      addMessageListener(startEl.id, flow => {
+        const next = {
+          id: nextTokenId++,
+          element: startEl,
+          viaFlow: flow.id,
+          context: sharedContext
+        };
+        skipHandlerFor.add(next.id);
+        logToken(next);
+        const { tokens: resTokens, waiting } = processToken(next);
+        if (waiting) {
+          if (!awaitingToken) awaitingToken = next;
+          return [next, ...resTokens];
+        }
+        return resTokens;
+      });
+    });
+  }
+
   function step(flowIds) {
     const newTokens = [];
     const processed = new Set();
@@ -1158,9 +1215,17 @@ let nextTokenId = 1;
       return;
     }
     const t = { id: nextTokenId++, element: startEl, viaFlow: null, context: sharedContext };
+    if (
+      startEl.businessObject?.eventDefinitions?.some(
+        d => d.$type === 'bpmn:MessageEventDefinition'
+      )
+    ) {
+      skipHandlerFor.add(t.id);
+    }
     tokens = [t];
     tokenStream.set(tokens);
     logToken(t);
+    registerMessageStartEvents();
     running = true;
     schedule();
   }
@@ -1198,13 +1263,22 @@ let nextTokenId = 1;
       tokens = [];
       tokenStream.set(tokens);
       pathsStream.set(null);
+      registerMessageStartEvents();
       return;
     }
     const t = { id: nextTokenId++, element: startEl, viaFlow: null, context: sharedContext };
+    if (
+      startEl.businessObject?.eventDefinitions?.some(
+        d => d.$type === 'bpmn:MessageEventDefinition'
+      )
+    ) {
+      skipHandlerFor.add(t.id);
+    }
     tokens = [t];
     tokenStream.set(tokens);
     logToken(t);
     pathsStream.set(null);
+    registerMessageStartEvents();
   }
 
   return {

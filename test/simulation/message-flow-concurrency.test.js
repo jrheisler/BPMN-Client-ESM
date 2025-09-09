@@ -17,7 +17,10 @@ function buildDiagram() {
     type: 'bpmn:StartEvent',
     incoming: [],
     outgoing: [],
-    businessObject: { $type: 'bpmn:StartEvent' }
+    businessObject: {
+      $type: 'bpmn:StartEvent',
+      eventDefinitions: [{ $type: 'bpmn:MessageEventDefinition' }]
+    }
   };
   const nextB = { id: 'Task_B', type: 'bpmn:Task', incoming: [], outgoing: [] };
 
