@@ -260,10 +260,8 @@ Object.assign(document.body.style, {
     const stream = openStartEventSelectionModal(eligible, currentTheme);
     return await new Promise(resolve => {
       const unsub = stream.subscribe(val => {
-        if (val) {
-          resolve(val);
-          unsub();
-        }
+        resolve(val);
+        unsub();
       });
     });
   }
@@ -982,10 +980,21 @@ function rebuildMenu() {
   avatarMenu,
 
   // Simulation controls
-  reactiveButton(new Stream("▶"), async () => simulation.start(await chooseStartEvent()), {
-    outline: true,
-    title: "Play"
-  }),
+  reactiveButton(
+    new Stream("▶"),
+    async () => {
+      const startId = await chooseStartEvent();
+      if (startId == null) {
+        showToast('Start cancelled');
+        return;
+      }
+      simulation.start(startId);
+    },
+    {
+      outline: true,
+      title: "Play"
+    }
+  ),
   reactiveButton(new Stream("⏸"), () => simulation.pause(), { outline: true, title: "Pause" }),
   reactiveButton(new Stream("⏭"), () => simulation.step(), { outline: true, title: "Step" }),
 
