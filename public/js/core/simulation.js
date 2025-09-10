@@ -449,6 +449,135 @@ const boundaryTokenMap = new Map();
     }
   }
 
+  function sendSignal(name) {
+    // trigger waiting signal catch events
+    tokens.forEach(t => {
+      const defs = t.element.businessObject?.eventDefinitions || [];
+      if (
+        defs.some(
+          d =>
+            d.$type === 'bpmn:SignalEventDefinition' &&
+            d.signalRef?.name === name
+        )
+      ) {
+        skipHandlerFor.add(t.id);
+      }
+    });
+
+    // signal start events
+    const starts = elementRegistry.filter
+      ? elementRegistry.filter(
+          e =>
+            e.type === 'bpmn:StartEvent' &&
+            e.businessObject?.eventDefinitions?.some(
+              d =>
+                d.$type === 'bpmn:SignalEventDefinition' &&
+                d.signalRef?.name === name
+            )
+        )
+      : [];
+
+    starts.forEach(el => {
+      const next = {
+        id: nextTokenId++,
+        element: el,
+        viaFlow: null,
+        context: sharedContext
+      };
+      skipHandlerFor.add(next.id);
+      logToken(next);
+      tokens.push(next);
+    });
+
+    if (!running) {
+      schedule();
+      running = true;
+    }
+  }
+
+  function propagateFrom(token, type, ref) {
+    const match = tokens.find(t => {
+      if (t.element.type !== 'bpmn:BoundaryEvent') return false;
+      const host =
+        t.element.host ||
+        t.element.businessObject?.attachedToRef ||
+        elementRegistry.get(t.element.businessObject?.attachedToRef?.id);
+      if (host !== token.element) return false;
+      const def = t.element.businessObject?.eventDefinitions?.[0];
+      if (!def || def.$type !== `bpmn:${type}EventDefinition`) return false;
+      if (type === 'Error') {
+        const code = def.errorRef?.errorCode;
+        return !ref || !def.errorRef || code === ref;
+      }
+      if (type === 'Escalation') {
+        const code = def.escalationRef?.escalationCode;
+        return !ref || !def.escalationRef || code === ref;
+      }
+      return true;
+    });
+
+    if (match) {
+      skipHandlerFor.add(match.id);
+      const interrupting = match.element.businessObject?.cancelActivity !== false;
+      if (interrupting) {
+        if (awaitingToken && awaitingToken.id === token.id) {
+          awaitingToken = null;
+        }
+        for (let i = tokens.length - 1; i >= 0; i--) {
+          if (tokens[i].element === token.element && tokens[i].id === token.id) {
+            tokens.splice(i, 1);
+            break;
+          }
+        }
+        boundaryTokenMap.delete(token.id);
+      }
+      return;
+    }
+
+    cleanupBoundaryTokens(token.id);
+    if (awaitingToken && awaitingToken.id === token.id) {
+      awaitingToken = null;
+    }
+    const idx = tokens.findIndex(t => t.id === token.id);
+    if (idx !== -1) tokens.splice(idx, 1);
+
+    if (token.parent) {
+      const parent =
+        tokens.find(t => t.id === token.parent) ||
+        (awaitingToken && awaitingToken.id === token.parent ? awaitingToken : null);
+      if (parent) propagateFrom(parent, type, ref);
+    }
+  }
+
+  function throwTyped(id, type, ref) {
+    tokens
+      .filter(t => t.element && t.element.id === id)
+      .forEach(t => propagateFrom(t, type, ref));
+    if (awaitingToken && awaitingToken.element?.id === id) {
+      propagateFrom(awaitingToken, type, ref);
+    }
+    if (!running) {
+      schedule();
+      running = true;
+    }
+  }
+
+  function throwError(id, code) {
+    throwTyped(id, 'Error', code);
+  }
+
+  function throwEscalation(id, code) {
+    throwTyped(id, 'Escalation', code);
+  }
+
+  function throwCancel(id) {
+    throwTyped(id, 'Cancel');
+  }
+
+  function throwCompensation(id) {
+    throwTyped(id, 'Compensate');
+  }
+
   // Visual highlighting of the active elements
   let previousElementIds = new Set();
   let previousFlowIds = new Set();
@@ -587,10 +716,22 @@ const boundaryTokenMap = new Map();
     return [token];
   });
 
-    elementHandlers.set('bpmn:MessageEvent', (token, api) => {
-      api.pause();
-      return [token];
-    });
+  elementHandlers.set('bpmn:MessageEvent', (token, api) => {
+    api.pause();
+    return [token];
+  });
+
+  // Generic catch handlers for additional BPMN events
+  const pausingHandler = (token, api) => {
+    api.pause();
+    return [token];
+  };
+
+  elementHandlers.set('bpmn:SignalEvent', pausingHandler);
+  elementHandlers.set('bpmn:ErrorEvent', pausingHandler);
+  elementHandlers.set('bpmn:EscalationEvent', pausingHandler);
+  elementHandlers.set('bpmn:CancelEvent', pausingHandler);
+  elementHandlers.set('bpmn:CompensateEvent', pausingHandler);
 
   function isManualResume(token) {
     const el = token && token.element;
@@ -641,7 +782,8 @@ const boundaryTokenMap = new Map();
         element: flow.target,
         pendingJoins: token.pendingJoins,
         viaFlow: flow.id,
-        context: sharedContext
+        context: sharedContext,
+        parent: token.parent
       };
       logToken(next);
       return [next];
@@ -1500,6 +1642,11 @@ const boundaryTokenMap = new Map();
     pathsStream,
     elementHandlers,
     triggerMessage,
+    sendSignal,
+    throwError,
+    throwEscalation,
+    throwCancel,
+    throwCompensation,
     setContext,
     getContext
   };
