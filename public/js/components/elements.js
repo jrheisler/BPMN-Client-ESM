@@ -431,6 +431,116 @@ export function headerContainer(titleStream) {
 }
 
 
+export function openStartEventSelectionModal(events, themeStream = currentTheme) {
+  const pickStream = new Stream(null);
+
+  // Overlay
+  const modal = document.createElement('div');
+  Object.assign(modal.style, {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100vw',
+    height: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 9999
+  });
+
+  // Content box
+  const content = document.createElement('div');
+  Object.assign(content.style, {
+    padding: '1.5rem',
+    borderRadius: '8px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+    minWidth: '300px',
+    maxHeight: '80vh',
+    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem'
+  });
+
+  const title = document.createElement('h3');
+  title.textContent = 'Select Start Event';
+  content.appendChild(title);
+
+  const list = document.createElement('div');
+  list.style.display = 'flex';
+  list.style.flexDirection = 'column';
+  list.style.gap = '0.5rem';
+  content.appendChild(list);
+
+  events.forEach(ev => {
+    const label = document.createElement('label');
+    Object.assign(label.style, {
+      padding: '0.5rem 1rem',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem'
+    });
+
+    const input = document.createElement('input');
+    input.type = 'radio';
+    input.name = 'startEventSelection';
+    input.value = ev.id;
+
+    const span = document.createElement('span');
+    span.textContent = ev.businessObject?.name || ev.id;
+
+    label.appendChild(input);
+    label.appendChild(span);
+    list.appendChild(label);
+  });
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.textContent = 'Confirm';
+  confirmBtn.style.marginTop = '1rem';
+  confirmBtn.addEventListener('click', () => {
+    const selected = Array.from(list.querySelectorAll('input')).find(i => i.checked);
+    pickStream.set(selected ? selected.value : null);
+    modal.remove();
+  });
+  content.appendChild(confirmBtn);
+
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+
+  const applyStyles = theme => {
+    const { colors, fonts } = theme;
+    content.style.backgroundColor = colors.surface || '#fff';
+    content.style.color = colors.foreground || '#000';
+    content.style.fontFamily = fonts.base || 'sans-serif';
+    Array.from(list.children).forEach(child => {
+      child.style.backgroundColor = colors.primary || '#f9f9f9';
+      child.style.border = `1px solid ${colors.border || '#ccc'}`;
+      child.onmouseover = () => child.style.backgroundColor = colors.accent + '55';
+      child.onmouseout = () => child.style.backgroundColor = colors.primary || '#f9f9f9';
+    });
+    confirmBtn.style.backgroundColor = colors.primary || '#f9f9f9';
+    confirmBtn.style.border = `1px solid ${colors.border || '#ccc'}`;
+    confirmBtn.onmouseover = () => confirmBtn.style.backgroundColor = colors.accent + '55';
+    confirmBtn.onmouseout = () => confirmBtn.style.backgroundColor = colors.primary || '#f9f9f9';
+  };
+
+  themeStream.subscribe(applyStyles);
+  applyStyles(themeStream.get());
+
+  modal.addEventListener('click', e => {
+    if (e.target === modal) {
+      pickStream.set(null);
+      modal.remove();
+    }
+  });
+
+  return pickStream;
+}
+
+
 export function openFlowSelectionModal(flows, themeStream = currentTheme, allowMultiple = false) {
   const pickStream = new Stream(null);
 
