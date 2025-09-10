@@ -1,296 +1,6 @@
 // public/js/core/simulation.js
 
 import { Stream } from './stream.js';
-import { evaluate as expressionEvaluate } from './expression/index.js';
-import { createMessageBroker } from './message-broker.js';
-
-// Sandboxed expression evaluator supporting a subset of JS syntax
-// (boolean, comparison and arithmetic operators). Identifiers not present
-// in the provided context will cause evaluation to throw, allowing callers
-// to treat missing variables according to BPMN rules.
-function safeEval(expression, context = {}, missingValue) {
-  const tokens = tokenize(expression);
-  let pos = 0;
-
-  function peek() {
-    return tokens[pos];
-  }
-
-  function consume(value) {
-    const token = tokens[pos];
-    if (!token || (value && token.value !== value)) {
-      throw new Error('Unexpected token: ' + (token ? token.value : 'EOF'));
-    }
-    pos++;
-    return token;
-  }
-
-  function parseExpression() {
-    return parseLogicalOr();
-  }
-
-  function parseLogicalOr() {
-    let node = parseLogicalAnd();
-    while (peek() && peek().type === 'op' && peek().value === '||') {
-      const op = consume('||').value;
-      const right = parseLogicalAnd();
-      node = { type: 'Binary', op, left: node, right };
-    }
-    return node;
-  }
-
-  function parseLogicalAnd() {
-    let node = parseEquality();
-    while (peek() && peek().type === 'op' && peek().value === '&&') {
-      const op = consume('&&').value;
-      const right = parseEquality();
-      node = { type: 'Binary', op, left: node, right };
-    }
-    return node;
-  }
-
-  function parseEquality() {
-    let node = parseComparison();
-    while (
-      peek() &&
-      peek().type === 'op' &&
-      ['==', '!=', '===', '!=='].includes(peek().value)
-    ) {
-      const op = consume(peek().value).value;
-      const right = parseComparison();
-      node = { type: 'Binary', op, left: node, right };
-    }
-    return node;
-  }
-
-  function parseComparison() {
-    let node = parseAdditive();
-    while (
-      peek() &&
-      peek().type === 'op' &&
-      ['<', '<=', '>', '>='].includes(peek().value)
-    ) {
-      const op = consume(peek().value).value;
-      const right = parseAdditive();
-      node = { type: 'Binary', op, left: node, right };
-    }
-    return node;
-  }
-
-  function parseAdditive() {
-    let node = parseMultiplicative();
-    while (peek() && peek().type === 'op' && ['+', '-'].includes(peek().value)) {
-      const op = consume(peek().value).value;
-      const right = parseMultiplicative();
-      node = { type: 'Binary', op, left: node, right };
-    }
-    return node;
-  }
-
-  function parseMultiplicative() {
-    let node = parseUnary();
-    while (peek() && peek().type === 'op' && ['*', '/', '%'].includes(peek().value)) {
-      const op = consume(peek().value).value;
-      const right = parseUnary();
-      node = { type: 'Binary', op, left: node, right };
-    }
-    return node;
-  }
-
-  function parseUnary() {
-    if (peek() && peek().type === 'op' && ['!', '+', '-'].includes(peek().value)) {
-      const op = consume(peek().value).value;
-      const argument = parseUnary();
-      return { type: 'Unary', op, argument };
-    }
-    return parsePrimary();
-  }
-
-  function parsePrimary() {
-    const token = peek();
-    if (!token) throw new Error('Unexpected end of expression');
-    if (token.type === 'number' || token.type === 'string' || token.type === 'boolean') {
-      consume();
-      return { type: 'Literal', value: token.value };
-    }
-    if (token.type === 'identifier') {
-      consume();
-      return { type: 'Identifier', name: token.value };
-    }
-    if (token.type === 'paren' && token.value === '(') {
-      consume('(');
-      const expr = parseExpression();
-      consume(')');
-      return expr;
-    }
-    throw new Error('Unexpected token: ' + token.value);
-  }
-
-  function evaluate(node) {
-    switch (node.type) {
-      case 'Literal':
-        return node.value;
-      case 'Identifier':
-        if (Object.prototype.hasOwnProperty.call(context, node.name)) {
-          return context[node.name];
-        }
-        return missingValue;
-      case 'Unary': {
-        const val = evaluate(node.argument);
-        switch (node.op) {
-          case '!':
-            return !val;
-          case '+':
-            return +val;
-          case '-':
-            return -val;
-          default:
-            throw new Error('Unknown operator: ' + node.op);
-        }
-      }
-      case 'Binary': {
-        if (node.op === '&&') {
-          return evaluate(node.left) && evaluate(node.right);
-        }
-        if (node.op === '||') {
-          return evaluate(node.left) || evaluate(node.right);
-        }
-        const left = evaluate(node.left);
-        const right = evaluate(node.right);
-        switch (node.op) {
-          case '===':
-            return left === right;
-          case '!==':
-            return left !== right;
-          case '==':
-            return left == right; // eslint-disable-line eqeqeq
-          case '!=':
-            return left != right; // eslint-disable-line eqeqeq
-          case '>':
-            return left > right;
-          case '<':
-            return left < right;
-          case '>=':
-            return left >= right;
-          case '<=':
-            return left <= right;
-          case '+':
-            return left + right;
-          case '-':
-            return left - right;
-          case '*':
-            return left * right;
-          case '/':
-            return left / right;
-          case '%':
-            return left % right;
-          default:
-            throw new Error('Unknown operator: ' + node.op);
-        }
-      }
-      default:
-        throw new Error('Unknown node type: ' + node.type);
-    }
-  }
-
-  const ast = parseExpression();
-  if (pos < tokens.length) {
-    throw new Error('Unexpected token: ' + tokens[pos].value);
-  }
-  return evaluate(ast);
-}
-
-function tokenize(input) {
-  const tokens = [];
-  let i = 0;
-  while (i < input.length) {
-    const ch = input[i];
-    if (/\s/.test(ch)) {
-      i++;
-      continue;
-    }
-
-    // multi-character operators
-    const op3 = input.slice(i, i + 3);
-    if (op3 === '===') {
-      tokens.push({ type: 'op', value: '===' });
-      i += 3;
-      continue;
-    }
-    if (op3 === '!==') {
-      tokens.push({ type: 'op', value: '!==' });
-      i += 3;
-      continue;
-    }
-    const op2 = input.slice(i, i + 2);
-    if (['&&', '||', '>=', '<=', '==', '!='].includes(op2)) {
-      tokens.push({ type: 'op', value: op2 });
-      i += 2;
-      continue;
-    }
-
-    if ('><+-*/%!'.includes(ch)) {
-      tokens.push({ type: 'op', value: ch });
-      i++;
-      continue;
-    }
-
-    if (ch === '(' || ch === ')') {
-      tokens.push({ type: 'paren', value: ch });
-      i++;
-      continue;
-    }
-
-    if (ch === '"' || ch === "'") {
-      const quote = ch;
-      let str = '';
-      i++;
-      while (i < input.length) {
-        const c = input[i];
-        if (c === '\\') {
-          str += input[i + 1];
-          i += 2;
-          continue;
-        }
-        if (c === quote) {
-          i++;
-          break;
-        }
-        str += c;
-        i++;
-      }
-      tokens.push({ type: 'string', value: str });
-      continue;
-    }
-
-    if (/[0-9]/.test(ch)) {
-      let num = ch;
-      i++;
-      while (i < input.length && /[0-9.]/.test(input[i])) {
-        num += input[i++];
-      }
-      tokens.push({ type: 'number', value: Number(num) });
-      continue;
-    }
-
-    if (/[A-Za-z_$]/.test(ch)) {
-      let id = ch;
-      i++;
-      while (i < input.length && /[A-Za-z0-9_$]/.test(input[i])) {
-        id += input[i++];
-      }
-      if (id === 'true' || id === 'false') {
-        tokens.push({ type: 'boolean', value: id === 'true' });
-      } else {
-        tokens.push({ type: 'identifier', value: id });
-      }
-      continue;
-    }
-
-    throw new Error('Unexpected character: ' + ch);
-  }
-  return tokens;
-}
 
 // Simple token simulation service built on Streams
 // Usage:
@@ -308,40 +18,25 @@ function tokenize(input) {
 export function createSimulation(services, opts = {}) {
   const { elementRegistry, canvas, context: initialContext = {} } = services;
   const delay = opts.delay || 1000;
-  // expressions are expected to throw on unknown variables or evaluation errors
+  const conditionFallback = Object.prototype.hasOwnProperty.call(opts, 'conditionFallback')
+    ? opts.conditionFallback
+    : false;
 
-  let sharedContext = { ...initialContext };
-
-  function setContext(obj) {
-    sharedContext = { ...sharedContext, ...obj };
-    tokens.forEach(t => (t.context = sharedContext));
+  function setContext(obj, token = tokens[0]) {
+    if (token) {
+      token.context = { ...(token.context || {}), ...obj };
+    }
   }
 
-  function getContext() {
-    return sharedContext;
+  function getContext(token = tokens[0]) {
+    return token ? { ...(token.context || {}) } : {};
   }
 
   // Stream of currently active tokens [{ id, element }]
   const tokenStream = new Stream([]);
   const tokenLogStream = new Stream([]);
-  // Stream of available sequence flows when waiting on a gateway decision.
-  // This acts as the signal to prompt the user for input on which path to take.
+  // Stream of available sequence flows when waiting on a gateway decision
   const pathsStream = new Stream(null);
-  // Stream carrying information about why the simulation is paused
-  const statusStream = new Stream(null);
-
-  function evaluate(expr, data) {
-    if (!expr) return true;
-    const raw = (expr.body || expr.value || '').toString().trim();
-    const inner = raw.replace(/^\$\{?|\}$/g, '');
-    if (!inner) return true;
-    try {
-      return !!expressionEvaluate(inner, data || {}, expr.language);
-    } catch (err) {
-      console.warn('Failed to evaluate condition', inner, err);
-      throw err;
-    }
-  }
 
   const TOKEN_LOG_STORAGE_KEY = 'simulationTokenLog';
 
@@ -369,7 +64,7 @@ export function createSimulation(services, opts = {}) {
           if (last.elementId) {
             const el = elementRegistry.get(last.elementId);
             if (el) {
-              tokens = [{ id: last.tokenId, element: el, context: sharedContext }];
+              tokens = [{ id: last.tokenId, element: el, context: { ...initialContext } }];
               tokenStream.set(tokens);
             }
           }
@@ -385,61 +80,14 @@ export function createSimulation(services, opts = {}) {
     tokenLogStream.set([]);
     saveTokenLog();
   }
-let timer = null;
-let running = false;
-let tokens = [];
-let awaitingToken = null;
-// remember whether simulation was running before pausing for a user choice
-let resumeAfterChoice = false;
-let nextTokenId = 1;
+  let timer = null;
+  let running = false;
+  let tokens = [];
+  let awaitingToken = null;
+  let resumeAfterChoice = false;
+  let nextTokenId = 1;
 
-  function clearAwaiting() {
-    if (awaitingToken?.element?.id) {
-      canvas.removeMarker(awaitingToken.element.id, 'awaiting');
-    }
-    awaitingToken = null;
-    if (statusStream.get() !== null) {
-      statusStream.set(null);
-    }
-  }
-
-  function setAwaiting(token, reason) {
-    clearAwaiting();
-    awaitingToken = token;
-    if (token?.element?.id) {
-      canvas.addMarker(token.element.id, 'awaiting');
-      const name = token.element.businessObject?.name || token.element.id;
-      statusStream.set({ elementId: token.element.id, elementName: name, reason });
-    } else {
-      statusStream.set({ reason });
-    }
-  }
-
-  function getWaitingReason(token) {
-    const type = token?.element?.type;
-    switch (type) {
-      case 'bpmn:UserTask':
-        return 'Waiting for user input';
-      case 'bpmn:ReceiveTask':
-      case 'bpmn:MessageEvent':
-      case 'bpmn:SignalEvent':
-      case 'bpmn:TimerEvent':
-      case 'bpmn:ErrorEvent':
-      case 'bpmn:EscalationEvent':
-      case 'bpmn:CancelEvent':
-      case 'bpmn:CompensateEvent':
-        return 'Waiting for event';
-      default:
-        return 'Paused';
-    }
-  }
-
-// Map host token id -> array of attached boundary token ids
-const boundaryTokenMap = new Map();
-
-  const messageBroker = createMessageBroker();
-
-// Map of BPMN element type -> handler(token, api)
+  // Map of BPMN element type -> handler(token, api)
   const elementHandlers = new Map();
 
   // Cleanup hooks for element handlers (timeouts, listeners, ...)
@@ -447,179 +95,6 @@ const boundaryTokenMap = new Map();
 
   // Token ids that should skip their element handler on next step
   const skipHandlerFor = new Set();
-
-  function triggerMessage(id, correlationKey) {
-    const el = elementRegistry.get(id);
-    const isMessageStart =
-      el &&
-      el.type === 'bpmn:StartEvent' &&
-      el.businessObject?.eventDefinitions?.some(
-        d => d.$type === 'bpmn:MessageEventDefinition'
-      );
-
-    if (isMessageStart) {
-      const def = el.businessObject.eventDefinitions.find(
-        d => d.$type === 'bpmn:MessageEventDefinition'
-      );
-      const name = def.messageRef?.name;
-      const corr =
-        correlationKey !== undefined
-          ? correlationKey
-          : evaluate(el.businessObject?.correlationKey, sharedContext);
-      const msg = messageBroker.consume(name, corr);
-      if (msg) {
-        const next = {
-          id: nextTokenId++,
-          element: el,
-          viaFlow: msg.flowId || null,
-          context: sharedContext
-        };
-        skipHandlerFor.add(next.id);
-        logToken(next);
-        tokens.push(next);
-      }
-    } else {
-      tokens.forEach(t => {
-        if (t.element && t.element.id === id) {
-          skipHandlerFor.add(t.id);
-        }
-      });
-    }
-
-    if (!running) {
-      schedule();
-      running = true;
-    }
-  }
-
-  function sendSignal(name) {
-    // trigger waiting signal catch events
-    tokens.forEach(t => {
-      const defs = t.element.businessObject?.eventDefinitions || [];
-      if (
-        defs.some(
-          d =>
-            d.$type === 'bpmn:SignalEventDefinition' &&
-            d.signalRef?.name === name
-        )
-      ) {
-        skipHandlerFor.add(t.id);
-      }
-    });
-
-    // signal start events
-    const starts = elementRegistry.filter
-      ? elementRegistry.filter(
-          e =>
-            e.type === 'bpmn:StartEvent' &&
-            e.businessObject?.eventDefinitions?.some(
-              d =>
-                d.$type === 'bpmn:SignalEventDefinition' &&
-                d.signalRef?.name === name
-            )
-        )
-      : [];
-
-    starts.forEach(el => {
-      const next = {
-        id: nextTokenId++,
-        element: el,
-        viaFlow: null,
-        context: sharedContext
-      };
-      skipHandlerFor.add(next.id);
-      logToken(next);
-      tokens.push(next);
-    });
-
-    if (!running) {
-      schedule();
-      running = true;
-    }
-  }
-
-  function propagateFrom(token, type, ref) {
-    const match = tokens.find(t => {
-      if (t.element.type !== 'bpmn:BoundaryEvent') return false;
-      const host =
-        t.element.host ||
-        t.element.businessObject?.attachedToRef ||
-        elementRegistry.get(t.element.businessObject?.attachedToRef?.id);
-      if (host !== token.element) return false;
-      const def = t.element.businessObject?.eventDefinitions?.[0];
-      if (!def || def.$type !== `bpmn:${type}EventDefinition`) return false;
-      if (type === 'Error') {
-        const code = def.errorRef?.errorCode;
-        return !ref || !def.errorRef || code === ref;
-      }
-      if (type === 'Escalation') {
-        const code = def.escalationRef?.escalationCode;
-        return !ref || !def.escalationRef || code === ref;
-      }
-      return true;
-    });
-
-    if (match) {
-      skipHandlerFor.add(match.id);
-      const interrupting = match.element.businessObject?.cancelActivity !== false;
-      if (interrupting) {
-        if (awaitingToken && awaitingToken.id === token.id) {
-          clearAwaiting();
-        }
-        for (let i = tokens.length - 1; i >= 0; i--) {
-          if (tokens[i].element === token.element && tokens[i].id === token.id) {
-            tokens.splice(i, 1);
-            break;
-          }
-        }
-        boundaryTokenMap.delete(token.id);
-      }
-      return;
-    }
-
-    cleanupBoundaryTokens(token.id);
-    if (awaitingToken && awaitingToken.id === token.id) {
-      clearAwaiting();
-    }
-    const idx = tokens.findIndex(t => t.id === token.id);
-    if (idx !== -1) tokens.splice(idx, 1);
-
-    if (token.parent) {
-      const parent =
-        tokens.find(t => t.id === token.parent) ||
-        (awaitingToken && awaitingToken.id === token.parent ? awaitingToken : null);
-      if (parent) propagateFrom(parent, type, ref);
-    }
-  }
-
-  function throwTyped(id, type, ref) {
-    tokens
-      .filter(t => t.element && t.element.id === id)
-      .forEach(t => propagateFrom(t, type, ref));
-    if (awaitingToken && awaitingToken.element?.id === id) {
-      propagateFrom(awaitingToken, type, ref);
-    }
-    if (!running) {
-      schedule();
-      running = true;
-    }
-  }
-
-  function throwError(id, code) {
-    throwTyped(id, 'Error', code);
-  }
-
-  function throwEscalation(id, code) {
-    throwTyped(id, 'Escalation', code);
-  }
-
-  function throwCancel(id) {
-    throwTyped(id, 'Cancel');
-  }
-
-  function throwCompensation(id) {
-    throwTyped(id, 'Compensate');
-  }
 
   // Visual highlighting of the active elements
   let previousElementIds = new Set();
@@ -670,33 +145,15 @@ const boundaryTokenMap = new Map();
     saveTokenLog();
   }
 
-  function getStart(startId) {
+  function getStart() {
     const all = elementRegistry.filter
-      ? elementRegistry.filter(
-          e =>
-            e.type === 'bpmn:StartEvent' ||
-            e.businessObject?.$type === 'bpmn:StartEvent'
-        )
+      ? elementRegistry.filter(e => e.type === 'bpmn:StartEvent' || e.businessObject?.$type === 'bpmn:StartEvent')
       : [];
-
-    if (startId) {
-      const found = elementRegistry.get(startId);
-      if (
-        found &&
-        (found.type === 'bpmn:StartEvent' ||
-          found.businessObject?.$type === 'bpmn:StartEvent')
-      ) {
-        return [found];
-      }
-      console.warn('StartEvent with id ' + startId + ' not found');
-      return [];
-    }
-
-    const eligible = all.filter(e => !e.incoming || !e.incoming.length);
-    if (!eligible.length) {
+    const start = all[0] || null;
+    if (!start) {
       console.warn('No StartEvent found in diagram');
     }
-    return eligible;
+    return start;
   }
 
   function schedule() {
@@ -708,79 +165,23 @@ const boundaryTokenMap = new Map();
   // --- Default element handlers ---
   elementHandlers.set('bpmn:UserTask', (token, api) => {
     api.pause();
-    return null;
-  });
-
-  function parseISODuration(str) {
-    const re = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/;
-    const m = re.exec(str);
-    if (!m) return null;
-    const [, d, h, m_, s] = m;
-    const days = parseFloat(d || 0);
-    const hours = parseFloat(h || 0);
-    const mins = parseFloat(m_ || 0);
-    const secs = parseFloat(s || 0);
-    return ((days * 24 + hours) * 60 + mins) * 60 * 1000 + secs * 1000;
-  }
-
-  function getTimerDelay(def) {
-    const getVal = v => (v && (v.body || v.value || '').toString().trim()) || '';
-    if (def.timeDuration) {
-      return parseISODuration(getVal(def.timeDuration));
-    }
-    if (def.timeDate) {
-      const ts = Date.parse(getVal(def.timeDate));
-      if (!isNaN(ts)) {
-        return Math.max(0, ts - Date.now());
-      }
-      return null;
-    }
-    if (def.timeCycle) {
-      const expr = getVal(def.timeCycle);
-      const parts = expr.split('/');
-      const last = parts[parts.length - 1];
-      return parseISODuration(last);
-    }
-    return null;
-  }
-
-  elementHandlers.set('bpmn:TimerEvent', (token, api) => {
-    const def = token.element.businessObject?.eventDefinitions?.[0];
-    const delayMs = def ? getTimerDelay(def) : null;
-    api.pause();
-    if (delayMs == null) {
-      return null;
-    }
     const to = setTimeout(() => {
       skipHandlerFor.add(token.id);
       api.resume();
-    }, delayMs);
+    }, delay);
     api.addCleanup(() => clearTimeout(to));
     return [token];
   });
 
-  elementHandlers.set('bpmn:MessageEvent', (token, api) => {
+  elementHandlers.set('bpmn:TimerEvent', (token, api) => {
     api.pause();
+    const to = setTimeout(() => {
+      skipHandlerFor.add(token.id);
+      api.resume();
+    }, delay);
+    api.addCleanup(() => clearTimeout(to));
     return [token];
   });
-
-  // Generic catch handlers for additional BPMN events
-  const pausingHandler = (token, api) => {
-    api.pause();
-    return [token];
-  };
-
-  elementHandlers.set('bpmn:SignalEvent', pausingHandler);
-  elementHandlers.set('bpmn:ErrorEvent', pausingHandler);
-  elementHandlers.set('bpmn:EscalationEvent', pausingHandler);
-  elementHandlers.set('bpmn:CancelEvent', pausingHandler);
-  elementHandlers.set('bpmn:CompensateEvent', pausingHandler);
-
-  function isManualResume(token) {
-    const el = token && token.element;
-    if (!el) return false;
-    return el.type === 'bpmn:UserTask';
-  }
 
   function clearHandlerState(clearSkip = false) {
     handlerCleanups.forEach(fn => fn());
@@ -790,11 +191,9 @@ const boundaryTokenMap = new Map();
 
   function cleanup() {
     clearHandlerState(true);
-    clearAwaiting();
+    awaitingToken = null;
     resumeAfterChoice = false;
     pathsStream.set(null);
-    boundaryTokenMap.clear();
-    messageBroker.clear();
     tokens = [];
     tokenStream.set(tokens);
     previousElementIds.forEach(id => {
@@ -808,13 +207,22 @@ const boundaryTokenMap = new Map();
   }
 
   function spawnMessageTokens(token, flows) {
+    const generated = [];
     flows.forEach(flow => {
-      const name = flow.businessObject?.messageRef?.name;
-      if (!name) return;
-      const corr = evaluate(flow.businessObject?.correlationKey, token.context);
-      messageBroker.publish(name, corr, { flowId: flow.id });
+      const target = flow.target;
+      if (target && (/Event$/.test(target.type) || /Task$/.test(target.type))) {
+        const next = {
+          id: nextTokenId++,
+          element: target,
+          pendingJoins: token.pendingJoins,
+          viaFlow: flow.id,
+          context: { ...token.context }
+        };
+        logToken(next);
+        generated.push(next);
+      }
     });
-    return [];
+    return generated;
   }
 
   function handleDefault(token, sequenceFlows) {
@@ -825,8 +233,7 @@ const boundaryTokenMap = new Map();
         element: flow.target,
         pendingJoins: token.pendingJoins,
         viaFlow: flow.id,
-        context: sharedContext,
-        parent: token.parent
+        context: { ...token.context }
       };
       logToken(next);
       return [next];
@@ -834,42 +241,35 @@ const boundaryTokenMap = new Map();
     logToken({ id: token.id, element: null, viaFlow: token.viaFlow });
     return [];
   }
-
   function handleExclusiveGateway(token, outgoing, flowId) {
-    // `flowId` is the id of the chosen sequence flow (string)
     // Determine viable flows based on conditions when no flowId is provided
     if (!flowId) {
-      const mapped = outgoing.map(flow => {
+      const evaluate = (expr, data) => {
+        if (!expr) return true;
+        const raw = (expr.body || expr.value || '').toString().trim();
+        const js = raw.replace(/^\$\{?|\}$/g, '');
+        if (!js) return true;
+        const proxy = new Proxy(data || {}, {
+          has: () => true,
+          get(target, prop) {
+            if (prop === Symbol.unscopables) return undefined;
+            return prop in target ? target[prop] : conditionFallback;
+          }
+        });
         try {
-          return {
-            flow,
-            satisfied: evaluate(
-              flow.businessObject?.conditionExpression,
-              token.context
-            )
-          };
+          return !!Function('context', 'with(context){ return (' + js + '); }')(proxy);
         } catch (err) {
-          return { flow, satisfied: false, error: err };
+          console.warn('Failed to evaluate condition', js, err);
+          return conditionFallback;
         }
-      });
+      };
+
+      const mapped = outgoing.map(flow => ({
+        flow,
+        satisfied: evaluate(flow.businessObject?.conditionExpression, token.context)
+      }));
       const defBo = token.element.businessObject?.default;
       const defFlow = defBo ? elementRegistry.get(defBo.id) || defBo : null;
-
-      // If no conditions are satisfied, prompt the user to select a path
-      // manually. `pathsStream` signals the UI to request input.
-      if (mapped.every(f => !f.satisfied)) {
-        pathsStream.set({
-          flows: mapped,
-          type: token.element.type,
-          isDefaultOnly: false
-        });
-        setAwaiting(token, 'Awaiting gateway decision'); // keep token so the process can resume
-        // remember running state to resume automatically once choice is made
-        resumeAfterChoice = resumeAfterChoice || running;
-        pause();
-        return null;
-      }
-
       let defaultOnly = false;
       if (defFlow) {
         const defEntry = mapped.find(f => f.flow === defFlow);
@@ -877,25 +277,16 @@ const boundaryTokenMap = new Map();
         if (defEntry) {
           if (others.length) {
             defEntry.satisfied = false;
-          } else if (defEntry.satisfied) {
+          } else {
+            defEntry.satisfied = true;
             defaultOnly = true;
           }
         }
       }
 
-      const satisfied = mapped.filter(f => f.satisfied);
-      if (satisfied.length === 1) {
-        return handleDefault(token, [satisfied[0].flow]);
-      }
-
-      pathsStream.set({
-        flows: mapped,
-        type: token.element.type,
-        isDefaultOnly: defaultOnly
-      });
-      setAwaiting(token, 'Awaiting gateway decision'); // keep token so the process can resume
-      // remember running state to resume automatically once choice is made
-      resumeAfterChoice = resumeAfterChoice || running;
+      pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: defaultOnly });
+      awaitingToken = token;
+      resumeAfterChoice = running;
       pause();
       return null;
     }
@@ -908,15 +299,12 @@ const boundaryTokenMap = new Map();
         element: flow.target,
         pendingJoins: token.pendingJoins,
         viaFlow: flow.id,
-        context: sharedContext
+        context: { ...token.context }
       };
       logToken(next);
       return [next];
     }
-
-    // invalid choice -> keep waiting
-    setAwaiting(token, 'Awaiting gateway decision');
-    return null;
+    return [];
   }
 
   function handleParallelGateway(token, outgoing) {
@@ -926,7 +314,7 @@ const boundaryTokenMap = new Map();
         element: flow.target,
         pendingJoins: token.pendingJoins,
         viaFlow: flow.id,
-        context: sharedContext
+        context: { ...token.context }
       };
       logToken(next);
       return next;
@@ -1004,32 +392,35 @@ const boundaryTokenMap = new Map();
     if (!diverging) {
       return handleDefault(token, outgoing);
     }
-    let ids = Array.isArray(flowIds) ? flowIds : flowIds ? [flowIds] : null;
-    if (!ids || ids.length === 0) {
-      const mapped = outgoing.map(flow => {
-        try {
-          return {
-            flow,
-            satisfied: evaluate(flow.businessObject?.conditionExpression, token.context)
-          };
-        } catch (err) {
-          return { flow, satisfied: false, error: err };
+
+    const evaluate = (expr, data) => {
+      if (!expr) return true;
+      const raw = (expr.body || expr.value || '').toString().trim();
+      const js = raw.replace(/^\$\{?|\}$/g, '');
+      if (!js) return true;
+      const proxy = new Proxy(data || {}, {
+        has: () => true,
+        get(target, prop) {
+          if (prop === Symbol.unscopables) return undefined;
+          return prop in target ? target[prop] : conditionFallback;
         }
       });
+      try {
+        return !!Function('context', 'with(context){ return (' + js + '); }')(proxy);
+      } catch (err) {
+        console.warn('Failed to evaluate condition', js, err);
+        return conditionFallback;
+      }
+    };
+
+    const ids = Array.isArray(flowIds) ? flowIds : flowIds ? [flowIds] : null;
+    if (!ids || ids.length === 0) {
+      const mapped = outgoing.map(flow => ({
+        flow,
+        satisfied: evaluate(flow.businessObject?.conditionExpression, token.context)
+      }));
       const defBo = token.element.businessObject?.default;
       const defFlow = defBo ? elementRegistry.get(defBo.id) || defBo : null;
-
-      // No sequence flow satisfied -> wait for user decision. `pathsStream`
-      // signals the UI to request input and the token is kept for resuming.
-      if (mapped.every(f => !f.satisfied)) {
-        pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: false });
-        setAwaiting(token, 'Awaiting gateway decision'); // keep token so the process can resume
-        // remember running state to resume automatically once choice is made
-        resumeAfterChoice = resumeAfterChoice || running;
-        pause();
-        return null;
-      }
-
       let defaultOnly = false;
       if (defFlow) {
         const defEntry = mapped.find(f => f.flow === defFlow);
@@ -1037,33 +428,24 @@ const boundaryTokenMap = new Map();
         if (defEntry) {
           if (others.length) {
             defEntry.satisfied = false;
-          } else if (defEntry.satisfied) {
+          } else {
+            defEntry.satisfied = true;
             defaultOnly = true;
           }
         }
       }
-      const satisfied = mapped.filter(f => f.satisfied);
-      if (satisfied.length === 1) {
-        ids = [satisfied[0].flow.id];
-      } else {
-        pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: defaultOnly });
-        setAwaiting(token, 'Awaiting gateway decision'); // keep token so the process can resume
-        // remember running state to resume automatically once choice is made
-        resumeAfterChoice = resumeAfterChoice || running;
-        pause();
-        return null;
-      }
+      pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: defaultOnly });
+      awaitingToken = token;
+      resumeAfterChoice = running;
+      pause();
+      return null;
     }
     const joins = findInclusiveJoin(token.element);
     return ids
       .map((id, idx) => {
         const flow = elementRegistry.get(id);
         if (!flow) return null;
-        try {
-          if (!evaluate(flow.businessObject?.conditionExpression, token.context)) return null;
-        } catch (err) {
-          return null;
-        }
+        if (!evaluate(flow.businessObject?.conditionExpression, token.context)) return null;
         const pendingJoins = { ...(token.pendingJoins || {}) };
         if (joins && joins.length) {
           joins.forEach(join => {
@@ -1075,7 +457,7 @@ const boundaryTokenMap = new Map();
           element: flow.target,
           pendingJoins,
           viaFlow: flow.id,
-          context: sharedContext
+          context: { ...token.context }
         };
         logToken(next);
         return next;
@@ -1083,306 +465,48 @@ const boundaryTokenMap = new Map();
       .filter(Boolean);
   }
 
-  function handleEventBasedGateway(token, outgoing) {
-    const generated = [];
-    outgoing.forEach(flow => {
-      const target = flow.target;
-      if (!target) return;
+  function handleEventBasedGateway(token, outgoing, flowId) {
+    if (!flowId) {
+      pathsStream.set({ flows: outgoing, type: token.element.type });
+      awaitingToken = token;
+      resumeAfterChoice = running;
+      pause();
+      return null;
+    }
+    const flow = elementRegistry.get(flowId);
+    if (flow) {
       const next = {
-        id: nextTokenId++,
-        element: target,
+        id: token.id,
+        element: flow.target,
         pendingJoins: token.pendingJoins,
         viaFlow: flow.id,
-        context: sharedContext,
-        gatewayOf: token.id
+        context: { ...token.context }
       };
       logToken(next);
-      const { tokens: resTokens, waiting } = processToken(next);
-      if (waiting) {
-        if (!awaitingToken) setAwaiting(next, getWaitingReason(next));
-        generated.push(next, ...resTokens);
-      } else {
-        generated.push(...resTokens);
-      }
-    });
-    return generated;
+      return [next];
+    }
+    return [];
   }
-
-  function resolveLoopCount(el, ctx) {
-    const lc = el.businessObject?.loopCharacteristics;
-    if (!lc) return 1;
-    if (lc.loopCardinality) {
-      try {
-        const raw = (lc.loopCardinality.body || lc.loopCardinality.value || '')
-          .toString()
-          .trim();
-        const inner = raw.replace(/^\$\{?|\}$/g, '');
-        if (inner) {
-          const val = expressionEvaluate(inner, ctx || {}, lc.loopCardinality.language);
-          const num = Number(val);
-          if (!isNaN(num)) return num;
-        }
-      } catch (err) {}
-    }
-    return 1;
-  }
-
-  function spawnChildTokens(parentToken, startEls) {
-    return startEls.map(startEl => {
-      const next = {
-        id: nextTokenId++,
-        element: startEl,
-        pendingJoins: parentToken.pendingJoins,
-        viaFlow: null,
-        context: sharedContext,
-        parent: parentToken.id
-      };
-      logToken(next);
-      return next;
-    });
-  }
-
-  elementHandlers.set('bpmn:SubProcess', token => {
-    const count = resolveLoopCount(token.element, token.context);
-    token._children = token._children || [];
-    const alive = new Set(tokens.map(t => t.id));
-    if (awaitingToken) alive.add(awaitingToken.id);
-    token._children = token._children.filter(id => alive.has(id));
-    if (!token._spawned) {
-      const starts = elementRegistry.filter
-        ? elementRegistry.filter(
-            e => e.type === 'bpmn:StartEvent' && e.parent === token.element
-          )
-        : [];
-      if (!starts.length || count <= 0) {
-        const flows = (token.element.outgoing || []).filter(
-          f => f.type === 'bpmn:SequenceFlow'
-        );
-        return handleDefault(token, flows);
-      }
-      const spawned = [];
-      for (let i = 0; i < count; i++) {
-        const kids = spawnChildTokens(token, starts);
-        kids.forEach(k => token._children.push(k.id));
-        spawned.push(...kids);
-      }
-      token._spawned = true;
-      return [token, ...spawned];
-    }
-    if (token._children.length) {
-      return [token];
-    }
-    token._spawned = false;
-    const flows = (token.element.outgoing || []).filter(
-      f => f.type === 'bpmn:SequenceFlow'
-    );
-    return handleDefault(token, flows);
-  });
-
-  elementHandlers.set('bpmn:CallActivity', token => {
-    const count = resolveLoopCount(token.element, token.context);
-    token._children = token._children || [];
-    const alive = new Set(tokens.map(t => t.id));
-    if (awaitingToken) alive.add(awaitingToken.id);
-    token._children = token._children.filter(id => alive.has(id));
-    if (!token._spawned) {
-      const calledId =
-        token.element.businessObject?.calledElement?.id ||
-        token.element.businessObject?.calledElement;
-      const proc = calledId && elementRegistry.get(calledId);
-      const starts = elementRegistry.filter
-        ? elementRegistry.filter(
-            e => e.type === 'bpmn:StartEvent' && e.parent === proc
-          )
-        : [];
-      if (!starts.length || count <= 0) {
-        const flows = (token.element.outgoing || []).filter(
-          f => f.type === 'bpmn:SequenceFlow'
-        );
-        return handleDefault(token, flows);
-      }
-      const spawned = [];
-      for (let i = 0; i < count; i++) {
-        const kids = spawnChildTokens(token, starts);
-        kids.forEach(k => token._children.push(k.id));
-        spawned.push(...kids);
-      }
-      token._spawned = true;
-      return [token, ...spawned];
-    }
-    if (token._children.length) {
-      return [token];
-    }
-    token._spawned = false;
-    const flows = (token.element.outgoing || []).filter(
-      f => f.type === 'bpmn:SequenceFlow'
-    );
-    return handleDefault(token, flows);
-  });
-
-  function trackBoundary(hostId, tokenId) {
-    let list = boundaryTokenMap.get(hostId);
-    if (!list) {
-      list = [];
-      boundaryTokenMap.set(hostId, list);
-    }
-    list.push(tokenId);
-  }
-
-  function cleanupBoundaryTokens(hostId) {
-    const ids = boundaryTokenMap.get(hostId);
-    if (!ids || !ids.length) return;
-    const idSet = new Set(ids);
-    for (let i = tokens.length - 1; i >= 0; i--) {
-      if (idSet.has(tokens[i].id)) {
-        tokens.splice(i, 1);
-      }
-    }
-    boundaryTokenMap.delete(hostId);
-  }
-
-  function removeBoundaryTokenRef(tokenId) {
-    for (const [hostId, list] of boundaryTokenMap) {
-      const idx = list.indexOf(tokenId);
-      if (idx !== -1) {
-        list.splice(idx, 1);
-        if (!list.length) {
-          boundaryTokenMap.delete(hostId);
-        }
-        break;
-      }
-    }
-  }
-
   function processToken(token, flowIds) {
-    // track spawned boundary tokens per host token
-    let boundaryTokens = [];
-
-    // handle boundary events when token itself is boundary
-    if (token.element.type === 'bpmn:BoundaryEvent' && skipHandlerFor.has(token.id)) {
-      const bo = token.element.businessObject || {};
-      const interrupting = bo.cancelActivity !== false;
-      const host =
-        token.element.host ||
-        elementRegistry.get(bo.attachedToRef?.id) ||
-        bo.attachedToRef ||
-        null;
-      const hostToken =
-        host
-          ? tokens.find(t => t.element === host) ||
-            (awaitingToken && awaitingToken.element === host ? awaitingToken : null)
-          : null;
-      if (interrupting) {
-        if (host) {
-          for (let i = tokens.length - 1; i >= 0; i--) {
-            const t = tokens[i];
-            const attached =
-              t.element.type === 'bpmn:BoundaryEvent' &&
-              (t.element.host === host ||
-                t.element.businessObject?.attachedToRef === host ||
-                t.element.businessObject?.attachedToRef?.id === host.id);
-            if (t.element === host || attached) {
-              if (t.id !== token.id) tokens.splice(i, 1);
-            }
-          }
-          if (hostToken) {
-            boundaryTokenMap.delete(hostToken.id);
-          }
-        }
-        removeBoundaryTokenRef(token.id);
-      } else if (host && hostToken) {
-        hostToken._boundaryCounts = hostToken._boundaryCounts || {};
-        const bid = token.element.id;
-        hostToken._boundaryCounts[bid] = Math.max(
-          0,
-          (hostToken._boundaryCounts[bid] || 1) - 1
-        );
-        const next = {
-          id: nextTokenId++,
-          element: token.element,
-          pendingJoins: hostToken.pendingJoins,
-          viaFlow: null,
-          context: sharedContext
-        };
-        logToken(next);
-        boundaryTokens.push(next);
-        trackBoundary(hostToken.id, next.id);
-        hostToken._boundaryCounts[bid] = (hostToken._boundaryCounts[bid] || 0) + 1;
-        removeBoundaryTokenRef(token.id);
-      }
-    }
-
-    // spawn boundary tokens for current element (per boundary)
-    if (token.element.type !== 'bpmn:BoundaryEvent') {
-      const boundaries = elementRegistry.filter
-        ? elementRegistry.filter(
-            e =>
-              e.type === 'bpmn:BoundaryEvent' &&
-              (e.host === token.element ||
-                e.businessObject?.attachedToRef === token.element ||
-                e.businessObject?.attachedToRef?.id === token.element.id)
-          )
-        : [];
-      for (const b of boundaries) {
-        token._boundaryCounts = token._boundaryCounts || {};
-        const cnt = token._boundaryCounts[b.id] || 0;
-        if (cnt < 1) {
-          const next = {
-            id: nextTokenId++,
-            element: b,
-            pendingJoins: token.pendingJoins,
-            viaFlow: null,
-            context: sharedContext
-          };
-          logToken(next);
-          boundaryTokens.push(next);
-          trackBoundary(token.id, next.id);
-          token._boundaryCounts[b.id] = cnt + 1;
-        }
-      }
-    }
-
     const outgoing = token.element.outgoing || [];
     const sequenceFlows = outgoing.filter(f => f.type === 'bpmn:SequenceFlow');
     const messageFlows = outgoing.filter(f => f.type === 'bpmn:MessageFlow');
 
     const messageTokens = spawnMessageTokens(token, messageFlows);
 
-    const extraTokens = messageTokens.concat(boundaryTokens);
-
     if (!skipHandlerFor.has(token.id)) {
-      let handlerKey = token.element.type;
-      const def = token.element.businessObject?.eventDefinitions?.[0];
-      if (def) {
-        const key = def.$type.replace('Definition', '');
-        if (elementHandlers.has(key)) handlerKey = key;
-      }
-      const elHandler = elementHandlers.get(handlerKey);
+      const elHandler = elementHandlers.get(token.element.type);
       if (elHandler) {
         const api = {
           pause,
           resume,
           addCleanup: fn => handlerCleanups.add(fn),
-          setContext: obj => setContext(obj),
-          getContext: () => getContext()
+          setContext: obj => setContext(obj, token),
+          getContext: () => getContext(token)
         };
         const res = elHandler(token, api, flowIds);
         if (Array.isArray(res)) {
-          const out = messageTokens.concat(res, boundaryTokens);
-          if (token.element.type === 'bpmn:BoundaryEvent') {
-            if (!out.some(t => t.id === token.id && t.element === token.element)) {
-              removeBoundaryTokenRef(token.id);
-            }
-          } else {
-            const still = out.find(t => t.id === token.id);
-            if (!still || still.element !== token.element) {
-              cleanupBoundaryTokens(token.id);
-            }
-          }
-          return { tokens: out, waiting: false };
-        }
-        if (res === null) {
-          return { tokens: extraTokens, waiting: true };
+          return { tokens: messageTokens.concat(res), waiting: false };
         }
       }
     } else {
@@ -1399,106 +523,46 @@ const boundaryTokenMap = new Map();
     if (gatewayHandler) {
       const res = gatewayHandler(token, sequenceFlows, flowIds);
       if (res === null) {
-        return { tokens: extraTokens, waiting: true };
+        return { tokens: messageTokens, waiting: true };
       }
-      const out = messageTokens.concat(res, boundaryTokens);
-      if (token.element.type === 'bpmn:BoundaryEvent') {
-        if (!out.some(t => t.id === token.id && t.element === token.element)) {
-          removeBoundaryTokenRef(token.id);
-        }
-      } else {
-        const still = out.find(t => t.id === token.id);
-        if (!still || still.element !== token.element) {
-          cleanupBoundaryTokens(token.id);
-        }
-      }
-      return { tokens: out, waiting: false };
+      return { tokens: messageTokens.concat(res), waiting: false };
     }
     if (/Gateway/.test(token.element.type)) {
       console.warn('Unknown gateway type', token.element.type);
     }
     const res = handleDefault(token, sequenceFlows);
-    const out = messageTokens.concat(res, boundaryTokens);
-    if (token.element.type === 'bpmn:BoundaryEvent') {
-      if (!out.some(t => t.id === token.id && t.element === token.element)) {
-        removeBoundaryTokenRef(token.id);
-      }
-    } else {
-      const still = out.find(t => t.id === token.id);
-      if (!still || still.element !== token.element) {
-        cleanupBoundaryTokens(token.id);
-      }
-    }
-    return { tokens: out, waiting: false };
+    return { tokens: messageTokens.concat(res), waiting: false };
   }
 
-  function registerMessageStartEvents() {}
-
   function step(flowIds) {
+    if (awaitingToken) {
+      const { tokens: resTokens, waiting } = processToken(awaitingToken, flowIds);
+      if (waiting) return;
+      tokens = tokens.filter(t => t.id !== awaitingToken.id).concat(resTokens);
+      awaitingToken = null;
+      pathsStream.set(null);
+      tokenStream.set(tokens);
+      if (!tokens.length) {
+        pause();
+        cleanup();
+        return;
+      }
+      if (resumeAfterChoice) {
+        resumeAfterChoice = false;
+        resume();
+      } else {
+        schedule();
+      }
+      return;
+    }
+
+    if (!tokens.length) return;
+
     const newTokens = [];
     const processed = new Set();
 
-    const gatewayWinners = new Map();
-    for (const t of tokens) {
-      if (t.gatewayOf && skipHandlerFor.has(t.id)) {
-        if (!gatewayWinners.has(t.gatewayOf)) {
-          gatewayWinners.set(t.gatewayOf, t.id);
-        }
-      }
-    }
-    const cancelled = new Set();
-    for (const t of tokens) {
-      if (t.gatewayOf) {
-        const win = gatewayWinners.get(t.gatewayOf);
-        if (win && t.id !== win) {
-          cancelled.add(t.id);
-        }
-      }
-    }
-
-    if (awaitingToken && (!running || flowIds)) {
-      if (isManualResume(awaitingToken)) {
-        skipHandlerFor.add(awaitingToken.id);
-      }
-      const current = awaitingToken;
-      // Exclusive gateways expect a single flow id string
-      const chosen =
-        current.element.type === 'bpmn:ExclusiveGateway'
-          ? Array.isArray(flowIds)
-            ? flowIds[0]
-            : flowIds
-          : flowIds;
-      const { tokens: resTokens, waiting } = processToken(current, chosen);
-      tokens = tokens.filter(t => t.id !== current.id);
-      if (waiting) {
-        setAwaiting(current, getWaitingReason(current));
-        resumeAfterChoice = resumeAfterChoice || running;
-        newTokens.push(current, ...resTokens);
-      } else {
-        clearAwaiting();
-        pathsStream.set(null);
-        newTokens.push(...resTokens);
-        if (resumeAfterChoice) {
-          if (!running) {
-            resume();
-          } else {
-            schedule();
-          }
-        }
-      }
-    }
-
-    if (!tokens.length && !newTokens.length) return;
-
     for (const token of tokens) {
-      if (processed.has(token.id) || cancelled.has(token.id)) {
-        skipHandlerFor.delete(token.id);
-        continue;
-      }
-      if (awaitingToken && token.id === awaitingToken.id && !skipHandlerFor.has(token.id) && !flowIds) {
-        newTokens.push(token);
-        continue;
-      }
+      if (processed.has(token.id)) continue;
       const el = token.element;
       const incomingCount = (el.incoming || []).length;
       const type = el.type;
@@ -1510,10 +574,11 @@ const boundaryTokenMap = new Map();
           newTokens.push(...group);
           continue;
         }
-        const merged = { id: group[0].id, element: el, context: sharedContext };
+        const merged = { id: group[0].id, element: el, context: { ...group[0].context } };
         const mergedPending = {};
         group.forEach(t => {
           if (t.pendingJoins) Object.assign(mergedPending, t.pendingJoins);
+          Object.assign(merged.context, t.context);
         });
         if (mergedPending[el.id]) delete mergedPending[el.id];
         if (Object.keys(mergedPending).length) {
@@ -1521,62 +586,43 @@ const boundaryTokenMap = new Map();
         }
         const { tokens: resTokens, waiting } = processToken(merged);
         if (waiting) {
-          if (!awaitingToken) {
-            setAwaiting(merged, getWaitingReason(merged));
-            resumeAfterChoice = resumeAfterChoice || running;
-          }
+          awaitingToken = merged;
           newTokens.push(merged);
           newTokens.push(...resTokens);
-          continue;
+          tokens = newTokens.concat(tokens.filter(t => !processed.has(t.id)));
+          tokenStream.set(tokens);
+          return;
         }
-        if (awaitingToken && merged.id === awaitingToken.id) clearAwaiting();
         newTokens.push(...resTokens);
       } else {
         processed.add(token.id);
         const { tokens: resTokens, waiting } = processToken(token);
-        if (!waiting && token.gatewayOf) {
-          for (const t of tokens) {
-            if (t.gatewayOf === token.gatewayOf && t.id !== token.id) {
-              cancelled.add(t.id);
-              processed.add(t.id);
-            }
-          }
-        }
         if (waiting) {
-          if (!awaitingToken) {
-            setAwaiting(token, getWaitingReason(token));
-            resumeAfterChoice = resumeAfterChoice || running;
-          }
+          awaitingToken = token;
           newTokens.push(token);
           newTokens.push(...resTokens);
-          continue;
+          tokens = newTokens.concat(tokens.filter(t => !processed.has(t.id)));
+          tokenStream.set(tokens);
+          return;
         }
-        if (awaitingToken && token.id === awaitingToken.id) clearAwaiting();
         newTokens.push(...resTokens);
       }
     }
 
     tokens = newTokens;
     tokenStream.set(tokens);
-    const runnable = tokens.some(t => !awaitingToken || t.id !== awaitingToken.id);
+    pathsStream.set(null);
 
-    if (!tokens.length) { pause(); cleanup(); return; }
-
-    if (runnable && (running || resumeAfterChoice)) {
-      if (!running) {
-        resume();
-      } else {
-        schedule();
-      }
-    } else {
+    if (!tokens.length) {
       pause();
+      cleanup();
+      return;
     }
 
-    // choice resolved -> clear auto-resume state
-    if (!awaitingToken) resumeAfterChoice = false;
+    schedule();
   }
 
-  function start(startId) {
+  function start() {
     if (tokens.length || running) {
       stop();
     }
@@ -1584,8 +630,7 @@ const boundaryTokenMap = new Map();
     clearHandlerState();
     clearTokenLog();
     pathsStream.set(null);
-    clearAwaiting();
-    boundaryTokenMap.clear();
+    awaitingToken = null;
     previousElementIds.forEach(id => {
       if (elementRegistry.get(id)) canvas.removeMarker(id, 'active');
     });
@@ -1595,46 +640,17 @@ const boundaryTokenMap = new Map();
     previousElementIds = new Set();
     previousFlowIds = new Set();
 
-    sharedContext = { ...initialContext };
-    const startEls = getStart(startId);
-    if (!startEls.length) {
-      tokens = [];
-      tokenStream.set(tokens);
-      running = false;
-      return;
-    }
-    tokens = startEls.map(startEl => {
-      const t = {
-        id: nextTokenId++,
-        element: startEl,
-        viaFlow: null,
-        context: sharedContext
-      };
-      if (
-        startEl.businessObject?.eventDefinitions?.some(
-          d => d.$type === 'bpmn:MessageEventDefinition'
-        )
-      ) {
-        skipHandlerFor.add(t.id);
-      }
-      return t;
-    });
+    const startEl = getStart();
+    const t = { id: nextTokenId++, element: startEl, viaFlow: null, context: { ...initialContext } };
+    tokens = [t];
     tokenStream.set(tokens);
-    tokens.forEach(logToken);
-    registerMessageStartEvents();
+    logToken(t);
     running = true;
     schedule();
   }
 
   function resume() {
     if (running) return;
-    if (awaitingToken?.element?.id) {
-      canvas.removeMarker(awaitingToken.element.id, 'awaiting');
-      statusStream.set(null);
-    }
-    if (awaitingToken && isManualResume(awaitingToken)) {
-      skipHandlerFor.add(awaitingToken.id);
-    }
     clearHandlerState();
     running = true;
     schedule();
@@ -1653,39 +669,16 @@ const boundaryTokenMap = new Map();
     cleanup();
   }
 
-  function reset(startId) {
+  function reset() {
     pause();
     cleanup();
     clearTokenLog();
-    sharedContext = { ...initialContext };
-    const startEls = getStart(startId);
-    if (!startEls.length) {
-      tokens = [];
-      tokenStream.set(tokens);
-      pathsStream.set(null);
-      registerMessageStartEvents();
-      return;
-    }
-    tokens = startEls.map(startEl => {
-      const t = {
-        id: nextTokenId++,
-        element: startEl,
-        viaFlow: null,
-        context: sharedContext
-      };
-      if (
-        startEl.businessObject?.eventDefinitions?.some(
-          d => d.$type === 'bpmn:MessageEventDefinition'
-        )
-      ) {
-        skipHandlerFor.add(t.id);
-      }
-      return t;
-    });
+    const startEl = getStart();
+    const t = { id: nextTokenId++, element: startEl, viaFlow: null, context: { ...initialContext } };
+    tokens = [t];
     tokenStream.set(tokens);
-    tokens.forEach(logToken);
+    logToken(t);
     pathsStream.set(null);
-    registerMessageStartEvents();
   }
 
   return {
@@ -1699,16 +692,8 @@ const boundaryTokenMap = new Map();
     tokenStream,
     tokenLogStream,
     pathsStream,
-    statusStream,
     elementHandlers,
-    triggerMessage,
-    sendSignal,
-    throwError,
-    throwEscalation,
-    throwCancel,
-    throwCompensation,
     setContext,
     getContext
   };
 }
-
