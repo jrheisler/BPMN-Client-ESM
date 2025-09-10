@@ -255,7 +255,13 @@ Object.assign(document.body.style, {
             e.businessObject?.$type === 'bpmn:StartEvent'
         )
       : [];
-    const eligible = all.filter(e => !e.incoming || !e.incoming.length);
+    const eligible = [
+      ...new Map(
+        all
+          .filter(e => !e.incoming || !e.incoming.length)
+          .map(e => [e.id, e])
+      ).values()
+    ];
     if (eligible.length <= 1) return eligible[0]?.id;
     const stream = openStartEventSelectionModal(eligible, currentTheme);
     return await new Promise(resolve => {
