@@ -1,7 +1,7 @@
 import customReplaceModule from './modules/customReplaceMenuProvider.js';
 import { createRaciMatrix } from './components/raciMatrix.js';
 import { createTokenListPanel } from './components/tokenListPanel.js';
-import { reactiveButton, dropdownStream, avatarDropdown, openFlowSelectionModal, createDiagramOverlay, openStartEventSelectionModal } from './components/elements.js';
+import { reactiveButton, dropdownStream, avatarDropdown, openFlowSelectionModal, createDiagramOverlay } from './components/elements.js';
 import { showToast } from './components/elements.js';
 import { showProperties, hideSidebar } from './components/showProperties.js';
 import { treeStream, setSelectedId, setOnSelect, togglePanel } from './components/diagramTree.js';
@@ -215,65 +215,6 @@ Object.assign(document.body.style, {
   const simulation      = createSimulation({ elementRegistry, canvas });
   window.simulation = simulation;
   const overlays        = modeler.get('overlays');
-
-  // status display when simulation is awaiting user action
-  const statusBar = document.createElement('div');
-  statusBar.id = 'simulation-status';
-  Object.assign(statusBar.style, {
-    position: 'fixed',
-    bottom: '1rem',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    background: '#fff',
-    border: '1px solid #ccc',
-    padding: '0.5rem 1rem',
-    display: 'none',
-    zIndex: '1000'
-  });
-  const statusText = document.createElement('span');
-  const resumeBtn = document.createElement('button');
-  resumeBtn.textContent = 'Resume';
-  resumeBtn.addEventListener('click', () => simulation.resume());
-  statusBar.appendChild(statusText);
-  statusBar.appendChild(resumeBtn);
-  document.body.appendChild(statusBar);
-
-  simulation.statusStream.subscribe(info => {
-    if (info) {
-      statusText.textContent = `Paused at ${info.elementName || info.elementId}: ${info.reason}`;
-      statusBar.style.display = 'block';
-    } else {
-      statusBar.style.display = 'none';
-    }
-  });
-
-  async function chooseStartEvent() {
-    const all = elementRegistry.filter
-      ? elementRegistry.filter(
-          e =>
-            e.type === 'bpmn:StartEvent' ||
-            e.businessObject?.$type === 'bpmn:StartEvent'
-        )
-      : [];
-    const eligible = [
-      ...new Map(
-        all
-          .filter(e => !e.incoming || !e.incoming.length)
-          .map(e => [e.id, e])
-      ).values()
-    ];
-    if (eligible.length <= 1) return eligible[0]?.id;
-    const stream = openStartEventSelectionModal(eligible, currentTheme);
-    return await new Promise(resolve => {
-      let unsubscribe;
-      unsubscribe = stream.subscribe(val => {
-        if (val) {
-          resolve(val);
-          unsubscribe?.();
-        }
-      });
-    });
-  }
 
   const { scheduleOverlayUpdate } = initAddOnOverlays({ overlays, elementRegistry, typeIcons });
   const { loadAddOnData, applyAddOnsToElements, syncAddOnStoreFromElements } =
@@ -991,14 +932,7 @@ function rebuildMenu() {
   // Simulation controls
   reactiveButton(
     new Stream("▶"),
-    async () => {
-      const startId = await chooseStartEvent();
-      if (startId == null) {
-        showToast('Start cancelled');
-        return;
-      }
-      simulation.start(startId);
-    },
+    () => simulation.start(),
     {
       outline: true,
       title: "Play"
