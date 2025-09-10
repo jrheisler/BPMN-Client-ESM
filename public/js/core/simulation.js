@@ -327,6 +327,8 @@ export function createSimulation(services, opts = {}) {
   // Stream of available sequence flows when waiting on a gateway decision.
   // This acts as the signal to prompt the user for input on which path to take.
   const pathsStream = new Stream(null);
+  // Stream carrying information about why the simulation is paused
+  const statusStream = new Stream(null);
 
   function evaluate(expr, data) {
     if (!expr) return true;
@@ -390,6 +392,47 @@ let awaitingToken = null;
 // remember whether simulation was running before pausing for a user choice
 let resumeAfterChoice = false;
 let nextTokenId = 1;
+
+  function clearAwaiting() {
+    if (awaitingToken?.element?.id) {
+      canvas.removeMarker(awaitingToken.element.id, 'awaiting');
+    }
+    awaitingToken = null;
+    if (statusStream.get() !== null) {
+      statusStream.set(null);
+    }
+  }
+
+  function setAwaiting(token, reason) {
+    clearAwaiting();
+    awaitingToken = token;
+    if (token?.element?.id) {
+      canvas.addMarker(token.element.id, 'awaiting');
+      const name = token.element.businessObject?.name || token.element.id;
+      statusStream.set({ elementId: token.element.id, elementName: name, reason });
+    } else {
+      statusStream.set({ reason });
+    }
+  }
+
+  function getWaitingReason(token) {
+    const type = token?.element?.type;
+    switch (type) {
+      case 'bpmn:UserTask':
+        return 'Waiting for user input';
+      case 'bpmn:ReceiveTask':
+      case 'bpmn:MessageEvent':
+      case 'bpmn:SignalEvent':
+      case 'bpmn:TimerEvent':
+      case 'bpmn:ErrorEvent':
+      case 'bpmn:EscalationEvent':
+      case 'bpmn:CancelEvent':
+      case 'bpmn:CompensateEvent':
+        return 'Waiting for event';
+      default:
+        return 'Paused';
+    }
+  }
 
 // Map host token id -> array of attached boundary token ids
 const boundaryTokenMap = new Map();
@@ -521,7 +564,7 @@ const boundaryTokenMap = new Map();
       const interrupting = match.element.businessObject?.cancelActivity !== false;
       if (interrupting) {
         if (awaitingToken && awaitingToken.id === token.id) {
-          awaitingToken = null;
+          clearAwaiting();
         }
         for (let i = tokens.length - 1; i >= 0; i--) {
           if (tokens[i].element === token.element && tokens[i].id === token.id) {
@@ -536,7 +579,7 @@ const boundaryTokenMap = new Map();
 
     cleanupBoundaryTokens(token.id);
     if (awaitingToken && awaitingToken.id === token.id) {
-      awaitingToken = null;
+      clearAwaiting();
     }
     const idx = tokens.findIndex(t => t.id === token.id);
     if (idx !== -1) tokens.splice(idx, 1);
@@ -747,7 +790,7 @@ const boundaryTokenMap = new Map();
 
   function cleanup() {
     clearHandlerState(true);
-    awaitingToken = null;
+    clearAwaiting();
     resumeAfterChoice = false;
     pathsStream.set(null);
     boundaryTokenMap.clear();
@@ -820,7 +863,7 @@ const boundaryTokenMap = new Map();
           type: token.element.type,
           isDefaultOnly: false
         });
-        awaitingToken = token; // keep token so the process can resume
+        setAwaiting(token, 'Awaiting gateway decision'); // keep token so the process can resume
         // remember running state to resume automatically once choice is made
         resumeAfterChoice = running;
         pause();
@@ -850,7 +893,7 @@ const boundaryTokenMap = new Map();
         type: token.element.type,
         isDefaultOnly: defaultOnly
       });
-      awaitingToken = token; // keep token so the process can resume
+      setAwaiting(token, 'Awaiting gateway decision'); // keep token so the process can resume
       // remember running state to resume automatically once choice is made
       resumeAfterChoice = running;
       pause();
@@ -872,7 +915,7 @@ const boundaryTokenMap = new Map();
     }
 
     // invalid choice -> keep waiting
-    awaitingToken = token;
+    setAwaiting(token, 'Awaiting gateway decision');
     return null;
   }
 
@@ -980,7 +1023,7 @@ const boundaryTokenMap = new Map();
       // signals the UI to request input and the token is kept for resuming.
       if (mapped.every(f => !f.satisfied)) {
         pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: false });
-        awaitingToken = token; // keep token so the process can resume
+        setAwaiting(token, 'Awaiting gateway decision'); // keep token so the process can resume
         // remember running state to resume automatically once choice is made
         resumeAfterChoice = running;
         pause();
@@ -1004,7 +1047,7 @@ const boundaryTokenMap = new Map();
         ids = [satisfied[0].flow.id];
       } else {
         pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: defaultOnly });
-        awaitingToken = token; // keep token so the process can resume
+        setAwaiting(token, 'Awaiting gateway decision'); // keep token so the process can resume
         // remember running state to resume automatically once choice is made
         resumeAfterChoice = running;
         pause();
@@ -1056,7 +1099,7 @@ const boundaryTokenMap = new Map();
       logToken(next);
       const { tokens: resTokens, waiting } = processToken(next);
       if (waiting) {
-        if (!awaitingToken) awaitingToken = next;
+        if (!awaitingToken) setAwaiting(next, getWaitingReason(next));
         generated.push(next, ...resTokens);
       } else {
         generated.push(...resTokens);
@@ -1428,10 +1471,10 @@ const boundaryTokenMap = new Map();
       const { tokens: resTokens, waiting } = processToken(current, chosen);
       tokens = tokens.filter(t => t.id !== current.id);
       if (waiting) {
-        awaitingToken = current;
+        setAwaiting(current, getWaitingReason(current));
         newTokens.push(current, ...resTokens);
       } else {
-        awaitingToken = null;
+        clearAwaiting();
         pathsStream.set(null);
         newTokens.push(...resTokens);
         if (resumeAfterChoice) {
@@ -1475,12 +1518,12 @@ const boundaryTokenMap = new Map();
         }
         const { tokens: resTokens, waiting } = processToken(merged);
         if (waiting) {
-          if (!awaitingToken) awaitingToken = merged;
+          if (!awaitingToken) setAwaiting(merged, getWaitingReason(merged));
           newTokens.push(merged);
           newTokens.push(...resTokens);
           continue;
         }
-        if (awaitingToken && merged.id === awaitingToken.id) awaitingToken = null;
+        if (awaitingToken && merged.id === awaitingToken.id) clearAwaiting();
         newTokens.push(...resTokens);
       } else {
         processed.add(token.id);
@@ -1494,12 +1537,12 @@ const boundaryTokenMap = new Map();
           }
         }
         if (waiting) {
-          if (!awaitingToken) awaitingToken = token;
+          if (!awaitingToken) setAwaiting(token, getWaitingReason(token));
           newTokens.push(token);
           newTokens.push(...resTokens);
           continue;
         }
-        if (awaitingToken && token.id === awaitingToken.id) awaitingToken = null;
+        if (awaitingToken && token.id === awaitingToken.id) clearAwaiting();
         newTokens.push(...resTokens);
       }
     }
@@ -1529,7 +1572,7 @@ const boundaryTokenMap = new Map();
     clearHandlerState();
     clearTokenLog();
     pathsStream.set(null);
-    awaitingToken = null;
+    clearAwaiting();
     boundaryTokenMap.clear();
     previousElementIds.forEach(id => {
       if (elementRegistry.get(id)) canvas.removeMarker(id, 'active');
@@ -1573,6 +1616,10 @@ const boundaryTokenMap = new Map();
 
   function resume() {
     if (running) return;
+    if (awaitingToken?.element?.id) {
+      canvas.removeMarker(awaitingToken.element.id, 'awaiting');
+      statusStream.set(null);
+    }
     if (awaitingToken && isManualResume(awaitingToken)) {
       skipHandlerFor.add(awaitingToken.id);
     }
@@ -1640,6 +1687,7 @@ const boundaryTokenMap = new Map();
     tokenStream,
     tokenLogStream,
     pathsStream,
+    statusStream,
     elementHandlers,
     triggerMessage,
     sendSignal,
