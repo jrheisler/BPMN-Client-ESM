@@ -183,6 +183,11 @@ export function createSimulation(services, opts = {}) {
     return [token];
   });
 
+  elementHandlers.set('bpmn:MessageEvent', (token, api) => {
+    api.pause();
+    return [token];
+  });
+
   function clearHandlerState(clearSkip = false) {
     handlerCleanups.forEach(fn => fn());
     handlerCleanups.clear();
@@ -488,6 +493,36 @@ export function createSimulation(services, opts = {}) {
     return [];
   }
   function processToken(token, flowIds) {
+    const boundaryTokens = [];
+    if (!token.host && !token.spawnedBoundaries) {
+      let boundaries = (token.element.boundaryEvents || [])
+        .map(id => elementRegistry.get(id))
+        .filter(Boolean);
+      if (!token.element.boundaryEvents && elementRegistry.filter) {
+        boundaries = boundaries.concat(
+          elementRegistry
+            .filter(
+              e =>
+                e.type === 'bpmn:BoundaryEvent' &&
+                (e.host?.id === token.element.id ||
+                  e.businessObject?.attachedToRef?.id === token.element.id)
+            )
+        );
+      }
+      boundaries = boundaries.filter((b, idx, arr) => arr.indexOf(b) === idx);
+      boundaries.forEach(boundary => {
+        const bt = {
+          id: nextTokenId++,
+          element: boundary,
+          host: token.id,
+          cancelActivity: boundary.cancelActivity !== false
+        };
+        logToken(bt);
+        boundaryTokens.push(bt);
+      });
+      if (boundaries.length) token.spawnedBoundaries = true;
+    }
+
     const outgoing = token.element.outgoing || [];
     const sequenceFlows = outgoing.filter(f => f.type === 'bpmn:SequenceFlow');
     const messageFlows = outgoing.filter(f => f.type === 'bpmn:MessageFlow');
@@ -506,7 +541,7 @@ export function createSimulation(services, opts = {}) {
         };
         const res = elHandler(token, api, flowIds);
         if (Array.isArray(res)) {
-          return { tokens: messageTokens.concat(res), waiting: false };
+          return { tokens: boundaryTokens.concat(messageTokens, res), waiting: false };
         }
       }
     } else {
@@ -523,15 +558,15 @@ export function createSimulation(services, opts = {}) {
     if (gatewayHandler) {
       const res = gatewayHandler(token, sequenceFlows, flowIds);
       if (res === null) {
-        return { tokens: messageTokens, waiting: true };
+        return { tokens: boundaryTokens.concat(messageTokens), waiting: true };
       }
-      return { tokens: messageTokens.concat(res), waiting: false };
+      return { tokens: boundaryTokens.concat(messageTokens, res), waiting: false };
     }
     if (/Gateway/.test(token.element.type)) {
       console.warn('Unknown gateway type', token.element.type);
     }
     const res = handleDefault(token, sequenceFlows);
-    return { tokens: messageTokens.concat(res), waiting: false };
+    return { tokens: boundaryTokens.concat(messageTokens, res), waiting: false };
   }
 
   function step(flowIds) {
@@ -561,12 +596,18 @@ export function createSimulation(services, opts = {}) {
     const newTokens = [];
     const processed = new Set();
 
+    function removeRelated(hostId) {
+      tokens.forEach(t => {
+        if (t.id === hostId || t.host === hostId) processed.add(t.id);
+      });
+    }
+
     for (const token of tokens) {
       if (processed.has(token.id)) continue;
       const el = token.element;
       const incomingCount = (el.incoming || []).length;
       const type = el.type;
-      if (incomingCount > 1 && (type === 'bpmn:ParallelGateway' || type === 'bpmn:InclusiveGateway')) {
+      if (!token.host && incomingCount > 1 && (type === 'bpmn:ParallelGateway' || type === 'bpmn:InclusiveGateway')) {
         const group = tokens.filter(t => t.element.id === el.id);
         group.forEach(t => processed.add(t.id));
         const expected = group[0].pendingJoins?.[el.id] || incomingCount;
@@ -596,15 +637,31 @@ export function createSimulation(services, opts = {}) {
         newTokens.push(...resTokens);
       } else {
         processed.add(token.id);
-        const { tokens: resTokens, waiting } = processToken(token);
+        let { tokens: resTokens, waiting } = processToken(token);
+        const stays = resTokens.some(t => t.id === token.id);
+
         if (waiting) {
           awaitingToken = token;
-          newTokens.push(token);
+          if (!stays) newTokens.push(token);
           newTokens.push(...resTokens);
           tokens = newTokens.concat(tokens.filter(t => !processed.has(t.id)));
           tokenStream.set(tokens);
           return;
         }
+
+        if (token.host) {
+          if (token.cancelActivity) {
+            if (!stays) removeRelated(token.host);
+          } else {
+            newTokens.push(token);
+          }
+        } else {
+          if (!stays) {
+            removeRelated(token.id);
+            resTokens = resTokens.filter(t => t.host !== token.id);
+          }
+        }
+
         newTokens.push(...resTokens);
       }
     }
@@ -681,6 +738,14 @@ export function createSimulation(services, opts = {}) {
     pathsStream.set(null);
   }
 
+  function triggerMessage(boundaryId) {
+    const token = tokens.find(t => t.element && t.element.id === boundaryId);
+    if (token) {
+      skipHandlerFor.add(token.id);
+      resume();
+    }
+  }
+
   return {
     start,
     resume,
@@ -694,6 +759,7 @@ export function createSimulation(services, opts = {}) {
     pathsStream,
     elementHandlers,
     setContext,
-    getContext
+    getContext,
+    triggerMessage
   };
 }
