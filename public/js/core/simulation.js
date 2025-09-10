@@ -865,7 +865,7 @@ const boundaryTokenMap = new Map();
         });
         setAwaiting(token, 'Awaiting gateway decision'); // keep token so the process can resume
         // remember running state to resume automatically once choice is made
-        resumeAfterChoice = running;
+        resumeAfterChoice = resumeAfterChoice || running;
         pause();
         return null;
       }
@@ -895,7 +895,7 @@ const boundaryTokenMap = new Map();
       });
       setAwaiting(token, 'Awaiting gateway decision'); // keep token so the process can resume
       // remember running state to resume automatically once choice is made
-      resumeAfterChoice = running;
+      resumeAfterChoice = resumeAfterChoice || running;
       pause();
       return null;
     }
@@ -1025,7 +1025,7 @@ const boundaryTokenMap = new Map();
         pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: false });
         setAwaiting(token, 'Awaiting gateway decision'); // keep token so the process can resume
         // remember running state to resume automatically once choice is made
-        resumeAfterChoice = running;
+        resumeAfterChoice = resumeAfterChoice || running;
         pause();
         return null;
       }
@@ -1049,7 +1049,7 @@ const boundaryTokenMap = new Map();
         pathsStream.set({ flows: mapped, type: token.element.type, isDefaultOnly: defaultOnly });
         setAwaiting(token, 'Awaiting gateway decision'); // keep token so the process can resume
         // remember running state to resume automatically once choice is made
-        resumeAfterChoice = running;
+        resumeAfterChoice = resumeAfterChoice || running;
         pause();
         return null;
       }
@@ -1472,17 +1472,20 @@ const boundaryTokenMap = new Map();
       tokens = tokens.filter(t => t.id !== current.id);
       if (waiting) {
         setAwaiting(current, getWaitingReason(current));
+        resumeAfterChoice = resumeAfterChoice || running;
         newTokens.push(current, ...resTokens);
       } else {
         clearAwaiting();
         pathsStream.set(null);
         newTokens.push(...resTokens);
         if (resumeAfterChoice) {
-          running = true;
-          schedule();
+          if (!running) {
+            resume();
+          } else {
+            schedule();
+          }
         }
       }
-      resumeAfterChoice = false;
     }
 
     if (!tokens.length && !newTokens.length) return;
@@ -1518,7 +1521,10 @@ const boundaryTokenMap = new Map();
         }
         const { tokens: resTokens, waiting } = processToken(merged);
         if (waiting) {
-          if (!awaitingToken) setAwaiting(merged, getWaitingReason(merged));
+          if (!awaitingToken) {
+            setAwaiting(merged, getWaitingReason(merged));
+            resumeAfterChoice = resumeAfterChoice || running;
+          }
           newTokens.push(merged);
           newTokens.push(...resTokens);
           continue;
@@ -1537,7 +1543,10 @@ const boundaryTokenMap = new Map();
           }
         }
         if (waiting) {
-          if (!awaitingToken) setAwaiting(token, getWaitingReason(token));
+          if (!awaitingToken) {
+            setAwaiting(token, getWaitingReason(token));
+            resumeAfterChoice = resumeAfterChoice || running;
+          }
           newTokens.push(token);
           newTokens.push(...resTokens);
           continue;
@@ -1554,8 +1563,11 @@ const boundaryTokenMap = new Map();
     if (!tokens.length) { pause(); cleanup(); return; }
 
     if (runnable && (running || resumeAfterChoice)) {
-      running = true;
-      schedule();
+      if (!running) {
+        resume();
+      } else {
+        schedule();
+      }
     } else {
       pause();
     }
