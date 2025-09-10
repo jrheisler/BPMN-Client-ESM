@@ -259,9 +259,12 @@ Object.assign(document.body.style, {
     if (eligible.length <= 1) return eligible[0]?.id;
     const stream = openStartEventSelectionModal(eligible, currentTheme);
     return await new Promise(resolve => {
-      const unsub = stream.subscribe(val => {
-        resolve(val);
-        unsub();
+      let unsubscribe;
+      unsubscribe = stream.subscribe(val => {
+        if (val) {
+          resolve(val);
+          unsubscribe?.();
+        }
       });
     });
   }
