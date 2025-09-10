@@ -432,6 +432,7 @@ export function headerContainer(titleStream) {
 
 
 export function openFlowSelectionModal(flows, themeStream = currentTheme, allowMultiple = false) {
+  const items = flows.map(f => ('flow' in f ? f : { flow: f, satisfied: true }));
   const pickStream = new Stream(null);
 
   // Overlay
@@ -473,7 +474,7 @@ export function openFlowSelectionModal(flows, themeStream = currentTheme, allowM
   list.style.gap = '0.5rem';
   content.appendChild(list);
 
-  flows.forEach(({ flow, satisfied }) => {
+  items.forEach(({ flow, satisfied }) => {
     const label = document.createElement('label');
     Object.assign(label.style, {
       padding: '0.5rem 1rem',
@@ -519,7 +520,7 @@ export function openFlowSelectionModal(flows, themeStream = currentTheme, allowM
   confirmBtn.addEventListener('click', () => {
     const selected = [];
     list.querySelectorAll('input').forEach((input, idx) => {
-      if (input.checked) selected.push(flows[idx].flow);
+      if (input.checked) selected.push(items[idx].flow);
     });
     pickStream.set(allowMultiple ? selected : selected[0] || null);
     modal.remove();
