@@ -1,7 +1,7 @@
 import customReplaceModule from './modules/customReplaceMenuProvider.js';
 import { createRaciMatrix } from './components/raciMatrix.js';
 import { createTokenListPanel } from './components/tokenListPanel.js';
-import { reactiveButton, dropdownStream, avatarDropdown, openFlowSelectionModal, createDiagramOverlay } from './components/elements.js';
+import { reactiveButton, dropdownStream, avatarDropdown, openFlowSelectionModal, createDiagramOverlay, openStartEventSelectionModal } from './components/elements.js';
 import { showToast } from './components/elements.js';
 import { showProperties, hideSidebar } from './components/showProperties.js';
 import { treeStream, setSelectedId, setOnSelect, togglePanel } from './components/diagramTree.js';
@@ -216,7 +216,7 @@ Object.assign(document.body.style, {
   window.simulation = simulation;
   const overlays        = modeler.get('overlays');
 
-  function chooseStartEvent() {
+  async function chooseStartEvent() {
     const all = elementRegistry.filter
       ? elementRegistry.filter(
           e =>
@@ -226,14 +226,15 @@ Object.assign(document.body.style, {
       : [];
     const eligible = all.filter(e => !e.incoming || !e.incoming.length);
     if (eligible.length <= 1) return eligible[0]?.id;
-    const options = eligible
-      .map(e =>
-        `${e.id}${e.businessObject?.name ? ' - ' + e.businessObject.name : ''}`
-      )
-      .join('\n');
-    const choice = window.prompt('Select start event id:\n' + options);
-    const match = eligible.find(e => e.id === choice);
-    return match ? match.id : undefined;
+    const stream = openStartEventSelectionModal(eligible, currentTheme);
+    return await new Promise(resolve => {
+      const unsub = stream.subscribe(val => {
+        if (val) {
+          resolve(val);
+          unsub();
+        }
+      });
+    });
   }
 
   const { scheduleOverlayUpdate } = initAddOnOverlays({ overlays, elementRegistry, typeIcons });
@@ -485,7 +486,7 @@ async function appendXml(xml) {
       const svg = canvasEl.querySelector('svg');
       if (svg) svg.style.height = '100%';
       simulation.clearTokenLog();
-      simulation.reset(chooseStartEvent());
+      simulation.reset(await chooseStartEvent());
     } catch (err) {
       console.error("Import error:", err);
     }
@@ -950,7 +951,7 @@ function rebuildMenu() {
   avatarMenu,
 
   // Simulation controls
-  reactiveButton(new Stream("▶"), () => simulation.start(chooseStartEvent()), {
+  reactiveButton(new Stream("▶"), async () => simulation.start(await chooseStartEvent()), {
     outline: true,
     title: "Play"
   }),
