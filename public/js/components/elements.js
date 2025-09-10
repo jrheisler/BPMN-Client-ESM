@@ -521,7 +521,7 @@ export function openFlowSelectionModal(flows, themeStream = currentTheme, allowM
     list.querySelectorAll('input').forEach((input, idx) => {
       if (input.checked) selected.push(flows[idx].flow);
     });
-    pickStream.set(selected);
+    pickStream.set(allowMultiple ? selected : selected[0] || null);
     modal.remove();
   });
   content.appendChild(confirmBtn);
