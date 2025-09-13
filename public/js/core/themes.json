@@ -551,7 +551,7 @@
       },
       "label": {
         "fontFamily": "\"Share Tech Mono\", monospace",
-        "fill": "#e0ffe0"
+        "fill": "#00ff00"
       },
       "selected": {
         "stroke": "#00ff00",
