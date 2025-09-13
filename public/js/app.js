@@ -1126,7 +1126,7 @@ currentTheme.subscribe(theme => {
     /* ── simulation active token highlight ─────────────────────────────── */
     .djs-element.active .djs-visual > :nth-child(1),
     .djs-connection.active .djs-visual > path {
-      stroke: orange !important;
+      stroke: ${colors.accent} !important;
       stroke-width: 4px !important;
     }
 
