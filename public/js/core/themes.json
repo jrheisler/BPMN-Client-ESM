@@ -121,7 +121,7 @@
       "background": "#0a192f",
       "foreground": "#00ffcc",
       "primary": "#112240",
-      "accent": "#ff00ff",
+      "accent": "#64ffda",
       "surface": "#0e2438",
       "border": "#1c3a5f",
       "muted": "#6a7b8c",
@@ -136,19 +136,19 @@
         "strokeWidth": 2
       },
       "connection": {
-        "stroke": "#00ffcc",
+        "stroke": "#64ffda",
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#00ffcc",
-        "stroke": "#00ffcc"
+        "fill": "#64ffda",
+        "stroke": "#64ffda"
       },
       "label": {
         "fontFamily": "Roboto, sans-serif",
         "fill": "#00ffcc"
       },
       "selected": {
-        "stroke": "#ff00ff",
+        "stroke": "#64ffda",
         "strokeWidth": 3
       },
       "startEvent": {
@@ -179,7 +179,7 @@
       "background": "#002b36",
       "foreground": "#00ffcc",
       "primary": "#073642",
-      "accent": "#ff00ff",
+      "accent": "#64ffda",
       "surface": "#003847",
       "border": "#586e75",
       "muted": "#93a1a1",
@@ -194,19 +194,19 @@
         "strokeWidth": 2
       },
       "connection": {
-        "stroke": "#00ffcc",
+        "stroke": "#64ffda",
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#00ffcc",
-        "stroke": "#00ffcc"
+        "fill": "#64ffda",
+        "stroke": "#64ffda"
       },
       "label": {
         "fontFamily": "Arial, sans-serif",
         "fill": "#00ffcc"
       },
       "selected": {
-        "stroke": "#ff00ff",
+        "stroke": "#64ffda",
         "strokeWidth": 3
       },
       "startEvent": {
@@ -295,7 +295,7 @@
       "background": "#2e3d29",
       "foreground": "#00ffcc",
       "primary": "#3a4d37",
-      "accent": "#ff00ff",
+      "accent": "#64ffda",
       "surface": "#2d4f3a",
       "border": "#4caf50",
       "muted": "#99ccb3",
@@ -310,19 +310,19 @@
         "strokeWidth": 2
       },
       "connection": {
-        "stroke": "#00ffcc",
+        "stroke": "#64ffda",
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#00ffcc",
-        "stroke": "#00ffcc"
+        "fill": "#64ffda",
+        "stroke": "#64ffda"
       },
       "label": {
         "fontFamily": "Verdana, sans-serif",
         "fill": "#00ffcc"
       },
       "selected": {
-        "stroke": "#ff00ff",
+        "stroke": "#64ffda",
         "strokeWidth": 3
       },
       "startEvent": {
@@ -411,7 +411,7 @@
       "background": "#1a1a2e",
       "foreground": "#00ffcc",
       "primary": "#16213e",
-      "accent": "#ff00ff",
+      "accent": "#64ffda",
       "surface": "#202040",
       "border": "#2a2a5c",
       "muted": "#7a7a9a",
@@ -426,19 +426,19 @@
         "strokeWidth": 2
       },
       "connection": {
-        "stroke": "#00ffcc",
+        "stroke": "#64ffda",
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#00ffcc",
-        "stroke": "#00ffcc"
+        "fill": "#64ffda",
+        "stroke": "#64ffda"
       },
       "label": {
         "fontFamily": "Helvetica Neue, sans-serif",
         "fill": "#00ffcc"
       },
       "selected": {
-        "stroke": "#ff00ff",
+        "stroke": "#64ffda",
         "strokeWidth": 3
       },
       "startEvent": {
