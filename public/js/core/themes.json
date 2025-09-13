@@ -20,12 +20,12 @@
         "strokeWidth": 2
       },
       "connection": {
-        "stroke": "#bb86fc",
+        "stroke": "#d1b6ff",
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#bb86fc",
-        "stroke": "#bb86fc"
+        "fill": "#d1b6ff",
+        "stroke": "#d1b6ff"
       },
       "label": {
         "fontFamily": "system-ui, sans-serif",
