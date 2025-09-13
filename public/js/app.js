@@ -1109,12 +1109,14 @@ currentTheme.subscribe(theme => {
     }
 
     /* ── connections & arrows ───────────────────────────────────────────── */
-    .djs-connection .djs-connection-inner {
+    .djs-connection .djs-visual {
       stroke: ${bpmn.connection.stroke} !important;
       stroke-width: ${bpmn.connection.strokeWidth}px !important;
     }
-    .djs-connection .djs-connection-outer {
-      stroke: ${bpmn.connectionOuter || colors.background};
+    .djs-connection .djs-outline {
+      visibility: visible !important;
+      display: block !important;
+      stroke: ${bpmn.connectionOuter || colors.background} !important;
       stroke-width: ${bpmn.connection.strokeWidth + 2}px !important;
     }
     .djs-connection .djs-marker {
@@ -1125,7 +1127,7 @@ currentTheme.subscribe(theme => {
 
     /* ── selected styles ───────────────────────────────────────────────── */
     .djs-element.djs-element-selected .djs-shape,
-    .djs-connection.djs-connection-selected .djs-connection-outer {
+    .djs-connection.djs-connection-selected .djs-outline {
       stroke: ${bpmn.selected.stroke} !important;
       stroke-width: ${bpmn.selected.strokeWidth}px !important;
     }
