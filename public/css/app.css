@@ -78,7 +78,7 @@
 }
 
 .diagram-tree-selected {
-  background: #ffd54f;
+  background: var(--accent);
 }
 
 .diagram-tree-owner {
@@ -230,11 +230,11 @@
 }
 
 .token-entry-even {
-  background-color: #f9f9f9;
+  background-color: var(--panel);
 }
 
 .token-entry-odd {
-  background-color: #e9e9e9;
+  background-color: var(--panel2);
 }
 
 .token-entry-start::before {
@@ -262,7 +262,7 @@
 }
 
 @keyframes token-entry-highlight {
-  from { background-color: #fff3cd; }
+  from { background-color: var(--accent); }
   to { background-color: inherit; }
 }
 
