@@ -1,8 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { applyThemeToPage } from '../public/js/core/theme.js';
 
-test('applyThemeToPage sets --bg-alt variable', () => {
+global.fetch = () => Promise.resolve({ json: () => Promise.resolve({}) });
+
+test('applyThemeToPage sets --bg-alt variable', async () => {
+  const { applyThemeToPage } = await import('../public/js/core/theme.js');
   const style = {
     setProperty(key, value) {
       this[key] = value;
