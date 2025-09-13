@@ -34,6 +34,22 @@
       "selected": {
         "stroke": "#ff00ff",
         "strokeWidth": 3
+      },
+      "startEvent": {
+        "fill": "#00e676",
+        "stroke": "#666"
+      },
+      "endEvent": {
+        "fill": "#ff5252",
+        "stroke": "#666"
+      },
+      "task": {
+        "fill": "#1e1e1e",
+        "stroke": "#666"
+      },
+      "gateway": {
+        "fill": "#ffb300",
+        "stroke": "#666"
       }
     },
     "fonts": {
@@ -76,6 +92,22 @@
       "selected": {
         "stroke": "#6200ee",
         "strokeWidth": 3
+      },
+      "startEvent": {
+        "fill": "#4caf50",
+        "stroke": "#ccc"
+      },
+      "endEvent": {
+        "fill": "#f44336",
+        "stroke": "#ccc"
+      },
+      "task": {
+        "fill": "#f5f5f5",
+        "stroke": "#ccc"
+      },
+      "gateway": {
+        "fill": "#fb8c00",
+        "stroke": "#ccc"
       }
     },
     "fonts": {
@@ -118,6 +150,22 @@
       "selected": {
         "stroke": "#ff00ff",
         "strokeWidth": 3
+      },
+      "startEvent": {
+        "fill": "#00e6a8",
+        "stroke": "#1c3a5f"
+      },
+      "endEvent": {
+        "fill": "#ff4d6d",
+        "stroke": "#1c3a5f"
+      },
+      "task": {
+        "fill": "#112240",
+        "stroke": "#1c3a5f"
+      },
+      "gateway": {
+        "fill": "#ffa726",
+        "stroke": "#1c3a5f"
       }
     },
     "fonts": {
@@ -160,6 +208,22 @@
       "selected": {
         "stroke": "#ff00ff",
         "strokeWidth": 3
+      },
+      "startEvent": {
+        "fill": "#859900",
+        "stroke": "#586e75"
+      },
+      "endEvent": {
+        "fill": "#dc322f",
+        "stroke": "#586e75"
+      },
+      "task": {
+        "fill": "#073642",
+        "stroke": "#586e75"
+      },
+      "gateway": {
+        "fill": "#b58900",
+        "stroke": "#586e75"
       }
     },
     "fonts": {
@@ -202,6 +266,22 @@
       "selected": {
         "stroke": "#268bd2",
         "strokeWidth": 3
+      },
+      "startEvent": {
+        "fill": "#859900",
+        "stroke": "#93a1a1"
+      },
+      "endEvent": {
+        "fill": "#dc322f",
+        "stroke": "#93a1a1"
+      },
+      "task": {
+        "fill": "#eee8d5",
+        "stroke": "#93a1a1"
+      },
+      "gateway": {
+        "fill": "#b58900",
+        "stroke": "#93a1a1"
       }
     },
     "fonts": {
@@ -244,6 +324,22 @@
       "selected": {
         "stroke": "#ff00ff",
         "strokeWidth": 3
+      },
+      "startEvent": {
+        "fill": "#4caf50",
+        "stroke": "#4caf50"
+      },
+      "endEvent": {
+        "fill": "#e57373",
+        "stroke": "#4caf50"
+      },
+      "task": {
+        "fill": "#3a4d37",
+        "stroke": "#4caf50"
+      },
+      "gateway": {
+        "fill": "#ffb74d",
+        "stroke": "#4caf50"
       }
     },
     "fonts": {
@@ -286,6 +382,22 @@
       "selected": {
         "stroke": "#ff69b4",
         "strokeWidth": 3
+      },
+      "startEvent": {
+        "fill": "#66bb6a",
+        "stroke": "#ff99cc"
+      },
+      "endEvent": {
+        "fill": "#ef5350",
+        "stroke": "#ff99cc"
+      },
+      "task": {
+        "fill": "#ffd6f3",
+        "stroke": "#ff99cc"
+      },
+      "gateway": {
+        "fill": "#ffb74d",
+        "stroke": "#ff99cc"
       }
     },
     "fonts": {
@@ -328,6 +440,22 @@
       "selected": {
         "stroke": "#ff00ff",
         "strokeWidth": 3
+      },
+      "startEvent": {
+        "fill": "#00e676",
+        "stroke": "#2a2a5c"
+      },
+      "endEvent": {
+        "fill": "#ff5252",
+        "stroke": "#2a2a5c"
+      },
+      "task": {
+        "fill": "#16213e",
+        "stroke": "#2a2a5c"
+      },
+      "gateway": {
+        "fill": "#ffb74d",
+        "stroke": "#2a2a5c"
       }
     },
     "fonts": {
@@ -370,6 +498,22 @@
       "selected": {
         "stroke": "#9bc1bc",
         "strokeWidth": 3
+      },
+      "startEvent": {
+        "fill": "#6b8e23",
+        "stroke": "#c5a880"
+      },
+      "endEvent": {
+        "fill": "#8b0000",
+        "stroke": "#c5a880"
+      },
+      "task": {
+        "fill": "#e6beae",
+        "stroke": "#c5a880"
+      },
+      "gateway": {
+        "fill": "#b8860b",
+        "stroke": "#c5a880"
       }
     },
     "fonts": {
@@ -412,6 +556,22 @@
       "selected": {
         "stroke": "#00ff00",
         "strokeWidth": 3
+      },
+      "startEvent": {
+        "fill": "#00ff00",
+        "stroke": "#00aa00"
+      },
+      "endEvent": {
+        "fill": "#ff0000",
+        "stroke": "#00aa00"
+      },
+      "task": {
+        "fill": "#004400",
+        "stroke": "#00aa00"
+      },
+      "gateway": {
+        "fill": "#ffff00",
+        "stroke": "#00aa00"
       }
     },
     "fonts": {

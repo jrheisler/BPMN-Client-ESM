@@ -1069,11 +1069,29 @@ currentTheme.subscribe(theme => {
       background: ${colors.background} !important;
     }
 
-    /* ── force all shape backgrounds to theme.surface ────────────────────── */
+    /* ── base shape styles ──────────────────────────────────────────────── */
     .djs-element .djs-shape {
-      fill: ${colors.surface} !important;
+      fill: ${bpmn.shape.fill} !important;
       stroke: ${bpmn.shape.stroke} !important;
       stroke-width: ${bpmn.shape.strokeWidth}px !important;
+    }
+
+    /* ── BPMN element specifics ─────────────────────────────────────────── */
+    .djs-element[class*="start-event"] .djs-shape {
+      fill: ${bpmn.startEvent.fill} !important;
+      stroke: ${bpmn.startEvent.stroke} !important;
+    }
+    .djs-element[class*="end-event"] .djs-shape {
+      fill: ${bpmn.endEvent.fill} !important;
+      stroke: ${bpmn.endEvent.stroke} !important;
+    }
+    .djs-element[class*="task"] .djs-shape {
+      fill: ${bpmn.task.fill} !important;
+      stroke: ${bpmn.task.stroke} !important;
+    }
+    .djs-element[class*="gateway"] .djs-shape {
+      fill: ${bpmn.gateway.fill} !important;
+      stroke: ${bpmn.gateway.stroke} !important;
     }
 
     /* keep event outlines clear if you like: */
