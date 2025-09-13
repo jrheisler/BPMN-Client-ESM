@@ -1065,8 +1065,11 @@ currentTheme.subscribe(theme => {
 
   bpmnThemeStyle.textContent = `
     /* canvas background */
-    #canvas {
+    #canvas,
+    #canvas .djs-container,
+    #canvas .djs-container svg {
       background: ${colors.background} !important;
+      --canvas-fill-color: ${colors.background};
     }
 
     /* ── base shape styles ──────────────────────────────────────────────── */
