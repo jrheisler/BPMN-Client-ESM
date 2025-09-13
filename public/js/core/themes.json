@@ -27,6 +27,8 @@
         "fill": "#d1b6ff",
         "stroke": "#d1b6ff"
       },
+      "connectionOuter": "#121212",
+      "markerOutline": "#121212",
       "label": {
         "fontFamily": "system-ui, sans-serif",
         "fill": "#bb86fc"
@@ -143,6 +145,8 @@
         "fill": "#64ffda",
         "stroke": "#64ffda"
       },
+      "connectionOuter": "#0a192f",
+      "markerOutline": "#0a192f",
       "label": {
         "fontFamily": "Roboto, sans-serif",
         "fill": "#00ffcc"
@@ -201,6 +205,8 @@
         "fill": "#64ffda",
         "stroke": "#64ffda"
       },
+      "connectionOuter": "#002b36",
+      "markerOutline": "#002b36",
       "label": {
         "fontFamily": "Arial, sans-serif",
         "fill": "#00ffcc"
@@ -317,6 +323,8 @@
         "fill": "#64ffda",
         "stroke": "#64ffda"
       },
+      "connectionOuter": "#2e3d29",
+      "markerOutline": "#2e3d29",
       "label": {
         "fontFamily": "Verdana, sans-serif",
         "fill": "#00ffcc"
@@ -433,6 +441,8 @@
         "fill": "#64ffda",
         "stroke": "#64ffda"
       },
+      "connectionOuter": "#1a1a2e",
+      "markerOutline": "#1a1a2e",
       "label": {
         "fontFamily": "Helvetica Neue, sans-serif",
         "fill": "#00ffcc"
@@ -549,6 +559,8 @@
         "fill": "#00bfa5",
         "stroke": "#00bfa5"
       },
+      "connectionOuter": "#000000",
+      "markerOutline": "#000000",
       "label": {
         "fontFamily": "\"Share Tech Mono\", monospace",
         "fill": "#00ff00"
