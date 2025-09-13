@@ -193,7 +193,13 @@ export function applyThemeToPage(theme, container = document.body) {
     '--panel2': colors.panel2 || colors.surface,
     '--text': colors.text || colors.foreground,
     '--muted': colors.muted || colors.foreground,
-    '--border': colors.border || colors.foreground
+    '--accent': colors.accent || colors.foreground,
+    '--accent-2':
+      colors['accent-2'] || colors.accent2 || colors.accent || colors.foreground,
+    '--border': colors.border || colors.foreground,
+    '--ok': colors.ok || colors.accent || colors.foreground,
+    '--warn': colors.warn || colors.accent || colors.foreground,
+    '--err': colors.err || colors.accent || colors.foreground
   };
 
   Object.entries(vars).forEach(([key, value]) => {
