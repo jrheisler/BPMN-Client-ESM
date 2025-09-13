@@ -261,7 +261,7 @@
       },
       "label": {
         "fontFamily": "Georgia, serif",
-        "fill": "#657b83"
+        "fill": "#586e75"
       },
       "selected": {
         "stroke": "#268bd2",

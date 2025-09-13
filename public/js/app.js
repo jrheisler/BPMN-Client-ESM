@@ -1102,9 +1102,9 @@ currentTheme.subscribe(theme => {
       stroke-width: ${bpmn.shape.strokeWidth}px !important;
     }
 
-    /* ── text labels use theme.foreground ───────────────────────────────── */
+    /* ── text labels use theme-defined fill with foreground fallback ───── */
     .djs-element .djs-label {
-      fill: ${colors.foreground} !important;
+      fill: ${bpmn.label.fill || colors.foreground} !important;
       font-family: ${bpmn.label.fontFamily} !important;
     }
 
