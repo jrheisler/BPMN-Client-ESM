@@ -1,27 +1,32 @@
+
 .djs-direct-editing-parent,
 .djs-direct-editing-content {
-  background: #1e1e1e;
-  color: #f0f0f0;
-  border: 1px solid #666;
-  outline: 1px solid #666;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  outline: 1px solid var(--border);
 }
+
 
 .djs-element.bpmn-addOn-highlight .djs-visual > :nth-child(1) {
-  stroke: #ff9800;
+  stroke: var(--accent);
   stroke-width: 4px;
-  fill: rgba(255, 152, 0, 0.3);
-  filter: drop-shadow(0 0 6px #ff9800);
+  fill: var(--accent);
+  fill-opacity: 0.3;
+  filter: drop-shadow(0 0 6px var(--accent));
 }
 
+
 .djs-element.drop-ok .djs-visual > :nth-child(1) {
-  stroke: #52b415;
+  stroke: var(--ok);
   stroke-width: 4px;
-  fill: rgba(82, 180, 21, 0.3);
-  filter: drop-shadow(0 0 6px #52b415);
+  fill: var(--ok);
+  fill-opacity: 0.3;
+  filter: drop-shadow(0 0 6px var(--ok));
 }
 
 .djs-connection.bpmn-addOn-highlight .djs-visual > :nth-child(1) {
-  stroke: #ff9800;
+  stroke: var(--accent);
   stroke-width: 4px;
 }
 
