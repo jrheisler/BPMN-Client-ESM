@@ -3,9 +3,9 @@
     "name": "Dark",
     "colors": {
       "background": "#121212",
-      "foreground": "#00ffcc",
+      "foreground": "#e0e0e0",
       "primary": "#1e1e1e",
-      "accent": "#ff00ff",
+      "accent": "#bb86fc",
       "surface": "#1e1e1e",
       "border": "#666",
       "muted": "#888888",
@@ -20,19 +20,19 @@
         "strokeWidth": 2
       },
       "connection": {
-        "stroke": "#00ffcc",
+        "stroke": "#bb86fc",
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#00ffcc",
-        "stroke": "#00ffcc"
+        "fill": "#bb86fc",
+        "stroke": "#bb86fc"
       },
       "label": {
         "fontFamily": "system-ui, sans-serif",
-        "fill": "#00ffcc"
+        "fill": "#bb86fc"
       },
       "selected": {
-        "stroke": "#ff00ff",
+        "stroke": "#bb86fc",
         "strokeWidth": 3
       },
       "startEvent": {
