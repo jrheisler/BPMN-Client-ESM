@@ -153,6 +153,27 @@ export function themedThemeSelector(themeStream = currentTheme) {
   return container;
 }
 
+function shadeColor(color, percent) {
+  if (!color || !color.startsWith('#')) return color;
+  const num = parseInt(color.slice(1), 16);
+  const amt = Math.round(2.55 * percent);
+  const r = Math.min(255, Math.max(0, (num >> 16) + amt));
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00ff) + amt));
+  const b = Math.min(255, Math.max(0, (num & 0x0000ff) + amt));
+  return `#${(1 << 24 | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+}
+
+function deriveBgAlt(color) {
+  if (!color) return color;
+  const num = parseInt(color.replace('#', ''), 16);
+  const r = (num >> 16) & 0xff;
+  const g = (num >> 8) & 0xff;
+  const b = num & 0xff;
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  const pct = luminance < 128 ? 10 : -10;
+  return shadeColor(color, pct);
+}
+
 export function applyThemeToPage(theme, container = document.body) {
   const colors = theme.colors || {};
   const fonts = theme.fonts || {};
@@ -164,6 +185,10 @@ export function applyThemeToPage(theme, container = document.body) {
 
   const vars = {
     '--bg': colors.bg || colors.background,
+    '--bg-alt':
+      colors['bg-alt'] ||
+      colors.bgAlt ||
+      deriveBgAlt(colors.background || '#ffffff'),
     '--panel': colors.panel || colors.primary,
     '--panel2': colors.panel2 || colors.surface,
     '--text': colors.text || colors.foreground,
