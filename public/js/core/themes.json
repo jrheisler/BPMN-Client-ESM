@@ -525,7 +525,7 @@
     "name": "Matrix",
     "colors": {
       "background": "#000000",
-      "foreground": "#00ff00",
+      "foreground": "#e0ffe0",
       "primary": "#004400",
       "accent": "#00ff00",
       "surface": "#002200",
@@ -542,16 +542,16 @@
         "strokeWidth": 2
       },
       "connection": {
-        "stroke": "#00ff00",
+        "stroke": "#00bfa5",
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#00ff00",
-        "stroke": "#00ff00"
+        "fill": "#00bfa5",
+        "stroke": "#00bfa5"
       },
       "label": {
         "fontFamily": "\"Share Tech Mono\", monospace",
-        "fill": "#00ff00"
+        "fill": "#e0ffe0"
       },
       "selected": {
         "stroke": "#00ff00",
