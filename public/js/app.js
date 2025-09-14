@@ -1109,20 +1109,14 @@ currentTheme.subscribe(theme => {
     }
 
     /* ── connections & arrows ───────────────────────────────────────────── */
-    .djs-connection .djs-visual {
+    .djs-connection .djs-connection-inner,
+    .djs-connection .djs-connection-outer {
       stroke: ${bpmn.connection.stroke} !important;
       stroke-width: ${bpmn.connection.strokeWidth}px !important;
     }
-    .djs-connection .djs-outline {
-      visibility: visible !important;
-      display: block !important;
-      stroke: ${bpmn.connectionOuter || colors.background} !important;
-      stroke-width: ${bpmn.connection.strokeWidth + 2}px !important;
-    }
     .djs-connection .djs-marker {
-      fill: ${bpmn.marker.fill};
-      stroke: ${bpmn.markerOutline || colors.background};
-      stroke-width: 1px;
+      fill: ${bpmn.marker.fill} !important;
+      stroke: ${bpmn.marker.stroke} !important;
     }
 
     /* ── selected styles ───────────────────────────────────────────────── */
