@@ -9,8 +9,6 @@ firebase-debug.*.log*
 # Local Firebase credentials (copy firebase.example.js to firebase.js)
 public/js/firebase.js
 !public/js/firebase.example.js
-add ons/Orpheus-bpmn.html
-add ons/bpmn_help_guide_embeddable_html.html
 
 # Firebase cache
 .firebase/
