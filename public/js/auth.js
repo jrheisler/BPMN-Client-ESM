@@ -2,7 +2,7 @@ import { Stream } from './core/stream.js';
 import { reactiveLoginModal } from './login.js';
 import { auth } from './firebase.js';
 import { signOut } from 'firebase/auth';
-import { showToast } from './components/elements.js';
+import { showToast } from './components/index.js';
 
 export const logUser = new Stream('👤 Login');
 export let currentUser = null;

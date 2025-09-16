@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createSimulationInstance } from '../helpers/simulation.js';
 import { Stream } from '../../public/js/core/stream.js';
-import { openFlowSelectionModal } from '../../public/js/components/elements.js';
+import { openFlowSelectionModal } from '../../public/js/components/index.js';
 
 class Element {
   constructor(tag) {
