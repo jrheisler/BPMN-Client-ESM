@@ -15,7 +15,7 @@ test('reactiveImage returns an img element', async () => {
   const stream = { subscribe(fn) { fn('image.png'); return () => {}; }, get() { return 'image.png'; } };
   const themeStream = { subscribe(fn){ fn({ colors: {} }); return () => {}; }, get(){ return { colors: {} }; } };
 
-  const { reactiveImage } = await import('../public/js/components/elements.js');
+  const { reactiveImage } = await import('../public/js/components/index.js');
   const img = reactiveImage(stream, {}, themeStream);
   assert.ok(img);
   assert.strictEqual(img.tagName, 'img');

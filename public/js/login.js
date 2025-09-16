@@ -1,7 +1,7 @@
 import { Stream } from './core/stream.js';
 import { currentTheme } from './core/theme.js';
 import { createModal } from './components/modal.js';
-import { editText, reactiveButton, dropdownStream, showConfirmationDialog, showToast } from './components/elements.js';
+import { editText, reactiveButton, dropdownStream, showConfirmationDialog, showToast } from './components/index.js';
 import { column, row } from './components/layout.js';
 import { auth, db } from './firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
