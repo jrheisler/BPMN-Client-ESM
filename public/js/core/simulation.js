@@ -1,6 +1,9 @@
 // public/js/core/simulation.js
 
 import { Stream } from './stream.js';
+import { createContextHelpers } from './simulation/context.js';
+import { createHandlerManager } from './simulation/handlers.js';
+import { createTokenLogHelpers } from './simulation/token-log.js';
 
 // Simple token simulation service built on Streams
 // Usage:
@@ -22,64 +25,12 @@ export function createSimulation(services, opts = {}) {
     ? opts.conditionFallback
     : false;
 
-  function setContext(obj, token = tokens[0]) {
-    if (token) {
-      token.context = { ...(token.context || {}), ...obj };
-    }
-  }
-
-  function getContext(token = tokens[0]) {
-    return token ? { ...(token.context || {}) } : {};
-  }
-
   // Stream of currently active tokens [{ id, element }]
   const tokenStream = new Stream([]);
   const tokenLogStream = new Stream([]);
   // Stream of available sequence flows when waiting on a gateway decision
   const pathsStream = new Stream(null);
 
-  const TOKEN_LOG_STORAGE_KEY = 'simulationTokenLog';
-
-  function saveTokenLog() {
-    try {
-      const data = tokenLogStream.get();
-      if (data && data.length) {
-        localStorage.setItem(TOKEN_LOG_STORAGE_KEY, JSON.stringify(data));
-      } else {
-        localStorage.removeItem(TOKEN_LOG_STORAGE_KEY);
-      }
-    } catch (err) {
-      console.warn('Failed to save token log', err);
-    }
-  }
-
-  function loadTokenLog() {
-    try {
-      const data = localStorage.getItem(TOKEN_LOG_STORAGE_KEY);
-      if (data) {
-        const parsed = JSON.parse(data);
-        tokenLogStream.set(parsed);
-        if (parsed.length) {
-          const last = parsed[parsed.length - 1];
-          if (last.elementId) {
-            const el = elementRegistry.get(last.elementId);
-            if (el) {
-              tokens = [{ id: last.tokenId, element: el, context: { ...initialContext } }];
-              tokenStream.set(tokens);
-            }
-          }
-        }
-        saveTokenLog();
-      }
-    } catch (err) {
-      console.warn('Failed to load token log', err);
-    }
-  }
-
-  function clearTokenLog() {
-    tokenLogStream.set([]);
-    saveTokenLog();
-  }
   let timer = null;
   let running = false;
   let tokens = [];
@@ -87,14 +38,26 @@ export function createSimulation(services, opts = {}) {
   let resumeAfterChoice = false;
   let nextTokenId = 1;
 
-  // Map of BPMN element type -> handler(token, api)
-  const elementHandlers = new Map();
+  const { setContext, getContext } = createContextHelpers({ getTokens: () => tokens });
 
-  // Cleanup hooks for element handlers (timeouts, listeners, ...)
-  const handlerCleanups = new Set();
+  const {
+    elementHandlers,
+    addHandlerCleanup,
+    clearHandlerState,
+    markHandlerSkip,
+    clearHandlerSkip,
+    shouldSkipHandler
+  } = createHandlerManager();
 
-  // Token ids that should skip their element handler on next step
-  const skipHandlerFor = new Set();
+  const { saveTokenLog, loadTokenLog, clearTokenLog } = createTokenLogHelpers({
+    tokenLogStream,
+    tokenStream,
+    elementRegistry,
+    getInitialContext: () => initialContext,
+    setTokens: newTokens => {
+      tokens = newTokens;
+    }
+  });
 
   // Visual highlighting of the active elements
   let previousElementIds = new Set();
@@ -166,7 +129,7 @@ export function createSimulation(services, opts = {}) {
   elementHandlers.set('bpmn:UserTask', (token, api) => {
     api.pause();
     const to = setTimeout(() => {
-      skipHandlerFor.add(token.id);
+      markHandlerSkip(token.id);
       api.resume();
     }, delay);
     api.addCleanup(() => clearTimeout(to));
@@ -176,7 +139,7 @@ export function createSimulation(services, opts = {}) {
   elementHandlers.set('bpmn:TimerEvent', (token, api) => {
     api.pause();
     const to = setTimeout(() => {
-      skipHandlerFor.add(token.id);
+      markHandlerSkip(token.id);
       api.resume();
     }, delay);
     api.addCleanup(() => clearTimeout(to));
@@ -187,12 +150,6 @@ export function createSimulation(services, opts = {}) {
     api.pause();
     return [token];
   });
-
-  function clearHandlerState(clearSkip = false) {
-    handlerCleanups.forEach(fn => fn());
-    handlerCleanups.clear();
-    if (clearSkip) skipHandlerFor.clear();
-  }
 
   function cleanup() {
     clearHandlerState(true);
@@ -529,13 +486,13 @@ export function createSimulation(services, opts = {}) {
 
     const messageTokens = spawnMessageTokens(token, messageFlows);
 
-    if (!skipHandlerFor.has(token.id)) {
+    if (!shouldSkipHandler(token.id)) {
       const elHandler = elementHandlers.get(token.element.type);
       if (elHandler) {
         const api = {
           pause,
           resume,
-          addCleanup: fn => handlerCleanups.add(fn),
+          addCleanup: addHandlerCleanup,
           setContext: obj => setContext(obj, token),
           getContext: () => getContext(token)
         };
@@ -545,7 +502,7 @@ export function createSimulation(services, opts = {}) {
         }
       }
     } else {
-      skipHandlerFor.delete(token.id);
+      clearHandlerSkip(token.id);
     }
 
     const gatewayHandlers = {
@@ -741,7 +698,7 @@ export function createSimulation(services, opts = {}) {
   function triggerMessage(boundaryId) {
     const token = tokens.find(t => t.element && t.element.id === boundaryId);
     if (token) {
-      skipHandlerFor.add(token.id);
+      markHandlerSkip(token.id);
       resume();
     }
   }
