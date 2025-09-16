@@ -8,7 +8,6 @@ import { openDiagramPickerModal, promptDiagramMetadata, selectVersionModal } fro
 import { Stream } from './core/stream.js';
 import { currentTheme, applyThemeToPage, themedThemeSelector } from './core/theme.js';
 import BpmnSnapping from 'bpmn-js/lib/features/snapping';
-import AttachBoundaryModule from '../features/attach-boundary/index.js';
 import './addOnStore.js';
 import './palette-toggle.js';
 import { row } from './components/layout.js';
@@ -98,8 +97,7 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
 
   const additionalModules = [
     customReplaceModule,
-    BpmnSnapping,
-    AttachBoundaryModule
+    BpmnSnapping
   ];
   if (navModule) additionalModules.push(navModule);
 
