@@ -8,7 +8,7 @@ import { openDiagramPickerModal, promptDiagramMetadata, selectVersionModal } fro
 import { Stream } from './core/stream.js';
 import { currentTheme, applyThemeToPage, themedThemeSelector } from './core/theme.js';
 import BpmnSnapping from 'bpmn-js/lib/features/snapping';
-import './addOnStore.js';
+import './addons/store.js';
 import './palette-toggle.js';
 import { row } from './components/layout.js';
 import { db } from './firebase.js';

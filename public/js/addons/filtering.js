@@ -1,5 +1,5 @@
-import { createAddOnFilterPanel, selectedType, selectedSubtype } from './components/addOnFilter.js';
-import { createAddOnLegend } from './components/addOnLegend.js';
+import { createAddOnFilterPanel, selectedType, selectedSubtype } from '../components/addOnFilter.js';
+import { createAddOnLegend } from '../components/addOnLegend.js';
 
 export function initAddOnFiltering({ currentTheme, elementRegistry, modeling, canvas, scheduleOverlayUpdate, addOnStore, diagramXMLStream, typeIcons }) {
   let addOnFilterPanelEl = null;
