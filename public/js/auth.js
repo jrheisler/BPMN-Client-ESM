@@ -1,5 +1,5 @@
 import { Stream } from './core/stream.js';
-import { reactiveLoginModal } from './login.js';
+import { reactiveLoginModal } from './modals/index.js';
 import { auth } from './firebase.js';
 import { signOut } from 'firebase/auth';
 import { showToast } from './components/index.js';
