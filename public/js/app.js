@@ -1,42 +1,25 @@
 import customReplaceModule from './modules/customReplaceMenuProvider.js';
 import { createRaciMatrix } from './components/raciMatrix.js';
-import { createTokenListPanel } from './components/tokenListPanel.js';
-import { reactiveButton, dropdownStream, avatarDropdown, openFlowSelectionModal, createDiagramOverlay, showToast } from './components/index.js';
+import { reactiveButton, dropdownStream, showToast } from './components/index.js';
 import { showProperties, hideSidebar } from './components/showProperties.js';
 import { treeStream, setSelectedId, setOnSelect, togglePanel } from './components/diagramTree.js';
 import { logUser, currentUser, authMenuOption } from './auth.js';
-import { initAddOnOverlays } from './addOnOverlays.js';
-import { initAddOnFiltering } from './addOnFiltering.js';
 import { openDiagramPickerModal, promptDiagramMetadata, selectVersionModal } from './modals/index.js';
 import { Stream } from './core/stream.js';
-import { createSimulation } from './core/simulation.js';
 import { currentTheme, applyThemeToPage, themedThemeSelector } from './core/theme.js';
 import BpmnSnapping from 'bpmn-js/lib/features/snapping';
 import AttachBoundaryModule from '../features/attach-boundary/index.js';
-import { Blockchain } from './blockchain.js';
 import './addOnStore.js';
 import './palette-toggle.js';
 import { row } from './components/layout.js';
 import { db } from './firebase.js';
 import { doc, collection, updateDoc, setDoc, addDoc, getDoc, Timestamp, arrayUnion } from 'firebase/firestore';
+import { setupPageScaffolding, createHiddenFileInput } from './app/init.js';
+import { typeIcons, createOverlay, setupCanvasLayout, attachOverlay } from './app/overlay.js';
+import { initializeAddOnServices, setupAvatarMenu } from './app/addons.js';
+import { bootstrapSimulation } from './app/simulation.js';
 // Initialization function will handle dynamic imports and DOM setup later.
 
-// js/app.js
-  const typeIcons = {
-    'Knowledge': '📚',
-    'Business': '💼',
-    'Requirement': '📝',
-    'Lifecycle': '🔄',
-    'Measurement': '📊',
-    'Condition': '⚖️',
-    'Material': '🧱',
-    'Role': '👤',
-    'Equipment': '🛠️',
-    'System': '⚙️',
-    'Tool': '🧰',
-    'Information': 'ℹ️'
-  };
-  window.typeIcons = typeIcons;
 // A reactive store of the current user’s addOns
 const addOnsStream = new Stream([]);
 window.addOnsStream = addOnsStream;
@@ -90,94 +73,19 @@ const diagramDataStream = new Stream(null);
 const nameStream = new Stream(diagramName);
 
 const versionStream = new Stream(diagramVersion);
-const overlay = createDiagramOverlay(
+const overlay = createOverlay({
   nameStream,
   versionStream,
   currentTheme
-);
+});
 
-Object.assign(document.body.style, {
-    display:      'flex',
-    flexDirection:'column',
-    height:       '100vh',
-    margin:       '0'
-  });
+const { canvasEl, header } = setupPageScaffolding({ currentTheme });
+setupCanvasLayout({ canvasEl, header, currentTheme });
+
   // ─── pull in the UMD globals ───────────────────────────────────────────────
   const { BpmnJS }       = window;
   const layoutProcess    = window.bpmnAutoLayout?.layoutProcess;
   const NavigatorModule  = window.NavigatorModule;
-
-  // ─── build canvas + xml-editor elements ────────────────────────────────────
-  const canvasEl = document.getElementById('canvas');
-
-  const helpGuideEl = document.getElementById('help-guide');
-  window.openHelpGuideModal = () => {
-    if (!helpGuideEl) return;
-    helpGuideEl.hidden = false;
-  };
-
-  if (helpGuideEl) {
-    const iframe = helpGuideEl.querySelector('iframe');
-    if (iframe) {
-      const applyIframeTheme = () => {
-        const body = iframe.contentDocument?.body;
-        if (!body) return;
-        applyThemeToPage(currentTheme.get(), body);
-        currentTheme.subscribe(theme => applyThemeToPage(theme, body));
-      };
-
-      if (iframe.contentDocument?.readyState === 'complete') {
-        applyIframeTheme();
-      }
-
-      iframe.addEventListener('load', applyIframeTheme);
-    }
-
-    const helpGuideCloseBtn = document.getElementById('help-guide-close');
-    if (helpGuideCloseBtn) {
-      helpGuideCloseBtn.addEventListener('click', () => {
-        helpGuideEl.hidden = true;
-      });
-    }
-
-    helpGuideEl.addEventListener('click', e => {
-      if (e.target === helpGuideEl) helpGuideEl.hidden = true;
-    });
-  }
-
-  // Touch interactions are handled via CSS (see `touch-action: none`).
-  // Previously, we suppressed page scrolling by preventing the default
-  // `touchmove` behavior on the canvas element which also blocked BPMN's
-  // internal handlers. Rely on CSS instead and only prevent scrolling when
-  // touches originate outside the BPMN diagram container.
-  document.addEventListener(
-    'touchmove',
-    e => {
-      if (!e.target.closest('.djs-container')) {
-        e.preventDefault();
-      }
-    },
-    { passive: false }
-  );
-  const header   = document.querySelector('header');
-
-  const setCanvasHeight = () => {
-    if (!header) return;
-    canvasEl.style.height = `calc(100vh - ${header.offsetHeight}px)`;
-  };
-
-  Object.assign(canvasEl.style, {
-    flex:   '1 1 auto',
-    width:  '100%',
-    border: `1px solid ${currentTheme.get().colors.border}`
-  });
-
-  setCanvasHeight();
-  window.addEventListener('resize', setCanvasHeight);
-
-
-  // ─── mount theme selector, spacer, canvas & xml ────────────────────────────
-  document.body.appendChild(canvasEl);
   
   // ─── sanity check ───────────────────────────────────────────────────────────
   if (typeof BpmnJS !== 'function') {
@@ -211,18 +119,17 @@ Object.assign(document.body.style, {
   const elementRegistry = modeler.get('elementRegistry');
   const selectionService= modeler.get('selection');
   const canvas          = modeler.get('canvas');
-  const simulation      = createSimulation({ elementRegistry, canvas });
-  window.simulation = simulation;
   const overlays        = modeler.get('overlays');
 
-  const { scheduleOverlayUpdate } = initAddOnOverlays({ overlays, elementRegistry, typeIcons });
-  const { loadAddOnData, applyAddOnsToElements, syncAddOnStoreFromElements } =
-    initAddOnFiltering({
-      currentTheme,
+  const { simulation } = bootstrapSimulation({ modeler, currentTheme });
+
+  const { scheduleOverlayUpdate, loadAddOnData, applyAddOnsToElements, syncAddOnStoreFromElements } =
+    initializeAddOnServices({
+      overlays,
       elementRegistry,
       modeling,
       canvas,
-      scheduleOverlayUpdate,
+      currentTheme,
       addOnStore,
       diagramXMLStream,
       typeIcons
@@ -245,84 +152,7 @@ Object.assign(document.body.style, {
       }
   });
 
-  // Token list panel for simulation log
-  const tokenPanel = createTokenListPanel(simulation.tokenLogStream, currentTheme);
-  document.body.appendChild(tokenPanel.el);
-
-
   let treeBtn;
-  // render persisted log immediately if entries exist
-  if (simulation.tokenLogStream.get().length) {
-    tokenPanel.show();
-  }
-
-  let blockchain;
-  let processedTokens = 0;
-  let blockchainPersistPromise = Promise.resolve();
-
-  function initBlockchain() {
-    tokenPanel.hide();
-    blockchain = new Blockchain();
-    tokenPanel.setBlockchain(blockchain);
-    processedTokens = 0;
-  }
-
-  const origStart = simulation.start;
-  simulation.start = (...args) => {
-    initBlockchain();
-    tokenPanel.show();
-    return origStart.apply(simulation, args);
-  };
-
-  const origReset = simulation.reset;
-  simulation.reset = (...args) => {
-    initBlockchain();
-    const res = origReset.apply(simulation, args);
-    return res;
-  };
-
-  if (tokenPanel.setDownloadHandler)
-    tokenPanel.setDownloadHandler(() => {
-      const data = JSON.stringify(blockchain?.chain ?? [], null, 2);
-      const blob = new Blob([data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'blockchain.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-
-  simulation.tokenLogStream.subscribe(entries => {
-    if (entries.length) {
-      tokenPanel.show();
-    } else {
-      tokenPanel.hide();
-    }
-
-    if (blockchain && entries.length > processedTokens) {
-      const toPersist = entries.slice(processedTokens);
-      blockchainPersistPromise = blockchainPersistPromise.then(() => {
-        for (let i = 0; i < toPersist.length; i++) {
-          blockchain.addBlock(toPersist[i]);
-        }
-        processedTokens = entries.length;
-        window.dispatchEvent(new Event('blockchain-persisted'));
-      });
-    }
-  });
-
-  let prevTokenCount = simulation.tokenStream.get().length;
-  simulation.tokenStream.subscribe(tokens => {
-    if (prevTokenCount > 0 && tokens.length === 0) {
-      tokenPanel.show();
-      blockchainPersistPromise.then(() => tokenPanel.showDownload());
-    }
-    prevTokenCount = tokens.length;
-  });
-
   setOnSelect(id => {
     const element = elementRegistry.get(id);
     if (element) {
@@ -381,43 +211,24 @@ Object.assign(document.body.style, {
     const tree = build(root);
     treeStream.set(tree);
   }
-  // Prompt user to choose path at gateways
-  simulation.pathsStream.subscribe(data => {
-    if (!data) return;
-    const { flows, type } = data;
-    if (!flows || !flows.length) return;
-    const allowMultiple = type === 'bpmn:InclusiveGateway';
-    // Pass full flow list (including unsatisfied) to modal so a user can force a choice
-    openFlowSelectionModal(flows, currentTheme, allowMultiple).subscribe(selection => {
-      if (!selection) return;
-      if (Array.isArray(selection)) {
-        if (selection.length) simulation.step(selection.map(f => f.id));
-      } else {
-        simulation.step(selection.id);
-      }
-    });
-  });
-
   // ─── theme (page background) ────────────────────────────────────────────────
   currentTheme.subscribe(applyThemeToPage);
  
   // ─── hidden file-input for BPMN import ──────────────────────────────────────
-  const fileInput = document.createElement('input');
-  fileInput.type    = 'file';
-  fileInput.accept  = '.bpmn,.xml';
-  fileInput.style.display = 'none';
- 
-  fileInput.onchange = async e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const xml = await file.text();
+  const fileInput = createHiddenFileInput({
+    accept: '.bpmn,.xml',
+    onChange: async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const xml = await file.text();
 
-  // Store the new XML in your stream
-  diagramXMLStream.set(xml);
+      // Store the new XML in your stream
+      diagramXMLStream.set(xml);
 
-  // Append the new diagram to the current diagram
-  await appendXml(xml);
-};
+      // Append the new diagram to the current diagram
+      await appendXml(xml);
+    }
+  });
 
 async function appendXml(xml) {
   try {
@@ -450,10 +261,6 @@ async function appendXml(xml) {
     console.error("Error appending BPMN XML:", err);
   }
 }
-
-  
-  document.body.appendChild(fileInput);
-
   // ─── import / initial render ───────────────────────────────────────────────
   async function importXml(xml) {
     try {
@@ -472,20 +279,16 @@ async function appendXml(xml) {
   importXml(diagramXMLStream.get());
 
 
-const jsonFileInput = document.createElement('input');
-jsonFileInput.type = 'file';
-jsonFileInput.accept = '.json';
-jsonFileInput.style.display = 'none';
+const jsonFileInput = createHiddenFileInput({
+  accept: '.json',
+  onChange: async e => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-jsonFileInput.onchange = async e => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const json = JSON.parse(await file.text());
-  await importJson(json);
-};
-
-document.body.appendChild(jsonFileInput);
+    const json = JSON.parse(await file.text());
+    await importJson(json);
+  }
+});
 
 
   // ─── build controls bar ────────────────────────────────────────────────────
@@ -643,6 +446,8 @@ showSaveButton.subscribe(d => {
 
 
               
+
+let rebuildMenu = () => {};
 
 // Example dropdown options (choices)
 function buildDropdownOptions() {
@@ -848,19 +653,16 @@ function buildDropdownOptions() {
   ];
 }
 
-let avatarMenu;  // global or outer-scope reference
-
-function rebuildMenu() {  
-  const newMenu = avatarDropdown(avatarStream, avatarOptions, currentTheme, buildDropdownOptions());
-  if (avatarMenu && avatarMenu.parentNode) {
-    avatarMenu.parentNode.replaceChild(newMenu, avatarMenu);
-  }
-  avatarMenu = newMenu;
-}
-
-  diagramDataStream.subscribe(() => rebuildMenu());
-  
-  avatarMenu = avatarDropdown(avatarStream, avatarOptions, currentTheme, buildDropdownOptions());
+  const menuManager = setupAvatarMenu({
+    avatarStream,
+    avatarOptions,
+    currentTheme,
+    buildDropdownOptions,
+    diagramDataStream
+  });
+  rebuildMenu = menuManager.rebuildMenu;
+  rebuildMenu();
+  const avatarMenu = menuManager.avatarMenu;
 
   function openRaciMatrixModal() {
     const matrix = createRaciMatrix(modeler);
@@ -1163,9 +965,7 @@ function clearModeler() {
 }
 
      
-const bjsContainer = document.querySelector('.bjs-container') || document.getElementById('canvas');
-bjsContainer.style.position = 'relative'; // ensure container can host absolute overlay
-bjsContainer.appendChild(overlay);
+attachOverlay(overlay);
 
 }
 
