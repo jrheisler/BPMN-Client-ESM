@@ -1,6 +1,6 @@
 import { Stream } from '../core/stream.js';
 import { currentTheme } from '../core/theme.js';
-import { reactiveButton, showConfirmationDialog } from './elements.js';
+import { reactiveButton, showConfirmationDialog } from './controls.js';
 import { divider, row } from './layout.js';
 import { BPMN_PROPERTY_MAP, FIELD_DEFINITIONS } from './property-config.js';
 import {
