@@ -1,6 +1,6 @@
 import { avatarDropdown } from '../components/index.js';
-import { initAddOnOverlays } from '../addOnOverlays.js';
-import { initAddOnFiltering } from '../addOnFiltering.js';
+import { initAddOnOverlays } from '../addons/overlays.js';
+import { initAddOnFiltering } from '../addons/filtering.js';
 
 export function initializeAddOnServices({
   overlays,
