@@ -6,6 +6,7 @@ import {
   selectedTimelineEntryId,
   getTimelineEntry
 } from '../modules/timeline.js';
+import { currentTheme } from '../core/theme.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const AXIS_HEIGHT = 12;
@@ -47,7 +48,12 @@ function dispatchTimelineEvent(type, detail) {
   window.dispatchEvent(new CustomEvent(type, { detail }));
 }
 
-export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
+export function setupTimeline({
+  canvas,
+  eventBus,
+  onEditEntry,
+  themeStream = currentTheme
+} = {}) {
   const layer = canvas.getLayer('timeline', 1000);
   const timelineGroup = ensureTimelineGroup(layer);
 
@@ -71,6 +77,43 @@ export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
   timelineGroup.appendChild(markersGroup);
 
   const markerElements = new Map();
+
+  const fallbackThemeColors = {
+    axisFill: '#4a5568',
+    markerFill: DEFAULT_COLOR,
+    markerStroke: DEFAULT_STROKE,
+    selectedFill: SELECTED_COLOR,
+    selectedStroke: SELECTED_STROKE,
+    label: '#2d3748'
+  };
+
+  let themeColors = { ...fallbackThemeColors };
+
+  function applyTheme(theme) {
+    const colors = theme?.colors || {};
+    themeColors = {
+      axisFill: colors.border || fallbackThemeColors.axisFill,
+      markerFill: colors.accent || fallbackThemeColors.markerFill,
+      markerStroke: colors.border || fallbackThemeColors.markerStroke,
+      selectedFill: colors.accent || fallbackThemeColors.selectedFill,
+      selectedStroke:
+        colors.foreground || colors.accent || fallbackThemeColors.selectedStroke,
+      label: colors.foreground || fallbackThemeColors.label
+    };
+
+    axis.setAttribute('fill', themeColors.axisFill);
+
+    markerElements.forEach(({ group, circle, label }) => {
+      const entryId = group.dataset.entryId;
+      const entry = entryId ? getTimelineEntry(entryId) : null;
+      const fill = entry?.color || themeColors.markerFill;
+      circle.setAttribute('fill', fill);
+      circle.setAttribute('stroke', themeColors.markerStroke);
+      label.setAttribute('fill', themeColors.label);
+    });
+
+    updateSelection(selectedTimelineEntryId.get());
+  }
 
   let axisLength = 0;
 
@@ -123,14 +166,14 @@ export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
     markerElements.forEach(({ group, circle }) => {
       if (group.dataset.entryId === selectedId) {
         group.classList.add('is-selected');
-        circle.setAttribute('fill', SELECTED_COLOR);
-        circle.setAttribute('stroke', SELECTED_STROKE);
+        circle.setAttribute('fill', themeColors.selectedFill);
+        circle.setAttribute('stroke', themeColors.selectedStroke);
       } else {
         group.classList.remove('is-selected');
         const entry = getTimelineEntry(group.dataset.entryId);
-        const fill = entry?.color || DEFAULT_COLOR;
+        const fill = entry?.color || themeColors.markerFill;
         circle.setAttribute('fill', fill);
-        circle.setAttribute('stroke', DEFAULT_STROKE);
+        circle.setAttribute('stroke', themeColors.markerStroke);
       }
     });
   }
@@ -143,8 +186,10 @@ export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
     const labelText = entry.label?.trim() || `T${index + 1}`;
     elements.label.textContent = labelText;
 
-    const fillColor = entry.color || DEFAULT_COLOR;
+    const fillColor = entry.color || themeColors.markerFill;
     elements.circle.setAttribute('fill', fillColor);
+    elements.circle.setAttribute('stroke', themeColors.markerStroke);
+    elements.label.setAttribute('fill', themeColors.label);
   }
 
   function renderMarkers(entries) {
@@ -260,8 +305,8 @@ export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
       cx: 0,
       cy: 0,
       r: MARKER_RADIUS,
-      fill: DEFAULT_COLOR,
-      stroke: DEFAULT_STROKE,
+      fill: themeColors.markerFill,
+      stroke: themeColors.markerStroke,
       'stroke-width': '2'
     });
 
@@ -270,7 +315,7 @@ export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
       y: MARKER_LABEL_OFFSET,
       'text-anchor': 'middle',
       'font-size': MARKER_FONT_SIZE,
-      fill: '#2d3748'
+      fill: themeColors.label
     });
 
     group.appendChild(circle);
@@ -308,6 +353,11 @@ export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
 
   axis.addEventListener('pointerdown', handleAxisPointerDown);
 
+  const unsubscribeTheme =
+    typeof themeStream?.subscribe === 'function'
+      ? themeStream.subscribe(applyTheme)
+      : null;
+
   const unsubscribeEntries = timelineEntries.subscribe(entries => {
     renderMarkers(entries);
     dispatchTimelineEvent('timeline:entriesChanged', {
@@ -326,6 +376,7 @@ export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
   return {
     update: updateLayout,
     destroy() {
+      unsubscribeTheme?.();
       unsubscribeEntries?.();
       unsubscribeSelection?.();
       axis.removeEventListener('pointerdown', handleAxisPointerDown);
