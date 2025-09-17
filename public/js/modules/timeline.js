@@ -87,3 +87,18 @@ export function clearTimelineEntries() {
   timelineEntries.set([]);
   selectedTimelineEntryId.set(null);
 }
+
+export function spaceTimelineEntriesEvenly() {
+  const sortedEntries = sortEntries(timelineEntries.get());
+  const count = sortedEntries.length;
+  const denominator = Math.max(count - 1, 1);
+
+  const spacedEntries = sortedEntries.map((entry, index) => ({
+    ...entry,
+    offset: index / denominator
+  }));
+
+  timelineEntries.set(spacedEntries);
+
+  return spacedEntries;
+}

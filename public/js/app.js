@@ -16,7 +16,7 @@ import { doc, collection, updateDoc, setDoc, addDoc, getDoc, Timestamp, arrayUni
 import { setupPageScaffolding, createHiddenFileInput } from './app/init.js';
 import { typeIcons, createOverlay, setupCanvasLayout, attachOverlay } from './app/overlay.js';
 import { setupTimeline } from './app/timeline.js';
-import { timelineEntries, setTimelineEntries, updateTimelineEntry } from './modules/timeline.js';
+import { timelineEntries, setTimelineEntries, updateTimelineEntry, spaceTimelineEntriesEvenly } from './modules/timeline.js';
 import { initializeAddOnServices, setupAvatarMenu } from './app/addons.js';
 import { bootstrapSimulation } from './app/simulation.js';
 import { promptTimelineEntryMetadata } from './timeline/entryModal.js';
@@ -1035,6 +1035,21 @@ function buildDropdownOptions() {
       new Stream('❔'),
       () => window.openHelpGuideModal(),
       { outline: true, title: 'Help guide' }
+    )
+  );
+  controls.push(
+    reactiveButton(
+      new Stream('Timeline'),
+      () => {
+        const spacedEntries = spaceTimelineEntriesEvenly();
+        if (!spacedEntries.length) {
+          showToast('Add timeline entries before using timeline tools.', { type: 'info' });
+          return;
+        }
+
+        showToast('Evenly distributed timeline markers.', { type: 'success' });
+      },
+      { outline: true, title: 'Timeline tools' }
     )
   );
   controls.push(themedThemeSelector());
