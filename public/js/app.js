@@ -15,6 +15,7 @@ import { db } from './firebase.js';
 import { doc, collection, updateDoc, setDoc, addDoc, getDoc, Timestamp, arrayUnion } from 'firebase/firestore';
 import { setupPageScaffolding, createHiddenFileInput } from './app/init.js';
 import { typeIcons, createOverlay, setupCanvasLayout, attachOverlay } from './app/overlay.js';
+import { setupTimeline } from './app/timeline.js';
 import { initializeAddOnServices, setupAvatarMenu } from './app/addons.js';
 import { bootstrapSimulation } from './app/simulation.js';
 // Initialization function will handle dynamic imports and DOM setup later.
@@ -117,7 +118,10 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
   const elementRegistry = modeler.get('elementRegistry');
   const selectionService= modeler.get('selection');
   const canvas          = modeler.get('canvas');
+  const eventBus        = modeler.get('eventBus');
   const overlays        = modeler.get('overlays');
+
+  setupTimeline({ canvas, eventBus, elementRegistry });
 
   const { simulation } = bootstrapSimulation({ modeler, currentTheme });
 
@@ -133,7 +137,6 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
       typeIcons
     });
 
-  const eventBus     = modeler.get('eventBus');
   const commandStack = modeler.get('commandStack');
   const isDirty = new Stream(false);
   const showSaveButton = new Stream(false);
