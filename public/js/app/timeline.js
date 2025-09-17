@@ -8,7 +8,11 @@ import {
 } from '../modules/timeline.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
-const MARKER_RADIUS = 6;
+const AXIS_HEIGHT = 12;
+const TIMELINE_VERTICAL_GAP = 30;
+const MARKER_RADIUS = 8;
+const MARKER_LABEL_OFFSET = 26;
+const MARKER_FONT_SIZE = 13;
 const DEFAULT_COLOR = '#2b6cb0';
 const DEFAULT_STROKE = '#1a365d';
 const SELECTED_COLOR = '#ed8936';
@@ -47,17 +51,18 @@ export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
   const layer = canvas.getLayer('timeline', 1000);
   const timelineGroup = ensureTimelineGroup(layer);
 
-  const axis = createSvgElement('line', {
+  const axis = createSvgElement('rect', {
     class: 'djs-timeline-axis',
-    x1: 0,
-    y1: 0,
-    x2: 0,
-    y2: 0,
-    stroke: '#4a5568',
-    'stroke-width': '2',
-    'stroke-linecap': 'round'
+    x: 0,
+    y: -(AXIS_HEIGHT / 2),
+    width: 0,
+    height: AXIS_HEIGHT,
+    rx: AXIS_HEIGHT / 2,
+    ry: AXIS_HEIGHT / 2,
+    fill: '#4a5568'
   });
   axis.style.cursor = 'crosshair';
+  axis.style.pointerEvents = 'all';
   axis.style.touchAction = 'none';
 
   const markersGroup = createSvgElement('g', { class: 'djs-timeline-markers' });
@@ -90,11 +95,13 @@ export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
     }
 
     timelineGroup.style.display = 'block';
-    timelineGroup.setAttribute('transform', `translate(${bounds.x}, ${bounds.y + bounds.height + 30})`);
-    axis.setAttribute('x1', 0);
-    axis.setAttribute('y1', 0);
-    axis.setAttribute('x2', axisLength);
-    axis.setAttribute('y2', 0);
+
+    const translateX = bounds.x;
+    const translateY =
+      bounds.y + bounds.height + TIMELINE_VERTICAL_GAP + AXIS_HEIGHT / 2;
+
+    timelineGroup.setAttribute('transform', `translate(${translateX}, ${translateY})`);
+    axis.setAttribute('width', axisLength);
 
     renderMarkers(timelineEntries.get());
   }
@@ -246,14 +253,14 @@ export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
       r: MARKER_RADIUS,
       fill: DEFAULT_COLOR,
       stroke: DEFAULT_STROKE,
-      'stroke-width': '1.5'
+      'stroke-width': '2'
     });
 
     const label = createSvgElement('text', {
       x: 0,
-      y: 20,
+      y: MARKER_LABEL_OFFSET,
       'text-anchor': 'middle',
-      'font-size': '12',
+      'font-size': MARKER_FONT_SIZE,
       fill: '#2d3748'
     });
 
@@ -278,7 +285,7 @@ export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
   }
 
   const handleAxisPointerDown = event => {
-    if (event.button !== 0 || event.target !== axis) return;
+    if (event.button !== 0) return;
     if (!axisLength) return;
 
     const localX = getLocalX(event);
