@@ -137,6 +137,7 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
     canvas,
     eventBus,
     elementRegistry,
+    themeStream: currentTheme,
     onEditEntry(entry) {
       const initialLabel = entry.label ?? '';
       const initialNotes = entry.metadata?.notes ?? '';
