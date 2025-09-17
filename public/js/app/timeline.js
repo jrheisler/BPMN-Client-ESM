@@ -213,7 +213,12 @@ export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
 
     group.addEventListener('pointerdown', event => {
       if (event.button !== 0) return;
-      event.stopPropagation();
+      event.preventDefault();
+      if (typeof event.stopImmediatePropagation === 'function') {
+        event.stopImmediatePropagation();
+      } else {
+        event.stopPropagation();
+      }
 
       selectTimelineEntry(id);
       dispatchTimelineEvent('timeline:select', { entry: getTimelineEntry(id) });
@@ -243,6 +248,10 @@ export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
 
     group.addEventListener('pointerup', finishDrag);
     group.addEventListener('pointercancel', finishDrag);
+
+    group.addEventListener('mousedown', event => {
+      event.preventDefault();
+    });
   }
 
   function createMarker(id) {
