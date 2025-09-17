@@ -19,6 +19,7 @@ import { setupTimeline } from './app/timeline.js';
 import { timelineEntries, setTimelineEntries, updateTimelineEntry } from './modules/timeline.js';
 import { initializeAddOnServices, setupAvatarMenu } from './app/addons.js';
 import { bootstrapSimulation } from './app/simulation.js';
+import { promptTimelineEntryMetadata } from './timeline/entryModal.js';
 // Initialization function will handle dynamic imports and DOM setup later.
 
 // A reactive store of the current user’s addOns
@@ -127,16 +128,13 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
     eventBus,
     elementRegistry,
     onEditEntry(entry) {
-      const initialName = entry.metadata?.name ?? entry.label ?? '';
+      const initialLabel = entry.label ?? '';
       const initialNotes = entry.metadata?.notes ?? '';
 
-      promptDiagramMetadata(initialName, initialNotes, currentTheme).subscribe(metadata => {
+      promptTimelineEntryMetadata(initialLabel, initialNotes, currentTheme).subscribe(metadata => {
         if (!metadata) return;
 
-        updateTimelineEntry(entry.id, {
-          label: metadata.name?.trim() || entry.label || '',
-          metadata: { ...entry.metadata, ...metadata }
-        });
+        updateTimelineEntry(entry.id, metadata);
       });
     }
   });
