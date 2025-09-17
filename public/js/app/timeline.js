@@ -310,7 +310,9 @@ export function setupTimeline({ canvas, eventBus, onEditEntry } = {}) {
 
   const unsubscribeEntries = timelineEntries.subscribe(entries => {
     renderMarkers(entries);
-    dispatchTimelineEvent('timeline:entriesChanged', { entries });
+    dispatchTimelineEvent('timeline:entriesChanged', {
+      entries: entries.map(entry => ({ ...entry }))
+    });
   });
 
   const unsubscribeSelection = selectedTimelineEntryId.subscribe(updateSelection);
