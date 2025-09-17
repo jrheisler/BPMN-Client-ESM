@@ -16,7 +16,7 @@ import { doc, collection, updateDoc, setDoc, addDoc, getDoc, Timestamp, arrayUni
 import { setupPageScaffolding, createHiddenFileInput } from './app/init.js';
 import { typeIcons, createOverlay, setupCanvasLayout, attachOverlay } from './app/overlay.js';
 import { setupTimeline } from './app/timeline.js';
-import { timelineEntries, setTimelineEntries, updateTimelineEntry, spaceTimelineEntriesEvenly } from './modules/timeline.js';
+import { timelineEntries, setTimelineEntries, updateTimelineEntry, spaceTimelineEntriesEvenly, removeTimelineEntry } from './modules/timeline.js';
 import { initializeAddOnServices, setupAvatarMenu } from './app/addons.js';
 import { bootstrapSimulation } from './app/simulation.js';
 import { promptTimelineEntryMetadata } from './timeline/entryModal.js';
@@ -141,10 +141,15 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
       const initialLabel = entry.label ?? '';
       const initialNotes = entry.metadata?.notes ?? '';
 
-      promptTimelineEntryMetadata(initialLabel, initialNotes, currentTheme).subscribe(metadata => {
-        if (!metadata) return;
+      promptTimelineEntryMetadata(initialLabel, initialNotes, currentTheme, { allowDelete: true }).subscribe(result => {
+        if (!result) return;
 
-        updateTimelineEntry(entry.id, metadata);
+        if (result.delete) {
+          removeTimelineEntry(entry.id);
+          return;
+        }
+
+        updateTimelineEntry(entry.id, result);
       });
     }
   });

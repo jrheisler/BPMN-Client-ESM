@@ -1,7 +1,12 @@
 import { Stream } from '../core/stream.js';
 import { currentTheme } from '../core/theme.js';
 
-export function promptTimelineEntryMetadata(initialLabel = '', initialNotes = '', themeStream = currentTheme) {
+export function promptTimelineEntryMetadata(
+  initialLabel = '',
+  initialNotes = '',
+  themeStream = currentTheme,
+  { allowDelete = false } = {}
+) {
   const resultStream = new Stream(null);
   const theme = themeStream.get();
   const colors = theme.colors;
@@ -113,6 +118,19 @@ export function promptTimelineEntryMetadata(initialLabel = '', initialNotes = ''
 
   btnRow.appendChild(cancelBtn);
   btnRow.appendChild(saveBtn);
+  if (allowDelete) {
+    const deleteBtn = styledButton('Delete timeline entry', () => {
+      resultStream.set({ delete: true });
+      modal.remove();
+    });
+    const deleteColor = colors.danger || '#c0392b';
+    const deleteHoverColor = colors.dangerHover || '#922b21';
+    deleteBtn.style.backgroundColor = deleteColor;
+    deleteBtn.style.color = colors.background;
+    deleteBtn.onmouseenter = () => deleteBtn.style.backgroundColor = deleteHoverColor;
+    deleteBtn.onmouseleave = () => deleteBtn.style.backgroundColor = deleteColor;
+    btnRow.appendChild(deleteBtn);
+  }
   box.append(title, labelInput, notesInput, btnRow);
   modal.appendChild(box);
   document.body.appendChild(modal);
