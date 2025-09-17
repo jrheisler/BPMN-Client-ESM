@@ -1044,7 +1044,7 @@ function buildDropdownOptions() {
   );
   controls.push(
     reactiveButton(
-      new Stream('Timeline'),
+      new Stream('🕒'),
       () => {
         const spacedEntries = spaceTimelineEntriesEvenly();
         if (!spacedEntries.length) {
@@ -1054,7 +1054,7 @@ function buildDropdownOptions() {
 
         showToast('Evenly distributed timeline markers.', { type: 'success' });
       },
-      { outline: true, title: 'Timeline tools' }
+      { outline: true, title: 'Timeline tools', 'aria-label': 'Timeline tools' }
     )
   );
   controls.push(themedThemeSelector());
