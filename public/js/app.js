@@ -64,8 +64,18 @@ const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
 
 // === Initial BPMN XML template ===
 const diagramXMLStream = new Stream(defaultXml);
+let cleanupCurrentModeler = null;
 async function init() {
   const { addOnStore } = window;
+
+  cleanupCurrentModeler?.();
+
+  const cleanups = [];
+  const registerCleanup = fn => {
+    if (typeof fn === 'function') {
+      cleanups.push(fn);
+    }
+  };
 
   const avatarStream = new Stream('flow.png');
 let currentDiagramId = null;
@@ -140,6 +150,8 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
   });
 
   const { simulation } = bootstrapSimulation({ modeler, currentTheme });
+
+  let isHydratingTimeline = false;
 
   const clamp01 = value => Math.min(Math.max(value ?? 0, 0), 1);
 
@@ -247,48 +259,56 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
   }
 
   function hydrateTimelineFromProcess() {
-    const processBo = getProcessBusinessObject();
-    if (!processBo) {
-      setTimelineEntries([]);
-      return;
-    }
+    isHydratingTimeline = true;
 
-    const extensionElements = processBo.extensionElements;
-    const values = extensionElements?.values || [];
-    const timelineExtension = values.find(value => value.$type === 'custom:Timeline');
-
-    if (!timelineExtension) {
-      setTimelineEntries([]);
-      return;
-    }
-
-    const deserialized = (timelineExtension.entries || []).map(entry => {
-      const rawPosition = entry.position ?? entry.offset ?? 0;
-      const numericPosition = typeof rawPosition === 'number'
-        ? rawPosition
-        : parseFloat(rawPosition) || 0;
-
-      let metadata = {};
-      if (typeof entry.metadata === 'string' && entry.metadata.trim()) {
-        try {
-          metadata = JSON.parse(entry.metadata);
-        } catch (err) {
-          console.warn('Failed to parse timeline entry metadata:', err);
-          metadata = {};
-        }
+    try {
+      const processBo = getProcessBusinessObject();
+      if (!processBo) {
+        setTimelineEntries([]);
+        timelineController?.update?.();
+        return;
       }
 
-      return {
-        id: entry.id || undefined,
-        offset: clamp01(numericPosition),
-        label: entry.label ?? '',
-        color: entry.color || null,
-        metadata
-      };
-    });
+      const extensionElements = processBo.extensionElements;
+      const values = extensionElements?.values || [];
+      const timelineExtension = values.find(value => value.$type === 'custom:Timeline');
 
-    setTimelineEntries(deserialized);
-    timelineController?.update?.();
+      if (!timelineExtension) {
+        setTimelineEntries([]);
+        timelineController?.update?.();
+        return;
+      }
+
+      const deserialized = (timelineExtension.entries || []).map(entry => {
+        const rawPosition = entry.position ?? entry.offset ?? 0;
+        const numericPosition = typeof rawPosition === 'number'
+          ? rawPosition
+          : parseFloat(rawPosition) || 0;
+
+        let metadata = {};
+        if (typeof entry.metadata === 'string' && entry.metadata.trim()) {
+          try {
+            metadata = JSON.parse(entry.metadata);
+          } catch (err) {
+            console.warn('Failed to parse timeline entry metadata:', err);
+            metadata = {};
+          }
+        }
+
+        return {
+          id: entry.id || undefined,
+          offset: clamp01(numericPosition),
+          label: entry.label ?? '',
+          color: entry.color || null,
+          metadata
+        };
+      });
+
+      setTimelineEntries(deserialized);
+      timelineController?.update?.();
+    } finally {
+      isHydratingTimeline = false;
+    }
   }
 
   async function saveXMLWithTimeline(options = {}) {
@@ -450,7 +470,29 @@ async function appendXml(xml) {
       console.error("Import error:", err);
     }
   }
-  importXml(diagramXMLStream.get());
+  await importXml(diagramXMLStream.get());
+
+  let skipTimelineEmission = true;
+  const unsubscribeTimelineEntries = timelineEntries.subscribe(async () => {
+    if (skipTimelineEmission) {
+      skipTimelineEmission = false;
+      return;
+    }
+
+    if (isHydratingTimeline) {
+      return;
+    }
+
+    try {
+      const { xml } = await saveXMLWithTimeline({ format: true });
+      diagramXMLStream.set(xml);
+      isDirty.set(true);
+    } catch (err) {
+      console.error('Failed to persist timeline updates:', err);
+    }
+  });
+
+  registerCleanup(unsubscribeTimelineEntries);
 
 
 const jsonFileInput = createHiddenFileInput({
@@ -1138,7 +1180,28 @@ function clearModeler() {
   versionStream.set(diagramVersion); // wherever version is selected
 }
 
-     
+
+  registerCleanup(() => {
+    try {
+      modeler.destroy?.();
+    } catch (err) {
+      console.error('Failed to destroy modeler during cleanup:', err);
+    }
+  });
+
+  cleanupCurrentModeler = () => {
+    while (cleanups.length) {
+      const cleanup = cleanups.pop();
+      try {
+        cleanup();
+      } catch (err) {
+        console.error('Error during modeler cleanup:', err);
+      }
+    }
+
+    cleanupCurrentModeler = null;
+  };
+
 attachOverlay(overlay);
 
 }
