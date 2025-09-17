@@ -16,7 +16,7 @@ import { doc, collection, updateDoc, setDoc, addDoc, getDoc, Timestamp, arrayUni
 import { setupPageScaffolding, createHiddenFileInput } from './app/init.js';
 import { typeIcons, createOverlay, setupCanvasLayout, attachOverlay } from './app/overlay.js';
 import { setupTimeline } from './app/timeline.js';
-import { updateTimelineEntry } from './modules/timeline.js';
+import { timelineEntries, setTimelineEntries, updateTimelineEntry } from './modules/timeline.js';
 import { initializeAddOnServices, setupAvatarMenu } from './app/addons.js';
 import { bootstrapSimulation } from './app/simulation.js';
 // Initialization function will handle dynamic imports and DOM setup later.
@@ -122,7 +122,7 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
   const eventBus        = modeler.get('eventBus');
   const overlays        = modeler.get('overlays');
 
-  setupTimeline({
+  const timelineController = setupTimeline({
     canvas,
     eventBus,
     elementRegistry,
@@ -143,6 +143,161 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
 
   const { simulation } = bootstrapSimulation({ modeler, currentTheme });
 
+  const clamp01 = value => Math.min(Math.max(value ?? 0, 0), 1);
+
+  function getProcessBusinessObject() {
+    const root = canvas.getRootElement();
+    if (!root) return null;
+
+    if (root.type === 'bpmn:Collaboration') {
+      const participants = root.children || [];
+      for (const participant of participants) {
+        const processRef = participant?.businessObject?.processRef;
+        if (processRef) {
+          return processRef;
+        }
+      }
+      return null;
+    }
+
+    return root.businessObject || null;
+  }
+
+  function ensureExtensionElements(businessObject) {
+    if (!businessObject) return null;
+
+    if (!businessObject.extensionElements) {
+      businessObject.extensionElements = moddle.create('bpmn:ExtensionElements');
+    }
+
+    if (!Array.isArray(businessObject.extensionElements.values)) {
+      businessObject.extensionElements.values = businessObject.extensionElements.values
+        ? [].concat(businessObject.extensionElements.values)
+        : [];
+    }
+
+    return businessObject.extensionElements;
+  }
+
+  function ensureTimelineExtension(businessObject) {
+    const extensionElements = ensureExtensionElements(businessObject);
+    if (!extensionElements) return null;
+
+    let timelineExtension = extensionElements.values.find(value => value.$type === 'custom:Timeline');
+
+    if (!timelineExtension) {
+      timelineExtension = moddle.create('custom:Timeline');
+      timelineExtension.entries = [];
+      extensionElements.values.push(timelineExtension);
+    }
+
+    if (!Array.isArray(timelineExtension.entries)) {
+      timelineExtension.entries = timelineExtension.entries ? [].concat(timelineExtension.entries) : [];
+    }
+
+    return timelineExtension;
+  }
+
+  function removeTimelineExtension(businessObject) {
+    const extensionElements = businessObject?.extensionElements;
+    if (!extensionElements?.values) {
+      return;
+    }
+
+    extensionElements.values = extensionElements.values.filter(value => value.$type !== 'custom:Timeline');
+
+    if (!extensionElements.values.length) {
+      businessObject.extensionElements = null;
+    }
+  }
+
+  function serializeTimelineExtension() {
+    const processBo = getProcessBusinessObject();
+    if (!processBo) return;
+
+    const entries = timelineEntries.get() || [];
+
+    if (!entries.length) {
+      removeTimelineExtension(processBo);
+      return;
+    }
+
+    const timelineExtension = ensureTimelineExtension(processBo);
+    if (!timelineExtension) return;
+
+    timelineExtension.entries = entries.map(entry => {
+      const metadata = entry.metadata && Object.keys(entry.metadata).length
+        ? JSON.stringify(entry.metadata)
+        : null;
+
+      const timelineEntryBo = moddle.create('custom:TimelineEntry', {
+        id: entry.id,
+        position: clamp01(entry.offset),
+        label: entry.label ?? ''
+      });
+
+      if (entry.color) {
+        timelineEntryBo.color = entry.color;
+      }
+
+      if (metadata) {
+        timelineEntryBo.metadata = metadata;
+      }
+
+      return timelineEntryBo;
+    });
+  }
+
+  function hydrateTimelineFromProcess() {
+    const processBo = getProcessBusinessObject();
+    if (!processBo) {
+      setTimelineEntries([]);
+      return;
+    }
+
+    const extensionElements = processBo.extensionElements;
+    const values = extensionElements?.values || [];
+    const timelineExtension = values.find(value => value.$type === 'custom:Timeline');
+
+    if (!timelineExtension) {
+      setTimelineEntries([]);
+      return;
+    }
+
+    const deserialized = (timelineExtension.entries || []).map(entry => {
+      const rawPosition = entry.position ?? entry.offset ?? 0;
+      const numericPosition = typeof rawPosition === 'number'
+        ? rawPosition
+        : parseFloat(rawPosition) || 0;
+
+      let metadata = {};
+      if (typeof entry.metadata === 'string' && entry.metadata.trim()) {
+        try {
+          metadata = JSON.parse(entry.metadata);
+        } catch (err) {
+          console.warn('Failed to parse timeline entry metadata:', err);
+          metadata = {};
+        }
+      }
+
+      return {
+        id: entry.id || undefined,
+        offset: clamp01(numericPosition),
+        label: entry.label ?? '',
+        color: entry.color || null,
+        metadata
+      };
+    });
+
+    setTimelineEntries(deserialized);
+    timelineController?.update?.();
+  }
+
+  async function saveXMLWithTimeline(options = {}) {
+    serializeTimelineExtension();
+    return modeler.saveXML(options);
+  }
+
   const { scheduleOverlayUpdate, loadAddOnData, applyAddOnsToElements, syncAddOnStoreFromElements } =
     initializeAddOnServices({
       overlays,
@@ -162,7 +317,7 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
   // push every change into your XML Stream:
   eventBus.on('commandStack.changed', async () => {
       try {
-        const { xml } = await modeler.saveXML({ format: true });
+        const { xml } = await saveXMLWithTimeline({ format: true });
         diagramXMLStream.set(xml);
         isDirty.set(true);
         syncAddOnStoreFromElements();
@@ -253,6 +408,7 @@ async function appendXml(xml) {
   try {
     // Import the new XML into the current diagram
     await modeler.importXML(xml);
+    hydrateTimelineFromProcess();
     updateDiagramTree();
     syncAddOnStoreFromElements();
     scheduleOverlayUpdate();
@@ -284,6 +440,7 @@ async function appendXml(xml) {
   async function importXml(xml) {
     try {
       await modeler.importXML(xml);
+      hydrateTimelineFromProcess();
       updateDiagramTree();
       syncAddOnStoreFromElements();
       scheduleOverlayUpdate();
@@ -322,7 +479,7 @@ const saveBtn = reactiveButton(
     syncAddOnStoreFromElements();
     const allAddOns = addOnStore.getAllAddOns();
     applyAddOnsToElements(allAddOns);
-    const { xml } = await modeler.saveXML({ format: true });
+    const { xml } = await saveXMLWithTimeline({ format: true });
 
     // Use fallback/defaults if diagramDataStream is null
     const currentDiagramData = diagramDataStream.get() || {
@@ -650,7 +807,7 @@ function buildDropdownOptions() {
     {
       label: '📄 Download XML', onClick: async () => {
         try {
-          const { xml } = await modeler.saveXML({ format: true });
+          const { xml } = await saveXMLWithTimeline({ format: true });
           const blob = new Blob([xml], { type: 'application/xml' });
           const url  = URL.createObjectURL(blob);
 

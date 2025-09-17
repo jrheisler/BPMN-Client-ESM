@@ -34,6 +34,24 @@
         { "name": "consulted",  "type": "String", "isAttr": true },
         { "name": "informed",   "type": "String", "isAttr": true }
       ]
+    },
+    {
+      "name": "Timeline",
+      "superClass": [ "Element" ],
+      "properties": [
+        { "name": "entries", "type": "TimelineEntry", "isMany": true }
+      ]
+    },
+    {
+      "name": "TimelineEntry",
+      "superClass": [ "Element" ],
+      "properties": [
+        { "name": "id", "type": "String", "isAttr": true },
+        { "name": "position", "type": "Double", "isAttr": true },
+        { "name": "label", "type": "String", "isAttr": true },
+        { "name": "color", "type": "String", "isAttr": true },
+        { "name": "metadata", "type": "String" }
+      ]
     }
   ]
 }
