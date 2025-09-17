@@ -16,6 +16,7 @@ import { doc, collection, updateDoc, setDoc, addDoc, getDoc, Timestamp, arrayUni
 import { setupPageScaffolding, createHiddenFileInput } from './app/init.js';
 import { typeIcons, createOverlay, setupCanvasLayout, attachOverlay } from './app/overlay.js';
 import { setupTimeline } from './app/timeline.js';
+import { updateTimelineEntry } from './modules/timeline.js';
 import { initializeAddOnServices, setupAvatarMenu } from './app/addons.js';
 import { bootstrapSimulation } from './app/simulation.js';
 // Initialization function will handle dynamic imports and DOM setup later.
@@ -121,7 +122,24 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
   const eventBus        = modeler.get('eventBus');
   const overlays        = modeler.get('overlays');
 
-  setupTimeline({ canvas, eventBus, elementRegistry });
+  setupTimeline({
+    canvas,
+    eventBus,
+    elementRegistry,
+    onEditEntry(entry) {
+      const initialName = entry.metadata?.name ?? entry.label ?? '';
+      const initialNotes = entry.metadata?.notes ?? '';
+
+      promptDiagramMetadata(initialName, initialNotes, currentTheme).subscribe(metadata => {
+        if (!metadata) return;
+
+        updateTimelineEntry(entry.id, {
+          label: metadata.name?.trim() || entry.label || '',
+          metadata: { ...entry.metadata, ...metadata }
+        });
+      });
+    }
+  });
 
   const { simulation } = bootstrapSimulation({ modeler, currentTheme });
 
