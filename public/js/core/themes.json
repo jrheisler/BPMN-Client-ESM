@@ -50,6 +50,16 @@
       "gateway": {
         "fill": "#ffb300",
         "stroke": "#666"
+      },
+      "quickMenu": {
+        "background": "#1e1e1e",
+        "hoverBackground": "#2a2a2a",
+        "text": "#bb86fc",
+        "hoverText": "#ffffff",
+        "border": "#666666",
+        "hoverBorder": "#bb86fc",
+        "shadow": "0 2px 4px rgba(0, 0, 0, 0.4)",
+        "hoverShadow": "0 4px 8px rgba(0, 0, 0, 0.5)"
       }
     },
     "fonts": {
@@ -108,6 +118,16 @@
       "gateway": {
         "fill": "#fb8c00",
         "stroke": "#d0d0d0"
+      },
+      "quickMenu": {
+        "background": "#ffffff",
+        "hoverBackground": "#ede7ff",
+        "text": "#222222",
+        "hoverText": "#6200ee",
+        "border": "#d0d0d0",
+        "hoverBorder": "#6200ee",
+        "shadow": "0 2px 4px rgba(0, 0, 0, 0.15)",
+        "hoverShadow": "0 4px 8px rgba(0, 0, 0, 0.2)"
       }
     },
     "fonts": {
@@ -166,6 +186,16 @@
       "gateway": {
         "fill": "#ffa726",
         "stroke": "#1c3a5f"
+      },
+      "quickMenu": {
+        "background": "#112240",
+        "hoverBackground": "#163055",
+        "text": "#64ffda",
+        "hoverText": "#ffffff",
+        "border": "#1c3a5f",
+        "hoverBorder": "#64ffda",
+        "shadow": "0 2px 6px rgba(10, 25, 47, 0.45)",
+        "hoverShadow": "0 4px 10px rgba(10, 25, 47, 0.6)"
       }
     },
     "fonts": {
@@ -224,6 +254,16 @@
       "gateway": {
         "fill": "#b58900",
         "stroke": "#586e75"
+      },
+      "quickMenu": {
+        "background": "#003847",
+        "hoverBackground": "#004d5c",
+        "text": "#64ffda",
+        "hoverText": "#00ffcc",
+        "border": "#586e75",
+        "hoverBorder": "#64ffda",
+        "shadow": "0 2px 6px rgba(0, 43, 54, 0.45)",
+        "hoverShadow": "0 4px 10px rgba(0, 43, 54, 0.6)"
       }
     },
     "fonts": {
@@ -282,6 +322,16 @@
       "gateway": {
         "fill": "#b58900",
         "stroke": "#93a1a1"
+      },
+      "quickMenu": {
+        "background": "#faf3dc",
+        "hoverBackground": "#f0e6c8",
+        "text": "#657b83",
+        "hoverText": "#268bd2",
+        "border": "#93a1a1",
+        "hoverBorder": "#268bd2",
+        "shadow": "0 2px 4px rgba(101, 123, 131, 0.2)",
+        "hoverShadow": "0 4px 8px rgba(101, 123, 131, 0.3)"
       }
     },
     "fonts": {
@@ -340,6 +390,16 @@
       "gateway": {
         "fill": "#ffb74d",
         "stroke": "#4caf50"
+      },
+      "quickMenu": {
+        "background": "#2d4f3a",
+        "hoverBackground": "#356448",
+        "text": "#64ffda",
+        "hoverText": "#ffffff",
+        "border": "#4caf50",
+        "hoverBorder": "#64ffda",
+        "shadow": "0 2px 6px rgba(23, 38, 27, 0.5)",
+        "hoverShadow": "0 4px 10px rgba(23, 38, 27, 0.65)"
       }
     },
     "fonts": {
@@ -398,6 +458,16 @@
       "gateway": {
         "fill": "#ff9f43",
         "stroke": "#8c5a32"
+      },
+      "quickMenu": {
+        "background": "#3b2616",
+        "hoverBackground": "#4a2f1b",
+        "text": "#fbe2b8",
+        "hoverText": "#ff7847",
+        "border": "#8c5a32",
+        "hoverBorder": "#ff7847",
+        "shadow": "0 2px 6px rgba(43, 29, 18, 0.5)",
+        "hoverShadow": "0 4px 10px rgba(43, 29, 18, 0.65)"
       }
     },
     "fonts": {
@@ -456,6 +526,16 @@
       "gateway": {
         "fill": "#ffb74d",
         "stroke": "#ff99cc"
+      },
+      "quickMenu": {
+        "background": "#fff0f9",
+        "hoverBackground": "#ffd6f3",
+        "text": "#6b006b",
+        "hoverText": "#ff69b4",
+        "border": "#ff99cc",
+        "hoverBorder": "#ff69b4",
+        "shadow": "0 2px 4px rgba(255, 105, 180, 0.25)",
+        "hoverShadow": "0 4px 8px rgba(255, 105, 180, 0.35)"
       }
     },
     "fonts": {
@@ -514,6 +594,16 @@
       "gateway": {
         "fill": "#ffb74d",
         "stroke": "#2a2a5c"
+      },
+      "quickMenu": {
+        "background": "#202040",
+        "hoverBackground": "#2a2a5c",
+        "text": "#64ffda",
+        "hoverText": "#ffffff",
+        "border": "#2a2a5c",
+        "hoverBorder": "#64ffda",
+        "shadow": "0 2px 6px rgba(22, 33, 62, 0.5)",
+        "hoverShadow": "0 4px 10px rgba(22, 33, 62, 0.65)"
       }
     },
     "fonts": {
@@ -572,6 +662,16 @@
       "gateway": {
         "fill": "#b8860b",
         "stroke": "#c5a880"
+      },
+      "quickMenu": {
+        "background": "#fcecc9",
+        "hoverBackground": "#f8dfa9",
+        "text": "#2d2d2a",
+        "hoverText": "#9bc1bc",
+        "border": "#c5a880",
+        "hoverBorder": "#9bc1bc",
+        "shadow": "0 2px 4px rgba(45, 45, 42, 0.2)",
+        "hoverShadow": "0 4px 8px rgba(45, 45, 42, 0.3)"
       }
     },
     "fonts": {
@@ -630,6 +730,16 @@
       "gateway": {
         "fill": "#ffff00",
         "stroke": "#00aa00"
+      },
+      "quickMenu": {
+        "background": "#002200",
+        "hoverBackground": "#003300",
+        "text": "#00ff00",
+        "hoverText": "#e0ffe0",
+        "border": "#00aa00",
+        "hoverBorder": "#00ff00",
+        "shadow": "0 2px 6px rgba(0, 68, 0, 0.55)",
+        "hoverShadow": "0 4px 10px rgba(0, 68, 0, 0.7)"
       }
     },
     "fonts": {
