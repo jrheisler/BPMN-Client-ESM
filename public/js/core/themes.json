@@ -60,6 +60,21 @@
         "hoverBorder": "#bb86fc",
         "shadow": "0 2px 4px rgba(0, 0, 0, 0.4)",
         "hoverShadow": "0 4px 8px rgba(0, 0, 0, 0.5)"
+      },
+      "popupMenu": {
+        "background": "#1e1e1e",
+        "hoverBackground": "#2a2a2a",
+        "text": "#e0e0e0",
+        "hoverText": "#bb86fc",
+        "border": "#444444",
+        "hoverBorder": "#bb86fc",
+        "shadow": "0 10px 24px rgba(0, 0, 0, 0.6)",
+        "hoverShadow": "0 12px 28px rgba(0, 0, 0, 0.65)",
+        "searchBackground": "#262626",
+        "searchText": "#f5f5f5",
+        "searchPlaceholder": "#9f9f9f",
+        "searchBorder": "#444444",
+        "searchFocusShadow": "0 0 0 1px rgba(187, 134, 252, 0.6)"
       }
     },
     "fonts": {
@@ -128,6 +143,21 @@
         "hoverBorder": "#6200ee",
         "shadow": "0 2px 4px rgba(0, 0, 0, 0.15)",
         "hoverShadow": "0 4px 8px rgba(0, 0, 0, 0.2)"
+      },
+      "popupMenu": {
+        "background": "#ffffff",
+        "hoverBackground": "#ede7ff",
+        "text": "#222222",
+        "hoverText": "#6200ee",
+        "border": "#d0d0d0",
+        "hoverBorder": "#6200ee",
+        "shadow": "0 10px 24px rgba(0, 0, 0, 0.18)",
+        "hoverShadow": "0 12px 28px rgba(0, 0, 0, 0.2)",
+        "searchBackground": "#f5f5f5",
+        "searchText": "#222222",
+        "searchPlaceholder": "#777777",
+        "searchBorder": "#d0d0d0",
+        "searchFocusShadow": "0 0 0 1px rgba(98, 0, 238, 0.3)"
       }
     },
     "fonts": {
@@ -196,6 +226,21 @@
         "hoverBorder": "#64ffda",
         "shadow": "0 2px 6px rgba(10, 25, 47, 0.45)",
         "hoverShadow": "0 4px 10px rgba(10, 25, 47, 0.6)"
+      },
+      "popupMenu": {
+        "background": "#112240",
+        "hoverBackground": "#163055",
+        "text": "#a5fff2",
+        "hoverText": "#ffffff",
+        "border": "#1c3a5f",
+        "hoverBorder": "#64ffda",
+        "shadow": "0 10px 24px rgba(10, 25, 47, 0.6)",
+        "hoverShadow": "0 12px 28px rgba(10, 25, 47, 0.7)",
+        "searchBackground": "#0e2438",
+        "searchText": "#64ffda",
+        "searchPlaceholder": "#4fb7c0",
+        "searchBorder": "#1c3a5f",
+        "searchFocusShadow": "0 0 0 1px rgba(100, 255, 218, 0.6)"
       }
     },
     "fonts": {
@@ -264,6 +309,21 @@
         "hoverBorder": "#64ffda",
         "shadow": "0 2px 6px rgba(0, 43, 54, 0.45)",
         "hoverShadow": "0 4px 10px rgba(0, 43, 54, 0.6)"
+      },
+      "popupMenu": {
+        "background": "#003847",
+        "hoverBackground": "#004d5c",
+        "text": "#00ffcc",
+        "hoverText": "#64ffda",
+        "border": "#586e75",
+        "hoverBorder": "#64ffda",
+        "shadow": "0 10px 24px rgba(0, 43, 54, 0.6)",
+        "hoverShadow": "0 12px 28px rgba(0, 43, 54, 0.7)",
+        "searchBackground": "#073642",
+        "searchText": "#64ffda",
+        "searchPlaceholder": "#5f8c94",
+        "searchBorder": "#586e75",
+        "searchFocusShadow": "0 0 0 1px rgba(100, 255, 218, 0.55)"
       }
     },
     "fonts": {
@@ -332,6 +392,21 @@
         "hoverBorder": "#268bd2",
         "shadow": "0 2px 4px rgba(101, 123, 131, 0.2)",
         "hoverShadow": "0 4px 8px rgba(101, 123, 131, 0.3)"
+      },
+      "popupMenu": {
+        "background": "#faf3dc",
+        "hoverBackground": "#f0e6c8",
+        "text": "#657b83",
+        "hoverText": "#268bd2",
+        "border": "#93a1a1",
+        "hoverBorder": "#268bd2",
+        "shadow": "0 10px 24px rgba(101, 123, 131, 0.25)",
+        "hoverShadow": "0 12px 28px rgba(101, 123, 131, 0.3)",
+        "searchBackground": "#eee8d5",
+        "searchText": "#657b83",
+        "searchPlaceholder": "#93a1a1",
+        "searchBorder": "#93a1a1",
+        "searchFocusShadow": "0 0 0 1px rgba(38, 139, 210, 0.35)"
       }
     },
     "fonts": {
@@ -400,6 +475,21 @@
         "hoverBorder": "#64ffda",
         "shadow": "0 2px 6px rgba(23, 38, 27, 0.5)",
         "hoverShadow": "0 4px 10px rgba(23, 38, 27, 0.65)"
+      },
+      "popupMenu": {
+        "background": "#2d4f3a",
+        "hoverBackground": "#356448",
+        "text": "#c8ffef",
+        "hoverText": "#ffffff",
+        "border": "#4caf50",
+        "hoverBorder": "#64ffda",
+        "shadow": "0 10px 24px rgba(23, 38, 27, 0.6)",
+        "hoverShadow": "0 12px 28px rgba(23, 38, 27, 0.7)",
+        "searchBackground": "#244030",
+        "searchText": "#c8ffef",
+        "searchPlaceholder": "#88c8b2",
+        "searchBorder": "#4caf50",
+        "searchFocusShadow": "0 0 0 1px rgba(100, 255, 218, 0.6)"
       }
     },
     "fonts": {
@@ -468,6 +558,21 @@
         "hoverBorder": "#ff7847",
         "shadow": "0 2px 6px rgba(43, 29, 18, 0.5)",
         "hoverShadow": "0 4px 10px rgba(43, 29, 18, 0.65)"
+      },
+      "popupMenu": {
+        "background": "#3b2616",
+        "hoverBackground": "#4a2f1b",
+        "text": "#fbe2b8",
+        "hoverText": "#ff7847",
+        "border": "#8c5a32",
+        "hoverBorder": "#ff7847",
+        "shadow": "0 10px 24px rgba(43, 29, 18, 0.6)",
+        "hoverShadow": "0 12px 28px rgba(43, 29, 18, 0.7)",
+        "searchBackground": "#4a2f1b",
+        "searchText": "#fbe2b8",
+        "searchPlaceholder": "#d6b58d",
+        "searchBorder": "#8c5a32",
+        "searchFocusShadow": "0 0 0 1px rgba(255, 120, 71, 0.55)"
       }
     },
     "fonts": {
@@ -536,6 +641,21 @@
         "hoverBorder": "#ff69b4",
         "shadow": "0 2px 4px rgba(255, 105, 180, 0.25)",
         "hoverShadow": "0 4px 8px rgba(255, 105, 180, 0.35)"
+      },
+      "popupMenu": {
+        "background": "#fff0f9",
+        "hoverBackground": "#ffd6f3",
+        "text": "#6b006b",
+        "hoverText": "#ff69b4",
+        "border": "#ff99cc",
+        "hoverBorder": "#ff69b4",
+        "shadow": "0 10px 20px rgba(255, 105, 180, 0.25)",
+        "hoverShadow": "0 12px 24px rgba(255, 105, 180, 0.3)",
+        "searchBackground": "#ffe6f7",
+        "searchText": "#6b006b",
+        "searchPlaceholder": "#b26ba6",
+        "searchBorder": "#ff99cc",
+        "searchFocusShadow": "0 0 0 1px rgba(255, 105, 180, 0.35)"
       }
     },
     "fonts": {
@@ -604,6 +724,21 @@
         "hoverBorder": "#64ffda",
         "shadow": "0 2px 6px rgba(22, 33, 62, 0.5)",
         "hoverShadow": "0 4px 10px rgba(22, 33, 62, 0.65)"
+      },
+      "popupMenu": {
+        "background": "#202040",
+        "hoverBackground": "#2a2a5c",
+        "text": "#a5fff2",
+        "hoverText": "#ffffff",
+        "border": "#2a2a5c",
+        "hoverBorder": "#64ffda",
+        "shadow": "0 10px 24px rgba(22, 33, 62, 0.6)",
+        "hoverShadow": "0 12px 28px rgba(22, 33, 62, 0.7)",
+        "searchBackground": "#1a1a2e",
+        "searchText": "#a5fff2",
+        "searchPlaceholder": "#6fd7c4",
+        "searchBorder": "#2a2a5c",
+        "searchFocusShadow": "0 0 0 1px rgba(100, 255, 218, 0.6)"
       }
     },
     "fonts": {
@@ -672,6 +807,21 @@
         "hoverBorder": "#9bc1bc",
         "shadow": "0 2px 4px rgba(45, 45, 42, 0.2)",
         "hoverShadow": "0 4px 8px rgba(45, 45, 42, 0.3)"
+      },
+      "popupMenu": {
+        "background": "#fcecc9",
+        "hoverBackground": "#f8dfa9",
+        "text": "#2d2d2a",
+        "hoverText": "#9bc1bc",
+        "border": "#c5a880",
+        "hoverBorder": "#9bc1bc",
+        "shadow": "0 10px 24px rgba(45, 45, 42, 0.2)",
+        "hoverShadow": "0 12px 28px rgba(45, 45, 42, 0.25)",
+        "searchBackground": "#f4f1bb",
+        "searchText": "#2d2d2a",
+        "searchPlaceholder": "#6e6e69",
+        "searchBorder": "#c5a880",
+        "searchFocusShadow": "0 0 0 1px rgba(155, 193, 188, 0.35)"
       }
     },
     "fonts": {
@@ -740,6 +890,21 @@
         "hoverBorder": "#00ff00",
         "shadow": "0 2px 6px rgba(0, 68, 0, 0.55)",
         "hoverShadow": "0 4px 10px rgba(0, 68, 0, 0.7)"
+      },
+      "popupMenu": {
+        "background": "#002200",
+        "hoverBackground": "#003300",
+        "text": "#00ff00",
+        "hoverText": "#e0ffe0",
+        "border": "#00aa00",
+        "hoverBorder": "#00ff00",
+        "shadow": "0 10px 24px rgba(0, 68, 0, 0.65)",
+        "hoverShadow": "0 12px 28px rgba(0, 68, 0, 0.75)",
+        "searchBackground": "#001600",
+        "searchText": "#66ff66",
+        "searchPlaceholder": "#00b44c",
+        "searchBorder": "#008800",
+        "searchFocusShadow": "0 0 0 1px rgba(0, 255, 0, 0.6)"
       }
     },
     "fonts": {
