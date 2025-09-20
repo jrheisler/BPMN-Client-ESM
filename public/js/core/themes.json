@@ -347,6 +347,64 @@
       "monospace": "Menlo"
     }
   },
+  "duneEmbers": {
+    "name": "Dune Embers",
+    "colors": {
+      "background": "#2b1d12",
+      "foreground": "#fbe2b8",
+      "primary": "#4a2f1b",
+      "accent": "#ff7847",
+      "surface": "#3b2616",
+      "border": "#8c5a32",
+      "muted": "#c0966a",
+      "ok": "#d8b46a",
+      "warn": "#ff9f43",
+      "err": "#d9544d"
+    },
+    "bpmn": {
+      "shape": {
+        "fill": "#3b2616",
+        "stroke": "#8c5a32",
+        "strokeWidth": 2
+      },
+      "connection": {
+        "stroke": "#ff7847",
+        "strokeWidth": 2
+      },
+      "marker": {
+        "fill": "#ff7847",
+        "stroke": "#ff7847"
+      },
+      "label": {
+        "fontFamily": "\"Trebuchet MS\", sans-serif",
+        "fill": "#fbe2b8"
+      },
+      "selected": {
+        "stroke": "#ff7847",
+        "strokeWidth": 3
+      },
+      "startEvent": {
+        "fill": "#d8b46a",
+        "stroke": "#8c5a32"
+      },
+      "endEvent": {
+        "fill": "#d9544d",
+        "stroke": "#8c5a32"
+      },
+      "task": {
+        "fill": "#4a2f1b",
+        "stroke": "#8c5a32"
+      },
+      "gateway": {
+        "fill": "#ff9f43",
+        "stroke": "#8c5a32"
+      }
+    },
+    "fonts": {
+      "base": "\"Trebuchet MS\", sans-serif",
+      "monospace": "\"Courier New\", monospace"
+    }
+  },
   "candy": {
     "name": "Candy",
     "colors": {
