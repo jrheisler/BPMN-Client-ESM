@@ -1099,85 +1099,124 @@ const bpmnThemeStyle = document.createElement('style');
 document.head.appendChild(bpmnThemeStyle);
 
 currentTheme.subscribe(theme => {
-  const { colors, bpmn } = theme;
+  const colors = theme?.colors ?? {};
+  const bpmn = theme?.bpmn;
+
+  if (!bpmn) {
+    bpmnThemeStyle.textContent = '';
+    return;
+  }
+
+  const shape = bpmn.shape ?? {};
+  const startEvent = bpmn.startEvent ?? {};
+  const endEvent = bpmn.endEvent ?? {};
+  const task = bpmn.task ?? {};
+  const gateway = bpmn.gateway ?? {};
+  const label = bpmn.label ?? {};
+  const connection = bpmn.connection ?? {};
+  const marker = bpmn.marker ?? {};
+  const selected = bpmn.selected ?? {};
+
+  const shapeFill = shape.fill ?? 'transparent';
+  const shapeStroke = shape.stroke ?? 'transparent';
+  const shapeStrokeWidth = shape.strokeWidth ?? 1;
+
+  const startFill = startEvent.fill ?? shapeFill;
+  const startStroke = startEvent.stroke ?? shapeStroke;
+  const endFill = endEvent.fill ?? shapeFill;
+  const endStroke = endEvent.stroke ?? shapeStroke;
+  const taskFill = task.fill ?? shapeFill;
+  const taskStroke = task.stroke ?? shapeStroke;
+  const gatewayFill = gateway.fill ?? shapeFill;
+  const gatewayStroke = gateway.stroke ?? shapeStroke;
 
   bpmnThemeStyle.textContent = `
     /* canvas background */
     #canvas,
     #canvas .djs-container,
     #canvas .djs-container svg {
-      background: ${colors.background} !important;
-      --canvas-fill-color: ${colors.background};
+      background: ${colors.background ?? 'transparent'} !important;
+      --canvas-fill-color: ${colors.background ?? 'transparent'};
     }
 
     /* ── base shape styles ──────────────────────────────────────────────── */
-    .djs-element .djs-shape {
-      fill: ${bpmn.shape.fill} !important;
-      stroke: ${bpmn.shape.stroke} !important;
-      stroke-width: ${bpmn.shape.strokeWidth}px !important;
+    .djs-element.djs-shape .djs-visual > :first-child {
+      fill: ${shapeFill} !important;
+      stroke: ${shapeStroke} !important;
+      stroke-width: ${shapeStrokeWidth}px !important;
+    }
+
+    /* ensure multi-primitive shapes inherit fills */
+    .djs-element.djs-shape .djs-visual > :first-child + :where(rect, circle, ellipse) {
+      fill: ${shapeFill} !important;
     }
 
     /* ── BPMN element specifics ─────────────────────────────────────────── */
-    .djs-element[class*="start-event"] .djs-shape {
-      fill: ${bpmn.startEvent.fill} !important;
-      stroke: ${bpmn.startEvent.stroke} !important;
+    .djs-element[data-element-type="bpmn:StartEvent"] .djs-visual > :is(:first-child, circle:nth-child(2)) {
+      fill: ${startFill} !important;
+      stroke: ${startStroke} !important;
     }
-    .djs-element[class*="end-event"] .djs-shape {
-      fill: ${bpmn.endEvent.fill} !important;
-      stroke: ${bpmn.endEvent.stroke} !important;
+    .djs-element[data-element-type="bpmn:BoundaryEvent"] .djs-visual > :is(:first-child, circle:nth-child(2)) {
+      fill: ${startFill} !important;
+      stroke: ${startStroke} !important;
     }
-    .djs-element[class*="task"] .djs-shape {
-      fill: ${bpmn.task.fill} !important;
-      stroke: ${bpmn.task.stroke} !important;
+    .djs-element[data-element-type="bpmn:EndEvent"] .djs-visual > :is(:first-child, circle:nth-child(2)) {
+      fill: ${endFill} !important;
+      stroke: ${endStroke} !important;
     }
-    .djs-element[class*="gateway"] .djs-shape {
-      fill: ${bpmn.gateway.fill} !important;
-      stroke: ${bpmn.gateway.stroke} !important;
+    .djs-element[data-element-type*="Task"] .djs-visual > :first-child,
+    .djs-element[data-element-type*="Activity"] .djs-visual > :first-child {
+      fill: ${taskFill} !important;
+      stroke: ${taskStroke} !important;
+    }
+    .djs-element[data-element-type*="Gateway"] .djs-visual > :first-child {
+      fill: ${gatewayFill} !important;
+      stroke: ${gatewayStroke} !important;
     }
 
-    /* keep event outlines clear if you like: */
-    .djs-element.djs-event .djs-shape {
-      stroke-width: ${bpmn.shape.strokeWidth}px !important;
+    /* keep event outlines clear */
+    .djs-element.djs-event .djs-visual > :first-child {
+      stroke-width: ${shapeStrokeWidth}px !important;
     }
 
     /* ── text labels use theme-defined fill with foreground fallback ───── */
     .djs-element .djs-label {
-      fill: ${bpmn.label.fill || colors.foreground} !important;
-      font-family: ${bpmn.label.fontFamily} !important;
+      fill: ${label.fill ?? colors.foreground ?? '#000'} !important;
+      font-family: ${label.fontFamily ?? 'sans-serif'} !important;
     }
 
     /* ── connections & arrows ───────────────────────────────────────────── */
     .djs-connection .djs-connection-inner,
     .djs-connection .djs-connection-outer {
-      stroke: ${bpmn.connection.stroke} !important;
-      stroke-width: ${bpmn.connection.strokeWidth}px !important;
+      stroke: ${connection.stroke ?? shapeStroke} !important;
+      stroke-width: ${connection.strokeWidth ?? shapeStrokeWidth}px !important;
     }
     .djs-connection .djs-marker {
-      fill: ${bpmn.marker.fill} !important;
-      stroke: ${bpmn.marker.stroke} !important;
+      fill: ${marker.fill ?? connection.stroke ?? shapeStroke} !important;
+      stroke: ${marker.stroke ?? connection.stroke ?? shapeStroke} !important;
     }
 
     /* ── selected styles ───────────────────────────────────────────────── */
-    .djs-element.djs-element-selected .djs-shape,
+    .djs-element.djs-element-selected .djs-visual > :first-child,
     .djs-connection.djs-connection-selected .djs-outline {
-      stroke: ${bpmn.selected.stroke} !important;
-      stroke-width: ${bpmn.selected.strokeWidth}px !important;
+      stroke: ${selected.stroke ?? colors.accent ?? shapeStroke} !important;
+      stroke-width: ${selected.strokeWidth ?? (shapeStrokeWidth + 1)}px !important;
     }
 
     /* ── simulation active token highlight ─────────────────────────────── */
     .djs-element.active .djs-visual > :nth-child(1),
     .djs-connection.active .djs-visual > path {
-      stroke: ${colors.accent} !important;
+      stroke: ${colors.accent ?? '#00f'} !important;
       stroke-width: 4px !important;
     }
 
     /* ── direct editing overlay ───────────────────────────────────────── */
     .djs-direct-editing-parent,
     .djs-direct-editing-content {
-      background: ${colors.surface} !important;
-      color: ${colors.foreground} !important;
-      border: 1px solid ${colors.border} !important;
-      outline: 1px solid ${colors.border} !important;
+      background: ${colors.surface ?? '#fff'} !important;
+      color: ${colors.foreground ?? '#000'} !important;
+      border: 1px solid ${colors.border ?? '#000'} !important;
+      outline: 1px solid ${colors.border ?? '#000'} !important;
     }
   `;
 });
