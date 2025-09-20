@@ -1127,6 +1127,21 @@ currentTheme.subscribe(theme => {
     hoverShadow: 'none'
   };
 
+  const popupMenuConfig = bpmn.popupMenu ?? {};
+  const popupBackground = popupMenuConfig.background ?? colors.surface ?? '#fff';
+  const popupText = popupMenuConfig.text ?? colors.foreground ?? '#000';
+  const popupBorder = popupMenuConfig.border ?? colors.border ?? 'transparent';
+  const popupShadow = popupMenuConfig.shadow ?? 'none';
+  const popupHoverBackground = popupMenuConfig.hoverBackground ?? colors.primary ?? popupBackground;
+  const popupHoverText = popupMenuConfig.hoverText ?? colors.accent ?? popupText;
+  const popupHoverBorder = popupMenuConfig.hoverBorder ?? colors.accent ?? popupBorder;
+  const popupHoverShadow = popupMenuConfig.hoverShadow ?? popupShadow;
+  const popupSearchBackground = popupMenuConfig.searchBackground ?? popupBackground;
+  const popupSearchText = popupMenuConfig.searchText ?? popupText;
+  const popupSearchPlaceholder = popupMenuConfig.searchPlaceholder ?? colors.muted ?? popupSearchText;
+  const popupSearchBorder = popupMenuConfig.searchBorder ?? popupBorder;
+  const popupSearchFocusShadow = popupMenuConfig.searchFocusShadow ?? `0 0 0 1px ${popupHoverBorder}`;
+
   const shapeFill = shape.fill ?? 'transparent';
   const shapeStroke = shape.stroke ?? 'transparent';
   const shapeStrokeWidth = shape.strokeWidth ?? 1;
@@ -1231,6 +1246,75 @@ currentTheme.subscribe(theme => {
       color: ${quickMenu.hoverText ?? quickMenu.text ?? colors.foreground ?? '#000'} !important;
       border: 1px solid ${quickMenu.hoverBorder ?? quickMenu.border ?? 'transparent'} !important;
       box-shadow: ${quickMenu.hoverShadow ?? quickMenu.shadow ?? 'none'} !important;
+    }
+
+    /* ── popup / replace menu ───────────────────────────────────────────── */
+    #canvas .djs-popup {
+      --popup-background: ${popupBackground};
+      --popup-text: ${popupText};
+      --popup-border: ${popupBorder};
+      --popup-shadow: ${popupShadow};
+      --popup-hover-background: ${popupHoverBackground};
+      --popup-hover-text: ${popupHoverText};
+      --popup-hover-border: ${popupHoverBorder};
+      --popup-hover-shadow: ${popupHoverShadow};
+      --popup-search-background: ${popupSearchBackground};
+      --popup-search-text: ${popupSearchText};
+      --popup-search-placeholder: ${popupSearchPlaceholder};
+      --popup-search-border: ${popupSearchBorder};
+      --popup-search-focus-shadow: ${popupSearchFocusShadow};
+    }
+
+    #canvas .djs-popup,
+    #canvas .djs-popup .djs-popup-header,
+    #canvas .djs-popup .djs-popup-body,
+    #canvas .djs-popup .djs-popup-title {
+      background: var(--popup-background) !important;
+      color: var(--popup-text) !important;
+    }
+
+    #canvas .djs-popup {
+      border: 1px solid var(--popup-border) !important;
+      box-shadow: var(--popup-shadow) !important;
+    }
+
+    #canvas .djs-popup .djs-popup-header,
+    #canvas .djs-popup .djs-popup-search {
+      border-bottom: 1px solid var(--popup-border) !important;
+    }
+
+    #canvas .djs-popup .entry {
+      color: var(--popup-text) !important;
+      border: 1px solid transparent !important;
+    }
+
+    #canvas .djs-popup-body .entry:hover,
+    #canvas .djs-popup-body .entry:focus,
+    #canvas .djs-popup-body .entry.active {
+      background: var(--popup-hover-background) !important;
+      color: var(--popup-hover-text) !important;
+      border-color: var(--popup-hover-border) !important;
+      box-shadow: var(--popup-hover-shadow) !important;
+    }
+
+    #canvas .djs-popup .entry .djs-popup-description {
+      color: var(--popup-search-placeholder) !important;
+    }
+
+    #canvas .djs-popup .djs-popup-search input {
+      background: var(--popup-search-background) !important;
+      color: var(--popup-search-text) !important;
+      border: 1px solid var(--popup-search-border) !important;
+      box-shadow: none !important;
+    }
+
+    #canvas .djs-popup .djs-popup-search input::placeholder {
+      color: var(--popup-search-placeholder) !important;
+    }
+
+    #canvas .djs-popup .djs-popup-search input:focus {
+      border-color: var(--popup-hover-border) !important;
+      box-shadow: var(--popup-search-focus-shadow) !important;
     }
 
     /* ── simulation active token highlight ─────────────────────────────── */
