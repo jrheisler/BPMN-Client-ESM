@@ -1116,6 +1116,16 @@ currentTheme.subscribe(theme => {
   const connection = bpmn.connection ?? {};
   const marker = bpmn.marker ?? {};
   const selected = bpmn.selected ?? {};
+  const quickMenu = bpmn.quickMenu ?? {
+    background: colors.surface ?? '#fff',
+    hoverBackground: colors.primary ?? colors.surface ?? '#fff',
+    text: colors.foreground ?? '#000',
+    hoverText: colors.accent ?? colors.foreground ?? '#000',
+    border: colors.border ?? 'transparent',
+    hoverBorder: colors.accent ?? colors.border ?? 'transparent',
+    shadow: 'none',
+    hoverShadow: 'none'
+  };
 
   const shapeFill = shape.fill ?? 'transparent';
   const shapeStroke = shape.stroke ?? 'transparent';
@@ -1137,6 +1147,12 @@ currentTheme.subscribe(theme => {
     #canvas .djs-container svg {
       background: ${colors.background ?? 'transparent'} !important;
       --canvas-fill-color: ${colors.background ?? 'transparent'};
+    }
+
+    #canvas .djs-container,
+    #canvas .djs-parent {
+      --context-pad-entry-background-color: ${quickMenu.background ?? colors.surface ?? 'transparent'};
+      --context-pad-entry-hover-background-color: ${quickMenu.hoverBackground ?? quickMenu.background ?? colors.primary ?? colors.surface ?? 'transparent'};
     }
 
     /* ── base shape styles ──────────────────────────────────────────────── */
@@ -1201,6 +1217,20 @@ currentTheme.subscribe(theme => {
     .djs-connection.djs-connection-selected .djs-outline {
       stroke: ${selected.stroke ?? colors.accent ?? shapeStroke} !important;
       stroke-width: ${selected.strokeWidth ?? (shapeStrokeWidth + 1)}px !important;
+    }
+
+    .djs-context-pad .entry {
+      background: var(--context-pad-entry-background-color, ${quickMenu.background ?? 'transparent'}) !important;
+      color: ${quickMenu.text ?? colors.foreground ?? '#000'} !important;
+      border: 1px solid ${quickMenu.border ?? 'transparent'} !important;
+      box-shadow: ${quickMenu.shadow ?? 'none'} !important;
+    }
+
+    .djs-context-pad .entry:hover {
+      background: var(--context-pad-entry-hover-background-color, ${quickMenu.hoverBackground ?? quickMenu.background ?? 'transparent'}) !important;
+      color: ${quickMenu.hoverText ?? quickMenu.text ?? colors.foreground ?? '#000'} !important;
+      border: 1px solid ${quickMenu.hoverBorder ?? quickMenu.border ?? 'transparent'} !important;
+      box-shadow: ${quickMenu.hoverShadow ?? quickMenu.shadow ?? 'none'} !important;
     }
 
     /* ── simulation active token highlight ─────────────────────────────── */
