@@ -77,6 +77,15 @@
         "searchFocusShadow": "0 0 0 1px rgba(187, 134, 252, 0.6)"
       }
     },
+    "modals": {
+      "diagramPicker": {
+        "background": "#1e1e1e",
+        "hoverBackground": "#2a2a2a",
+        "border": "#444444",
+        "textMuted": "#888888",
+        "deleteIcon": "#ff5252"
+      }
+    },
     "fonts": {
       "base": "system-ui, sans-serif",
       "monospace": "monospace"
@@ -158,6 +167,15 @@
         "searchPlaceholder": "#777777",
         "searchBorder": "#d0d0d0",
         "searchFocusShadow": "0 0 0 1px rgba(98, 0, 238, 0.3)"
+      }
+    },
+    "modals": {
+      "diagramPicker": {
+        "background": "#ffffff",
+        "hoverBackground": "#ede7ff",
+        "border": "#d0d0d0",
+        "textMuted": "#555555",
+        "deleteIcon": "#f44336"
       }
     },
     "fonts": {
@@ -243,6 +261,15 @@
         "searchFocusShadow": "0 0 0 1px rgba(100, 255, 218, 0.6)"
       }
     },
+    "modals": {
+      "diagramPicker": {
+        "background": "#112240",
+        "hoverBackground": "#163055",
+        "border": "#1c3a5f",
+        "textMuted": "#6a7b8c",
+        "deleteIcon": "#ff4d6d"
+      }
+    },
     "fonts": {
       "base": "Roboto, sans-serif",
       "monospace": "Courier New"
@@ -324,6 +351,15 @@
         "searchPlaceholder": "#5f8c94",
         "searchBorder": "#586e75",
         "searchFocusShadow": "0 0 0 1px rgba(100, 255, 218, 0.55)"
+      }
+    },
+    "modals": {
+      "diagramPicker": {
+        "background": "#003847",
+        "hoverBackground": "#004d5c",
+        "border": "#586e75",
+        "textMuted": "#93a1a1",
+        "deleteIcon": "#dc322f"
       }
     },
     "fonts": {
@@ -409,6 +445,15 @@
         "searchFocusShadow": "0 0 0 1px rgba(38, 139, 210, 0.35)"
       }
     },
+    "modals": {
+      "diagramPicker": {
+        "background": "#faf3dc",
+        "hoverBackground": "#f0e6c8",
+        "border": "#93a1a1",
+        "textMuted": "#93a1a1",
+        "deleteIcon": "#dc322f"
+      }
+    },
     "fonts": {
       "base": "Georgia, serif",
       "monospace": "Courier"
@@ -490,6 +535,15 @@
         "searchPlaceholder": "#88c8b2",
         "searchBorder": "#4caf50",
         "searchFocusShadow": "0 0 0 1px rgba(100, 255, 218, 0.6)"
+      }
+    },
+    "modals": {
+      "diagramPicker": {
+        "background": "#2d4f3a",
+        "hoverBackground": "#356448",
+        "border": "#4caf50",
+        "textMuted": "#99ccb3",
+        "deleteIcon": "#e57373"
       }
     },
     "fonts": {
@@ -575,6 +629,15 @@
         "searchFocusShadow": "0 0 0 1px rgba(255, 120, 71, 0.55)"
       }
     },
+    "modals": {
+      "diagramPicker": {
+        "background": "#3b2616",
+        "hoverBackground": "#4a2f1b",
+        "border": "#8c5a32",
+        "textMuted": "#c0966a",
+        "deleteIcon": "#d9544d"
+      }
+    },
     "fonts": {
       "base": "\"Trebuchet MS\", sans-serif",
       "monospace": "\"Courier New\", monospace"
@@ -656,6 +719,15 @@
         "searchPlaceholder": "#b26ba6",
         "searchBorder": "#ff99cc",
         "searchFocusShadow": "0 0 0 1px rgba(255, 105, 180, 0.35)"
+      }
+    },
+    "modals": {
+      "diagramPicker": {
+        "background": "#fff0f9",
+        "hoverBackground": "#ffd6f3",
+        "border": "#ff99cc",
+        "textMuted": "#b26ba6",
+        "deleteIcon": "#ef5350"
       }
     },
     "fonts": {
@@ -741,6 +813,15 @@
         "searchFocusShadow": "0 0 0 1px rgba(100, 255, 218, 0.6)"
       }
     },
+    "modals": {
+      "diagramPicker": {
+        "background": "#202040",
+        "hoverBackground": "#2a2a5c",
+        "border": "#2a2a5c",
+        "textMuted": "#7a7a9a",
+        "deleteIcon": "#ff5252"
+      }
+    },
     "fonts": {
       "base": "Helvetica Neue, sans-serif",
       "monospace": "Courier New"
@@ -824,6 +905,15 @@
         "searchFocusShadow": "0 0 0 1px rgba(155, 193, 188, 0.35)"
       }
     },
+    "modals": {
+      "diagramPicker": {
+        "background": "#fcecc9",
+        "hoverBackground": "#f8dfa9",
+        "border": "#c5a880",
+        "textMuted": "#6e6e69",
+        "deleteIcon": "#8b0000"
+      }
+    },
     "fonts": {
       "base": "\"Courier Prime\", monospace",
       "monospace": "\"Courier Prime\", monospace"
@@ -905,6 +995,15 @@
         "searchPlaceholder": "#00b44c",
         "searchBorder": "#008800",
         "searchFocusShadow": "0 0 0 1px rgba(0, 255, 0, 0.6)"
+      }
+    },
+    "modals": {
+      "diagramPicker": {
+        "background": "#002200",
+        "hoverBackground": "#003300",
+        "border": "#00aa00",
+        "textMuted": "#008800",
+        "deleteIcon": "#ff0000"
       }
     },
     "fonts": {

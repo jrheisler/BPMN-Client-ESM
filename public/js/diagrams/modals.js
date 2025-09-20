@@ -8,6 +8,16 @@ import { doc, getDoc, updateDoc, deleteDoc, arrayRemove } from 'firebase/firesto
 export function openDiagramPickerModal(themeStream = currentTheme) {
   const pickStream = new Stream(null); // emits selected diagram or null
 
+  const theme = themeStream.get();
+  const colors = theme.colors || {};
+  const pickerTheme = theme.modals?.diagramPicker ?? {};
+
+  const backgroundColor = pickerTheme.background ?? colors.surface ?? '#f9f9f9';
+  const hoverBackgroundColor = pickerTheme.hoverBackground ?? colors.primary ?? '#eee';
+  const borderColor = pickerTheme.border ?? colors.border ?? '#ccc';
+  const textMutedColor = pickerTheme.textMuted ?? colors.muted ?? (colors.foreground ? `${colors.foreground}aa` : '#666666');
+  const deleteIconColor = pickerTheme.deleteIcon ?? colors.err ?? colors.warn ?? '#b00';
+
   const { modal, content } = createModal(themeStream, () => pickStream.set(null));
   content.style.maxHeight = '80vh';
   content.style.overflowY = 'auto';
@@ -40,9 +50,9 @@ export function openDiagramPickerModal(themeStream = currentTheme) {
           item.style.justifyContent = 'space-between';
           item.style.alignItems = 'center';
           item.style.padding = '0.5rem 1rem';
-          item.style.border = '1px solid #ccc';
+          item.style.border = `1px solid ${borderColor}`;
           item.style.borderRadius = '4px';
-          item.style.backgroundColor = '#f9f9f9';
+          item.style.backgroundColor = backgroundColor;
           item.style.cursor = 'pointer';
           item.style.gap = '1rem';
 
@@ -61,7 +71,7 @@ export function openDiagramPickerModal(themeStream = currentTheme) {
           const notesEl = document.createElement('div');
           notesEl.textContent = notes;
           notesEl.style.fontSize = '0.9rem';
-          notesEl.style.color = themeStream.get().colors.foreground + 'aa';
+          notesEl.style.color = textMutedColor;
 
           textContainer.appendChild(nameEl);
           textContainer.appendChild(notesEl);
@@ -73,7 +83,7 @@ export function openDiagramPickerModal(themeStream = currentTheme) {
           deleteBtn.style.background = 'transparent';
           deleteBtn.style.cursor = 'pointer';
           deleteBtn.style.fontSize = '1.2rem';
-          deleteBtn.style.color = '#b00';
+          deleteBtn.style.color = deleteIconColor;
 
           deleteBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
@@ -107,8 +117,8 @@ export function openDiagramPickerModal(themeStream = currentTheme) {
             modal.remove();
           });
 
-          item.addEventListener('mouseenter', () => item.style.backgroundColor = '#eee');
-          item.addEventListener('mouseleave', () => item.style.backgroundColor = '#f9f9f9');
+          item.addEventListener('mouseenter', () => item.style.backgroundColor = hoverBackgroundColor);
+          item.addEventListener('mouseleave', () => item.style.backgroundColor = backgroundColor);
 
           item.appendChild(textContainer);
           item.appendChild(deleteBtn);
