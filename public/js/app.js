@@ -1127,6 +1127,26 @@ currentTheme.subscribe(theme => {
     hoverShadow: 'none'
   };
 
+  const palette = bpmn.palette ?? {};
+  const paletteBackground = palette.background ?? colors.surface ?? '#fff';
+  const paletteText = palette.text ?? colors.foreground ?? '#000';
+  const paletteBorder = palette.border ?? colors.border ?? 'transparent';
+  const paletteShadow = palette.shadow ?? 'none';
+  const paletteGroupBackground = palette.groupBackground ?? paletteBackground;
+  const paletteGroupText = palette.groupText ?? paletteText;
+  const paletteGroupBorder = palette.groupBorder ?? paletteBorder;
+  const paletteEntryBackground = palette.entryBackground ?? 'transparent';
+  const paletteEntryText = palette.entryText ?? paletteText;
+  const paletteEntryBorder = palette.entryBorder ?? 'transparent';
+  const paletteEntryHoverBackground = palette.entryHoverBackground ?? (paletteEntryBackground === 'transparent' ? paletteBackground : paletteEntryBackground);
+  const paletteEntryHoverText = palette.entryHoverText ?? paletteEntryText;
+  const paletteEntryHoverBorder = palette.entryHoverBorder ?? paletteEntryBorder;
+  const paletteEntryHoverShadow = palette.entryHoverShadow ?? 'none';
+  const paletteEntryActiveBackground = palette.entryActiveBackground ?? colors.accent ?? paletteEntryHoverBackground;
+  const paletteEntryActiveText = palette.entryActiveText ?? paletteEntryHoverText;
+  const paletteEntryActiveBorder = palette.entryActiveBorder ?? colors.accent ?? paletteEntryHoverBorder;
+  const paletteEntryActiveShadow = palette.entryActiveShadow ?? paletteEntryHoverShadow;
+
   const popupMenuConfig = bpmn.popupMenu ?? {};
   const popupBackground = popupMenuConfig.background ?? colors.surface ?? '#fff';
   const popupText = popupMenuConfig.text ?? colors.foreground ?? '#000';
@@ -1168,6 +1188,65 @@ currentTheme.subscribe(theme => {
     #canvas .djs-parent {
       --context-pad-entry-background-color: ${quickMenu.background ?? colors.surface ?? 'transparent'};
       --context-pad-entry-hover-background-color: ${quickMenu.hoverBackground ?? quickMenu.background ?? colors.primary ?? colors.surface ?? 'transparent'};
+    }
+
+    /* palette styling */
+    #palette {
+      background: ${paletteBackground} !important;
+      color: ${paletteText} !important;
+      border-right: 1px solid ${paletteBorder} !important;
+      box-shadow: ${paletteShadow} !important;
+    }
+
+    #palette .djs-palette,
+    #canvas .djs-palette {
+      background: ${paletteBackground} !important;
+      color: ${paletteText} !important;
+      border: 1px solid ${paletteBorder} !important;
+      box-shadow: ${paletteShadow} !important;
+    }
+
+    #palette .djs-palette-entries,
+    #canvas .djs-palette .djs-palette-entries,
+    #palette .djs-palette .group,
+    #canvas .djs-palette .group {
+      background: ${paletteGroupBackground} !important;
+      color: ${paletteGroupText} !important;
+      border-color: ${paletteGroupBorder} !important;
+    }
+
+    #palette .djs-palette .group .group-title,
+    #palette .djs-palette .group > h3,
+    #canvas .djs-palette .group .group-title,
+    #canvas .djs-palette .group > h3 {
+      color: ${paletteGroupText} !important;
+      border-bottom: 1px solid ${paletteGroupBorder} !important;
+    }
+
+    #palette .djs-palette .entry,
+    #canvas .djs-palette .entry {
+      background: ${paletteEntryBackground} !important;
+      color: ${paletteEntryText} !important;
+      border: 1px solid ${paletteEntryBorder} !important;
+      box-shadow: none !important;
+    }
+
+    #palette .djs-palette .entry:hover,
+    #palette .djs-palette .entry:focus,
+    #canvas .djs-palette .entry:hover,
+    #canvas .djs-palette .entry:focus {
+      background: ${paletteEntryHoverBackground} !important;
+      color: ${paletteEntryHoverText} !important;
+      border-color: ${paletteEntryHoverBorder} !important;
+      box-shadow: ${paletteEntryHoverShadow} !important;
+    }
+
+    #palette .djs-palette .entry.active,
+    #canvas .djs-palette .entry.active {
+      background: ${paletteEntryActiveBackground} !important;
+      color: ${paletteEntryActiveText} !important;
+      border-color: ${paletteEntryActiveBorder} !important;
+      box-shadow: ${paletteEntryActiveShadow} !important;
     }
 
     /* ── base shape styles ──────────────────────────────────────────────── */

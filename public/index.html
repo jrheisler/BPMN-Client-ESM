@@ -55,6 +55,14 @@
     box-sizing: border-box;
   }
 
+  #palette {
+    background: var(--palette-background, transparent);
+    color: var(--palette-text, inherit);
+    border-right: 1px solid var(--palette-border, transparent);
+    box-shadow: var(--palette-shadow, none);
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
   /* properties sidebar */
   .props-sidebar {
     position: fixed;
@@ -130,7 +138,7 @@
       width: 70%;
       max-width: 300px;
       overflow-y: auto;
-      background: #fff;
+      background: var(--palette-background, #fff);
       z-index: 1000;
     }
 
