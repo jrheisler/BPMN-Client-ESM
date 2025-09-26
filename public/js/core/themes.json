@@ -111,6 +111,232 @@
       "monospace": "monospace"
     }
   },
+  "desertSunset": {
+    "name": "Desert Sunset",
+    "colors": {
+      "background": "#2b1b17",
+      "foreground": "#f4e7d4",
+      "primary": "#3b2a24",
+      "accent": "#f97316",
+      "accent2": "#facc15",
+      "surface": "#3f2d28",
+      "border": "#8c6849",
+      "muted": "#d6bfa3",
+      "ok": "#34d399",
+      "warn": "#fbbf24",
+      "err": "#f87171"
+    },
+    "bpmn": {
+      "shape": {
+        "fill": "#3b2a24",
+        "stroke": "#f4e7d4",
+        "strokeWidth": 2
+      },
+      "connection": {
+        "stroke": "#facc15",
+        "strokeWidth": 2
+      },
+      "marker": {
+        "fill": "#f97316",
+        "stroke": "#facc15"
+      },
+      "label": {
+        "fontFamily": "system-ui, sans-serif",
+        "fill": "#f4e7d4"
+      },
+      "selected": {
+        "stroke": "#facc15",
+        "strokeWidth": 3
+      },
+      "palette": {
+        "background": "#34221d",
+        "text": "#f4e7d4",
+        "border": "#8c6849",
+        "shadow": "0 4px 12px rgba(0, 0, 0, 0.45)",
+        "groupBackground": "#34221d",
+        "groupText": "#f97316",
+        "groupBorder": "#8c6849",
+        "entryBackground": "transparent",
+        "entryText": "#f4e7d4",
+        "entryBorder": "#8c6849",
+        "entryHoverBackground": "#433027",
+        "entryHoverText": "#facc15",
+        "entryHoverBorder": "#f97316",
+        "entryHoverShadow": "0 2px 6px rgba(0, 0, 0, 0.5)",
+        "entryActiveBackground": "#f97316",
+        "entryActiveText": "#2b1b17",
+        "entryActiveBorder": "#f97316",
+        "entryActiveShadow": "0 0 0 2px rgba(250, 204, 21, 0.35)"
+      },
+      "startEvent": {
+        "fill": "#34d399",
+        "stroke": "#f4e7d4"
+      },
+      "endEvent": {
+        "fill": "#f87171",
+        "stroke": "#f4e7d4"
+      },
+      "task": {
+        "fill": "#3b2a24",
+        "stroke": "#8c6849"
+      },
+      "gateway": {
+        "fill": "#f97316",
+        "stroke": "#8c6849"
+      },
+      "quickMenu": {
+        "background": "#34221d",
+        "hoverBackground": "#433027",
+        "text": "#facc15",
+        "hoverText": "#f4e7d4",
+        "border": "#8c6849",
+        "hoverBorder": "#f97316",
+        "shadow": "0 2px 4px rgba(0, 0, 0, 0.45)",
+        "hoverShadow": "0 4px 8px rgba(0, 0, 0, 0.55)"
+      },
+      "popupMenu": {
+        "background": "#34221d",
+        "hoverBackground": "#433027",
+        "text": "#f4e7d4",
+        "hoverText": "#facc15",
+        "border": "#8c6849",
+        "hoverBorder": "#f97316",
+        "shadow": "0 10px 24px rgba(0, 0, 0, 0.65)",
+        "hoverShadow": "0 12px 28px rgba(0, 0, 0, 0.7)",
+        "searchBackground": "#3b2a24",
+        "searchText": "#f4e7d4",
+        "searchPlaceholder": "#d6bfa3",
+        "searchBorder": "#8c6849",
+        "searchFocusShadow": "0 0 0 1px rgba(249, 115, 22, 0.55)"
+      }
+    },
+    "modals": {
+      "diagramPicker": {
+        "background": "#34221d",
+        "hoverBackground": "#433027",
+        "border": "#8c6849",
+        "textMuted": "#d6bfa3",
+        "deleteIcon": "#f87171"
+      }
+    },
+    "fonts": {
+      "base": "system-ui, sans-serif",
+      "monospace": "monospace"
+    }
+  },
+  "desertSunrise": {
+    "name": "Desert Sunrise",
+    "colors": {
+      "background": "#f8e1c4",
+      "foreground": "#3f2d20",
+      "primary": "#f3d6b3",
+      "accent": "#d97706",
+      "accent2": "#2d8f8f",
+      "surface": "#fff4e6",
+      "border": "#d7b38a",
+      "muted": "#7a5a3b",
+      "ok": "#2f855a",
+      "warn": "#c05621",
+      "err": "#c53030"
+    },
+    "bpmn": {
+      "shape": {
+        "fill": "#fff4e6",
+        "stroke": "#d7b38a",
+        "strokeWidth": 2
+      },
+      "connection": {
+        "stroke": "#3f2d20",
+        "strokeWidth": 2
+      },
+      "marker": {
+        "fill": "#d97706",
+        "stroke": "#a16205"
+      },
+      "label": {
+        "fontFamily": "system-ui, sans-serif",
+        "fill": "#3f2d20"
+      },
+      "selected": {
+        "stroke": "#2d8f8f",
+        "strokeWidth": 3
+      },
+      "palette": {
+        "background": "#fff4e6",
+        "text": "#3f2d20",
+        "border": "#d7b38a",
+        "shadow": "0 4px 12px rgba(0, 0, 0, 0.1)",
+        "groupBackground": "#fff4e6",
+        "groupText": "#d97706",
+        "groupBorder": "#d7b38a",
+        "entryBackground": "transparent",
+        "entryText": "#3f2d20",
+        "entryBorder": "#e4c8a1",
+        "entryHoverBackground": "#fde4c9",
+        "entryHoverText": "#d97706",
+        "entryHoverBorder": "#d97706",
+        "entryHoverShadow": "0 2px 6px rgba(217, 119, 6, 0.15)",
+        "entryActiveBackground": "#2d8f8f",
+        "entryActiveText": "#fff4e6",
+        "entryActiveBorder": "#2d8f8f",
+        "entryActiveShadow": "0 0 0 2px rgba(45, 143, 143, 0.25)"
+      },
+      "startEvent": {
+        "fill": "#2f855a",
+        "stroke": "#d7b38a"
+      },
+      "endEvent": {
+        "fill": "#c53030",
+        "stroke": "#d7b38a"
+      },
+      "task": {
+        "fill": "#f3d6b3",
+        "stroke": "#d7b38a"
+      },
+      "gateway": {
+        "fill": "#d97706",
+        "stroke": "#d7b38a"
+      },
+      "quickMenu": {
+        "background": "#fff4e6",
+        "hoverBackground": "#fde4c9",
+        "text": "#3f2d20",
+        "hoverText": "#2d8f8f",
+        "border": "#d7b38a",
+        "hoverBorder": "#2d8f8f",
+        "shadow": "0 2px 4px rgba(0, 0, 0, 0.18)",
+        "hoverShadow": "0 4px 8px rgba(0, 0, 0, 0.2)"
+      },
+      "popupMenu": {
+        "background": "#fff4e6",
+        "hoverBackground": "#fde4c9",
+        "text": "#3f2d20",
+        "hoverText": "#2d8f8f",
+        "border": "#d7b38a",
+        "hoverBorder": "#2d8f8f",
+        "shadow": "0 10px 24px rgba(0, 0, 0, 0.2)",
+        "hoverShadow": "0 12px 28px rgba(0, 0, 0, 0.25)",
+        "searchBackground": "#f3d6b3",
+        "searchText": "#3f2d20",
+        "searchPlaceholder": "#7a5a3b",
+        "searchBorder": "#d7b38a",
+        "searchFocusShadow": "0 0 0 1px rgba(45, 143, 143, 0.35)"
+      }
+    },
+    "modals": {
+      "diagramPicker": {
+        "background": "#fff4e6",
+        "hoverBackground": "#fde4c9",
+        "border": "#d7b38a",
+        "textMuted": "#7a5a3b",
+        "deleteIcon": "#c53030"
+      }
+    },
+    "fonts": {
+      "base": "system-ui, sans-serif",
+      "monospace": "monospace"
+    }
+  },
   "light": {
     "name": "Light",
     "colors": {
