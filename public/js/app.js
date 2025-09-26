@@ -1174,6 +1174,9 @@ currentTheme.subscribe(theme => {
   const taskStroke = task.stroke ?? shapeStroke;
   const gatewayFill = gateway.fill ?? shapeFill;
   const gatewayStroke = gateway.stroke ?? shapeStroke;
+  const connectionStrokeValue = connection.stroke ?? colors.accent ?? colors.foreground ?? shapeStroke ?? '#000';
+  const markerFillValue = marker.fill ?? marker.accent ?? colors.accent ?? connectionStrokeValue ?? colors.foreground ?? '#000';
+  const markerStrokeValue = marker.stroke ?? marker.outline ?? colors.foreground ?? colors.accent ?? connectionStrokeValue ?? '#000';
 
   bpmnThemeStyle.textContent = `
     /* canvas background */
@@ -1298,12 +1301,12 @@ currentTheme.subscribe(theme => {
     /* ── connections & arrows ───────────────────────────────────────────── */
     .djs-connection .djs-connection-inner,
     .djs-connection .djs-connection-outer {
-      stroke: ${connection.stroke ?? shapeStroke} !important;
+      stroke: ${connectionStrokeValue} !important;
       stroke-width: ${connection.strokeWidth ?? shapeStrokeWidth}px !important;
     }
     .djs-connection .djs-marker {
-      fill: ${marker.fill ?? connection.stroke ?? shapeStroke} !important;
-      stroke: ${marker.stroke ?? connection.stroke ?? shapeStroke} !important;
+      fill: ${markerFillValue} !important;
+      stroke: ${markerStrokeValue} !important;
     }
 
     /* ── selected styles ───────────────────────────────────────────────── */
