@@ -27,20 +27,50 @@ function validateThemes(data) {
   return valid;
 }
 
-export const themesLoaded = fetch('./js/core/themes.json')
-  .then(r => r.json())
+const themeDataPromise =
+  typeof window === 'undefined' || typeof fetch !== 'function'
+    ? Promise.resolve({})
+    : fetch('./js/core/themes.json')
+        .then(r => r.json())
+        .catch(err => {
+          console.error('Failed to fetch themes.json', err);
+          return {};
+        });
+
+export const themesLoaded = themeDataPromise
   .then(json => {
     themes = validateThemes(json);
-    const initial =
-      themes.dark ||
-      Object.values(themes)[0] ||
-      { colors: {}, fonts: {} };
+    const initial = getPreferredDarkTheme() || { colors: {}, fonts: {} };
     currentTheme.set(initial);
+    maybeApplyThemeToPage(initial);
     return themes;
   })
   .catch(err => {
     console.error('Failed to load themes.json', err);
   });
+
+function getThemeEntries() {
+  return Object.entries(themes);
+}
+
+function getPreferredDarkTheme() {
+  return themes.desertSunset || themes.dark || getThemeEntries()[0]?.[1];
+}
+
+function getPreferredLightTheme() {
+  return themes.desertSunrise || themes.light || getThemeEntries()[0]?.[1];
+}
+
+function getPreferredDarkKey() {
+  if (themes.desertSunset) return 'desertSunset';
+  if (themes.dark) return 'dark';
+  return getThemeEntries()[0]?.[0];
+}
+
+function getThemeKeyByValue(themeObj) {
+  const entry = getThemeEntries().find(([, theme]) => theme === themeObj);
+  return entry ? entry[0] : null;
+}
 
 export function applyTheme(el, options = {}) {
   const {
@@ -78,11 +108,27 @@ export function themeToggleButton() {
   button.onclick = () => {
     themesLoaded.then(() => {
       const current = currentTheme.get();
-      const next = current === themes.dark ? themes.light : themes.dark;
+      const preferredDark = getPreferredDarkTheme();
+      const preferredLight = getPreferredLightTheme();
+      const pair = [...new Set([preferredDark, preferredLight].filter(Boolean))];
+      if (pair.length === 0) {
+        console.warn('Toggle theme failed: themes not loaded');
+        return;
+      }
+      let next;
+      const currentIndex = pair.findIndex(theme => theme === current);
+      if (currentIndex === -1 || pair.length === 1) {
+        next = pair[0];
+      } else {
+        next = pair[(currentIndex + 1) % pair.length];
+      }
       if (next) {
         currentTheme.set(next);
-      } else {
-        console.warn('Toggle theme failed: themes not loaded');
+        maybeApplyThemeToPage(next);
+        const nextKey = getThemeKeyByValue(next);
+        if (nextKey) {
+          localStorage.setItem('theme', nextKey);
+        }
       }
     });
   };
@@ -110,13 +156,16 @@ export function themedThemeSelector(themeStream = currentTheme) {
       select.appendChild(option);
     });
 
-    const savedKey = localStorage.getItem('theme') || 'dark';
+    const savedKey = localStorage.getItem('theme');
+    const fallbackKey = getPreferredDarkKey() || getThemeEntries()[0]?.[0];
+    const selectedKey = themes[savedKey] ? savedKey : fallbackKey;
     const selectedTheme =
-      themes[savedKey] || themes.dark || Object.values(themes)[0];
-    if (selectedTheme) {
-      currentTheme.set(selectedTheme);
-      applyThemeToPage(selectedTheme);
-      select.value = savedKey;
+      themes[selectedKey] || getPreferredDarkTheme() || { colors: {}, fonts: {} };
+    currentTheme.set(selectedTheme);
+    maybeApplyThemeToPage(selectedTheme);
+    const keyToSelect = getThemeKeyByValue(selectedTheme);
+    if (keyToSelect) {
+      select.value = keyToSelect;
     }
   });
 
@@ -142,7 +191,7 @@ export function themedThemeSelector(themeStream = currentTheme) {
     if (newTheme) {
       localStorage.setItem('theme', newKey);
       currentTheme.set(newTheme);
-      applyThemeToPage(newTheme);
+      maybeApplyThemeToPage(newTheme);
     } else {
       console.warn(`Theme "${newKey}" not found`);
     }
@@ -208,5 +257,18 @@ export function applyThemeToPage(theme, container = document.body) {
 
   container.style.webkitFontSmoothing = 'antialiased';
   container.style.mozOsxFontSmoothing = 'grayscale';
+}
+
+function maybeApplyThemeToPage(theme) {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  const container = document.body;
+  if (!container || !container.style || typeof container.style.setProperty !== 'function') {
+    return;
+  }
+
+  applyThemeToPage(theme, container);
 }
 
