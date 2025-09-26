@@ -24,8 +24,8 @@
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#f2e7ff",
-        "stroke": "#bb86fc"
+        "fill": "#f9f2ff",
+        "stroke": "#e6d4ff"
       },
       "label": {
         "fontFamily": "system-ui, sans-serif",
@@ -916,12 +916,12 @@
         "strokeWidth": 2
       },
       "connection": {
-        "stroke": "#64ffda",
+        "stroke": "#36d9b7",
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#1de9b6",
-        "stroke": "#e0fff9"
+        "fill": "#b2fff2",
+        "stroke": "#e8fffb"
       },
       "label": {
         "fontFamily": "Helvetica Neue, sans-serif",
