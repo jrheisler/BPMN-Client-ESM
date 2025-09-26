@@ -433,7 +433,7 @@ Here’s the documentation for the theme-related code you provided:
 * **Description**: This JSON file defines multiple theme configurations for the application. Each theme contains color settings for UI elements, BPMN (Business Process Model and Notation) styling, and font settings for general text and monospace fonts.
 * **Properties**:
 
-  * **`name`**: The name of the theme (e.g., 'Dark', 'Light', 'Ocean').
+  * **`name`**: The name of the theme (e.g., 'Dark', 'Light', 'Solarized Dark').
   * **`colors`**: An object containing various color values for the background, foreground, primary, accent, surface, and border.
   * **`bpmn`**: An object defining the styles for BPMN elements such as shapes, connections, markers, labels, and selected states.
   * **`fonts`**: An object defining the base font family and monospace font.
