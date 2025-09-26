@@ -24,8 +24,8 @@
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#d1b6ff",
-        "stroke": "#d1b6ff"
+        "fill": "#f2e7ff",
+        "stroke": "#bb86fc"
       },
       "label": {
         "fontFamily": "system-ui, sans-serif",
@@ -136,8 +136,8 @@
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#222222",
-        "stroke": "#222222"
+        "fill": "#6200ee",
+        "stroke": "#3700b3"
       },
       "label": {
         "fontFamily": "system-ui, sans-serif",
@@ -248,8 +248,8 @@
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#64ffda",
-        "stroke": "#64ffda"
+        "fill": "#00c9a7",
+        "stroke": "#e0fff9"
       },
       "label": {
         "fontFamily": "Roboto, sans-serif",
@@ -360,8 +360,8 @@
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#64ffda",
-        "stroke": "#64ffda"
+        "fill": "#2aa198",
+        "stroke": "#b2fff3"
       },
       "label": {
         "fontFamily": "Arial, sans-serif",
@@ -472,8 +472,8 @@
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#657b83",
-        "stroke": "#657b83"
+        "fill": "#268bd2",
+        "stroke": "#1d6ea5"
       },
       "label": {
         "fontFamily": "Georgia, serif",
@@ -584,8 +584,8 @@
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#64ffda",
-        "stroke": "#64ffda"
+        "fill": "#c8ffef",
+        "stroke": "#2de2b7"
       },
       "label": {
         "fontFamily": "Verdana, sans-serif",
@@ -696,7 +696,7 @@
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#ff7847",
+        "fill": "#ffd1c2",
         "stroke": "#ff7847"
       },
       "label": {
@@ -808,8 +808,8 @@
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#6b006b",
-        "stroke": "#6b006b"
+        "fill": "#ff69b4",
+        "stroke": "#b3007d"
       },
       "label": {
         "fontFamily": "Comic Sans MS, cursive",
@@ -920,8 +920,8 @@
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#64ffda",
-        "stroke": "#64ffda"
+        "fill": "#1de9b6",
+        "stroke": "#e0fff9"
       },
       "label": {
         "fontFamily": "Helvetica Neue, sans-serif",
@@ -1032,8 +1032,8 @@
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#2d2d2a",
-        "stroke": "#2d2d2a"
+        "fill": "#9bc1bc",
+        "stroke": "#4a6d69"
       },
       "label": {
         "fontFamily": "\"Courier Prime\", monospace",
@@ -1144,8 +1144,8 @@
         "strokeWidth": 2
       },
       "marker": {
-        "fill": "#00bfa5",
-        "stroke": "#00bfa5"
+        "fill": "#00ff00",
+        "stroke": "#003300"
       },
       "label": {
         "fontFamily": "\"Share Tech Mono\", monospace",
