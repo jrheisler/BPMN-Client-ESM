@@ -1,4 +1,11 @@
 
+.djs-container {
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+
 .djs-direct-editing-parent,
 .djs-direct-editing-content {
   background: var(--panel);
