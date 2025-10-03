@@ -132,6 +132,7 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
   const modeling        = modeler.get('modeling');
   const elementRegistry = modeler.get('elementRegistry');
   const selectionService= modeler.get('selection');
+  const alignElements   = modeler.get('alignElements');
   const canvas          = modeler.get('canvas');
   const eventBus        = modeler.get('eventBus');
   const overlays        = modeler.get('overlays');
@@ -1059,6 +1060,33 @@ function buildDropdownOptions() {
         showToast('Evenly distributed timeline markers.', { type: 'success' });
       },
       { outline: true, title: 'Timeline tools', 'aria-label': 'Timeline tools' }
+    )
+  );
+  controls.push(
+    reactiveButton(
+      new Stream('📐'),
+      () => {
+        const selected = selectionService?.get?.() ?? [];
+        const selectedElements = Array.isArray(selected) ? selected : [];
+
+        if (!alignElements?.trigger) {
+          showToast('Alignment tools are unavailable in this modeler instance.', { type: 'error' });
+          return;
+        }
+
+        if (selectedElements.length < 2) {
+          showToast('Select at least two elements to align.', { type: 'warning' });
+          return;
+        }
+
+        alignElements.trigger(selectedElements, 'middle');
+        showToast('Aligned selected elements.', { type: 'success' });
+      },
+      {
+        outline: true,
+        title: 'Align selected elements',
+        'aria-label': 'Align selected elements'
+      }
     )
   );
   controls.push(themedThemeSelector());
