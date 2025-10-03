@@ -8,6 +8,7 @@ import { openDiagramPickerModal, promptDiagramMetadata, selectVersionModal } fro
 import { Stream } from './core/stream.js';
 import { currentTheme, applyThemeToPage, themedThemeSelector } from './core/theme.js';
 import BpmnSnapping from 'bpmn-js/lib/features/snapping';
+import GridSnappingModule from 'diagram-js/lib/features/grid-snapping';
 import './addons/store.js';
 import './palette-toggle.js';
 import { row } from './components/layout.js';
@@ -110,7 +111,8 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
 
   const additionalModules = [
     customReplaceModule,
-    BpmnSnapping
+    BpmnSnapping,
+    GridSnappingModule
   ];
   if (navModule) additionalModules.push(navModule);
 
@@ -121,8 +123,9 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
     container:       canvasEl,
     selection:       { mode: 'multiple' },
     additionalModules,
+    gridSnapping:    { active: true },
     moddleExtensions: { custom: customModdle }
-    });
+  });
   // ─── expose services ────────────────────────────────────────────────────────
   const moddle          = modeler.get('moddle');
   const elementFactory  = modeler.get('elementFactory');
