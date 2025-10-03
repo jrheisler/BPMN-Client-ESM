@@ -67,6 +67,7 @@
   top: 0.25rem;
   color: var(--addon-icon-color);
   transition: transform 0.2s;
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif;
 }
 
 .addon-filter .expanded > .addon-type-header::before {
@@ -92,6 +93,7 @@
   width: 1rem;
   margin-right: 0.25rem;
   text-align: center;
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif;
 }
 
 .diagram-tree-kind-node::before {
@@ -240,21 +242,25 @@
 .token-entry-start::before {
   content: '🟢';
   margin-right: 0.25rem;
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif;
 }
 
 .token-entry-end::before {
   content: '🔴';
   margin-right: 0.25rem;
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif;
 }
 
 .token-entry-task::before {
   content: '🛠️';
   margin-right: 0.25rem;
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif;
 }
 
 .token-entry-gateway::before {
   content: '◇';
   margin-right: 0.25rem;
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif;
 }
 
 .token-entry-new {
