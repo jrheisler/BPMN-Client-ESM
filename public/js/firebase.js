@@ -1,5 +1,10 @@
 const firebaseConfig = {
-  // TODO: replace with your Firebase project configuration
+  apiKey: "AIzaSyAx5LSkCZpE157lhflrrLtD0sG2-grxbiY",
+  authDomain: "flow-control-center.firebaseapp.com",
+  projectId: "flow-control-center",
+  storageBucket: "flow-control-center.firebasestorage.app",
+  messagingSenderId: "739617076077",
+  appId: "1:739617076077:web:7ba2def0df169471a92064"
 };
 
 let firebaseInitPromise = null;
