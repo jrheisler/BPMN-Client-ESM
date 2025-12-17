@@ -8,7 +8,8 @@ export const logUser = new Stream('👤 Login');
 export let currentUser = null;
 window.currentUser = currentUser;
 
-export function authMenuOption({ avatarStream, showSaveButton, currentTheme, rebuildMenu }) {
+export function authMenuOption({ avatarStream, showSaveButton, currentTheme, rebuildMenu, onLogin }) {
+  const handleLogin = typeof onLogin === 'function' ? onLogin : () => {};
   return {
     label: logUser.get(),
     onClick: async () => {
@@ -41,6 +42,7 @@ export function authMenuOption({ avatarStream, showSaveButton, currentTheme, reb
             avatarStream.set('flowLoggedIn.png');
             showSaveButton.set(true);
             rebuildMenu();
+            handleLogin();
           }
         });
       }

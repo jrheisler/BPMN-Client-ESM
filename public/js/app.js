@@ -781,142 +781,148 @@ showSaveButton.subscribe(d => {
 
 let rebuildMenu = () => {};
 
+function showDiagramPickerDialog() {
+  openDiagramPickerModal().subscribe(result => {
+    if (result === null) {
+      return;
+    }
+
+    if (result.new) {
+      currentDiagramId = null;
+      diagramDataStream.set(null);
+      diagramName = null;
+      diagramVersion = 1;
+      nameStream.set(diagramName);
+      notesStream.set(null);
+      versionStream.set(diagramVersion); // wherever version is selected
+      clearModeler();
+      return;
+    }
+
+    const { id, data } = result;
+    currentDiagramId = id;
+
+    // size check
+    // Assuming result.data is the diagram data that was fetched from Firestore
+    const diagramData = result.data;
+
+    // Convert diagram data to JSON string
+    const diagramDataJson = JSON.stringify(diagramData);
+
+    // Get the size of the JSON string in bytes
+    const dataSizeInBytes = new Blob([diagramDataJson]).size;
+
+    // Firestore document size limit (in bytes)
+    const firestoreLimit = 1048576; // 1MB in bytes
+
+    // Check if the size is approaching the limit
+    if (dataSizeInBytes > firestoreLimit * 0.9) {
+      showToast(`Warning: Diagram data size is approaching the Firestore 1MB limit. Current size: ${dataSizeInBytes} bytes`, { type: 'warning' });
+    } else {
+      showToast(`Diagram data size is within limits. Current size: ${dataSizeInBytes} bytes`, { type: 'warning' });
+    }
+
+    // Set the diagram data
+    diagramDataStream.set(diagramData);
+
+    // Handle diagram name and versioning
+    diagramName = data.name || `Untitled (${id})`;
+    nameStream.set(diagramName);
+
+    // Handling versions
+    const versions = data.versions || [];
+
+    if (!versions.length) {
+      showToast("Diagram has no versions", { type: 'warning' });
+      return;
+    }
+
+    // Build choices for the dropdown
+    const versionChoices = versions.map((ver, index) => ({
+      value: index.toString(),
+      label: `Version ${index + 1} — ${new Date(ver.timestamp).toLocaleString()}`
+    })).reverse();
+
+    versionStream.set((versions.length - 1).toString()); // Default to latest version
+    const dropdown = dropdownStream(versionStream, {
+      choices: versionChoices,
+      width: '100%',
+      margin: '0.5rem 0'
+    });
+
+    // Handle confirm button click (loading selected version)
+    const confirmBtn = reactiveButton(new Stream("📥 Load Selected Version"), async () => {
+      const selectedIndex = parseInt(versionStream.get(), 10);
+      const selectedVersion = versions[selectedIndex];
+
+      if (selectedVersion?.xml) {
+        diagramVersion = selectedIndex + 1;
+        versionStream.set(diagramVersion); // wherever version is selected
+
+        await importXml(selectedVersion.xml);
+        if (selectedVersion.addOns) {
+          loadAddOnData(selectedVersion.addOns);
+        } else {
+          syncAddOnStoreFromElements();
+        }
+      } else {
+        showToast("Selected version has no XML", { type: 'warning' });
+      }
+
+      modal.remove();
+      }, { accent: true }, currentTheme);
+
+      const modal = document.createElement('div');
+      Object.assign(modal.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: '9999'
+      });
+
+      const box = document.createElement('div');
+      Object.assign(box.style, {
+        backgroundColor: currentTheme.get().colors.surface,
+        color: currentTheme.get().colors.foreground,
+        padding: '1.5rem',
+        borderRadius: '12px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+        minWidth: '360px',
+        fontFamily: currentTheme.get().fonts?.base || 'system-ui, sans-serif',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+      });
+
+      const label = document.createElement('label');
+      label.textContent = `Choose version for "${diagramName}"`;
+      label.style.fontWeight = 'bold';
+      box.appendChild(label);
+
+      box.appendChild(dropdown);
+      box.appendChild(confirmBtn);
+      modal.appendChild(box);
+      document.body.appendChild(modal);
+
+      modal.addEventListener('click', e => {
+        if (e.target === modal) modal.remove();
+      });
+  });
+}
+
 // Example dropdown options (choices)
 function buildDropdownOptions() {
-  return [        
+  return [
         ...(currentUser ? [
         {
         label: "📋 Select or New Diagram",
-        onClick: () => {
-          openDiagramPickerModal().subscribe(result => {
-            if (result === null) {
-            } else if (result.new) {
-              currentDiagramId = null;
-              diagramDataStream.set(null);
-              diagramName = null;
-              diagramVersion = 1;
-              nameStream.set(diagramName);
-              notesStream.set(null); 
-              versionStream.set(diagramVersion); // wherever version is selected
-              clearModeler();
-            } else {
-               const { id, data } = result;
-              currentDiagramId = id;
-
-              // size check
-              // Assuming result.data is the diagram data that was fetched from Firestore
-              const diagramData = result.data;
-
-              // Convert diagram data to JSON string
-              const diagramDataJson = JSON.stringify(diagramData);
-
-              // Get the size of the JSON string in bytes
-              const dataSizeInBytes = new Blob([diagramDataJson]).size;
-
-              // Firestore document size limit (in bytes)
-              const firestoreLimit = 1048576; // 1MB in bytes
-
-              // Check if the size is approaching the limit
-              if (dataSizeInBytes > firestoreLimit * 0.9) {
-                showToast(`Warning: Diagram data size is approaching the Firestore 1MB limit. Current size: ${dataSizeInBytes} bytes`, { type: 'warning' });
-              } else {
-                showToast(`Diagram data size is within limits. Current size: ${dataSizeInBytes} bytes`, { type: 'warning' });
-              }
-
-              // Set the diagram data
-              diagramDataStream.set(diagramData);
-
-              // Handle diagram name and versioning
-              diagramName = data.name || `Untitled (${id})`;
-              nameStream.set(diagramName);
-              
-              // Handling versions
-              const versions = data.versions || [];
-
-              if (!versions.length) {
-                showToast("Diagram has no versions", { type: 'warning' });
-                return;
-              }
-
-              // Build choices for the dropdown
-              const versionChoices = versions.map((ver, index) => ({
-                value: index.toString(),
-                label: `Version ${index + 1} — ${new Date(ver.timestamp).toLocaleString()}`
-              })).reverse();
-
-              versionStream.set((versions.length - 1).toString()); // Default to latest version
-              const dropdown = dropdownStream(versionStream, {
-                choices: versionChoices,
-                width: '100%',
-                margin: '0.5rem 0'
-              });
-
-              // Handle confirm button click (loading selected version)
-              const confirmBtn = reactiveButton(new Stream("📥 Load Selected Version"), async () => {
-                const selectedIndex = parseInt(versionStream.get(), 10);
-                const selectedVersion = versions[selectedIndex];
-
-                if (selectedVersion?.xml) {
-                  diagramVersion = selectedIndex + 1;
-                  versionStream.set(diagramVersion); // wherever version is selected
-
-                  await importXml(selectedVersion.xml);
-                  if (selectedVersion.addOns) {
-                    loadAddOnData(selectedVersion.addOns);
-                  } else {
-                    syncAddOnStoreFromElements();
-                  }
-                } else {
-                  showToast("Selected version has no XML", { type: 'warning' });
-                }
-
-                modal.remove();
-                }, { accent: true }, currentTheme);
-
-                const modal = document.createElement('div');
-                Object.assign(modal.style, {
-                  position: 'fixed',
-                  top: '0',
-                  left: '0',
-                  width: '100vw',
-                  height: '100vh',
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  zIndex: '9999'
-                });
-
-                const box = document.createElement('div');
-                Object.assign(box.style, {
-                  backgroundColor: currentTheme.get().colors.surface,
-                  color: currentTheme.get().colors.foreground,
-                  padding: '1.5rem',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '1rem',
-                  minWidth: '360px',
-                  fontFamily: currentTheme.get().fonts?.base || 'system-ui, sans-serif',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-                });
-
-                const label = document.createElement('label');
-                label.textContent = `Choose version for "${diagramName}"`;
-                label.style.fontWeight = 'bold';
-                box.appendChild(label);
-
-                box.appendChild(dropdown);
-                box.appendChild(confirmBtn);
-                modal.appendChild(box);
-                document.body.appendChild(modal);
-
-                modal.addEventListener('click', e => {
-                  if (e.target === modal) modal.remove();
-                });
-              }
-          });
-        }
+        onClick: showDiagramPickerDialog
       },
       {
         label: "🔁 Switch Version",            
@@ -981,7 +987,7 @@ function buildDropdownOptions() {
         }
       }
     },
-    authMenuOption({ avatarStream, showSaveButton, currentTheme, rebuildMenu })
+    authMenuOption({ avatarStream, showSaveButton, currentTheme, rebuildMenu, onLogin: showDiagramPickerDialog })
   ];
 }
 
