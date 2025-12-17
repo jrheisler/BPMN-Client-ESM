@@ -2,7 +2,7 @@ import { Stream } from '../core/stream.js';
 import { currentTheme } from '../core/theme.js';
 import { createModal } from '../components/modal.js';
 import { editText, reactiveButton } from '../components/index.js';
-import { auth, db } from '../firebase.js';
+import { getFirebase, showFirebaseLoading, hideFirebaseLoading } from '../firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -47,12 +47,17 @@ export function reactiveLoginModal(themeStream = currentTheme) {
       return;
     }
 
+    showFirebaseLoading('Signing in…');
+
     try {
+      const { auth } = await getFirebase();
       const userCred = await signInWithEmailAndPassword(auth, email, password);
       loginStream.set(userCred.user);
       modal.remove();
     } catch (err) {
       loginStream.set(new Error(err.message));
+    } finally {
+      hideFirebaseLoading();
     }
   }, { accent: true }, themeStream);
 
@@ -65,7 +70,10 @@ export function reactiveLoginModal(themeStream = currentTheme) {
       return;
     }
 
+    showFirebaseLoading('Creating account…');
+
     try {
+      const { auth, db } = await getFirebase();
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
 
       await setDoc(
@@ -82,6 +90,8 @@ export function reactiveLoginModal(themeStream = currentTheme) {
       modal.remove();
     } catch (err) {
       loginStream.set(new Error(err.message));
+    } finally {
+      hideFirebaseLoading();
     }
   }, { outline: true }, themeStream);
 

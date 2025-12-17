@@ -1,6 +1,6 @@
 import { Stream } from './core/stream.js';
 import { reactiveLoginModal } from './modals/index.js';
-import { auth } from './firebase.js';
+import { getFirebase, showFirebaseLoading, hideFirebaseLoading } from './firebase.js';
 import { signOut } from 'firebase/auth';
 import { showToast } from './components/index.js';
 
@@ -11,18 +11,24 @@ window.currentUser = currentUser;
 export function authMenuOption({ avatarStream, showSaveButton, currentTheme, rebuildMenu }) {
   return {
     label: logUser.get(),
-    onClick: () => {
+    onClick: async () => {
       if (currentUser) {
-        signOut(auth).then(() => {
+        showFirebaseLoading('Signing out…');
+
+        try {
+          const { auth } = await getFirebase();
+          await signOut(auth);
           logUser.set('👤 Login');
           avatarStream.set('flow.png');
           showSaveButton.set(false);
           currentUser = null;
           window.currentUser = currentUser;
           rebuildMenu();
-        }).catch(() => {
-          showToast('Logout failed: ', { type: 'error' });
-        });
+        } catch (err) {
+          showToast('Logout failed: ' + (err?.message || ''), { type: 'error' });
+        } finally {
+          hideFirebaseLoading();
+        }
       } else {
         const userStream = reactiveLoginModal(currentTheme);
         userStream.subscribe(result => {

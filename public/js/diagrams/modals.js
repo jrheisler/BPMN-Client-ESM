@@ -2,7 +2,7 @@ import { Stream } from '../core/stream.js';
 import { currentTheme } from '../core/theme.js';
 import { createModal } from '../components/modal.js';
 import { reactiveButton, dropdownStream, showConfirmationDialog, showToast } from '../components/index.js';
-import { db } from '../firebase.js';
+import { getFirebase, showFirebaseLoading, hideFirebaseLoading } from '../firebase.js';
 import { doc, getDoc, updateDoc, deleteDoc, arrayRemove } from 'firebase/firestore';
 
 export function openDiagramPickerModal(themeStream = currentTheme) {
@@ -32,8 +32,12 @@ export function openDiagramPickerModal(themeStream = currentTheme) {
   list.style.gap = '0.5rem';
   content.appendChild(list);
 
-  getDoc(doc(db, 'users', window.currentUser.uid))
-    .then(docSnap => {
+  const loadIndex = async () => {
+    showFirebaseLoading('Loading diagrams…');
+
+    try {
+      const { db } = await getFirebase();
+      const docSnap = await getDoc(doc(db, 'users', window.currentUser.uid));
       const userData = docSnap.data();
       const index = userData.diagrams || [];
 
@@ -90,7 +94,10 @@ export function openDiagramPickerModal(themeStream = currentTheme) {
             const confirmed = await showConfirmationDialog(`Are you sure you want to delete "${entry.name}"?`, themeStream);
             if (!confirmed) return;
 
+            showFirebaseLoading('Deleting diagram…');
+
             try {
+              const { db } = await getFirebase();
               const userRef = doc(db, 'users', window.currentUser.uid);
               const diagramRef = doc(db, 'users', window.currentUser.uid, 'diagrams', entry.id);
 
@@ -105,16 +112,27 @@ export function openDiagramPickerModal(themeStream = currentTheme) {
               item.remove();
             } catch (err) {
               showToast(`❌ Failed to delete diagram: ${err.message}`, { type: 'error' });
+            } finally {
+              hideFirebaseLoading();
             }
           });
 
           item.addEventListener('click', async () => {
-            const docSnap = await getDoc(doc(db, 'users', window.currentUser.uid, 'diagrams', entry.id));
+            showFirebaseLoading('Loading diagram…');
 
-            if (window.notesStream) window.notesStream.set(entry.notes);
+            try {
+              const { db } = await getFirebase();
+              const docSnap = await getDoc(doc(db, 'users', window.currentUser.uid, 'diagrams', entry.id));
 
-            pickStream.set({ id: entry.id, data: docSnap.data() });
-            modal.remove();
+              if (window.notesStream) window.notesStream.set(entry.notes);
+
+              pickStream.set({ id: entry.id, data: docSnap.data() });
+              modal.remove();
+            } catch (err) {
+              showToast(`❌ Failed to load diagram: ${err.message}`, { type: 'error' });
+            } finally {
+              hideFirebaseLoading();
+            }
           });
 
           item.addEventListener('mouseenter', () => item.style.backgroundColor = hoverBackgroundColor);
@@ -125,13 +143,17 @@ export function openDiagramPickerModal(themeStream = currentTheme) {
           list.appendChild(item);
         });
       }
-    })
-    .catch(err => {
+    } catch (err) {
       const error = document.createElement('p');
       error.textContent = "❌ Failed to load diagram index: " + err.message;
       error.style.color = 'red';
       list.appendChild(error);
-    });
+    } finally {
+      hideFirebaseLoading();
+    }
+  };
+
+  loadIndex();
 
   const btnRow = document.createElement('div');
   btnRow.style.display = 'flex';
