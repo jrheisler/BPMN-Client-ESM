@@ -78,3 +78,8 @@ export async function getFirebase() {
 
   return firebaseInitPromise;
 }
+
+// Provide an explicit named export map to ensure module systems can resolve
+// the Firebase helpers even if tree-shaking or minification happens in
+// hosting environments.
+export { getFirebase as default, getFirebase as firebaseClient, showFirebaseLoading, hideFirebaseLoading };
