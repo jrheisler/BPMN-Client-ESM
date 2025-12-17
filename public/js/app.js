@@ -12,7 +12,7 @@ import GridSnappingModule from 'diagram-js/lib/features/grid-snapping';
 import './addons/store.js';
 import './palette-toggle.js';
 import { row } from './components/layout.js';
-import { db } from './firebase.js';
+import { getFirebase, showFirebaseLoading, hideFirebaseLoading } from './firebase.js';
 import { doc, collection, updateDoc, setDoc, addDoc, getDoc, Timestamp, arrayUnion } from 'firebase/firestore';
 import { setupPageScaffolding, createHiddenFileInput } from './app/init.js';
 import { typeIcons, createOverlay, setupCanvasLayout, attachOverlay } from './app/overlay.js';
@@ -626,91 +626,102 @@ const saveBtn = reactiveButton(
 
       const localTimestamp = Date.now();
 
-      // If we have an existing diagram, update it
-      if (currentDiagramId) {
-        // 🔁 UPDATE EXISTING DIAGRAM
-        const diagramRef = doc(db, 'users', currentUser.uid, 'diagrams', currentDiagramId);
+      showFirebaseLoading('Saving diagram…');
 
-        // Add the new version to the diagram
-        await updateDoc(diagramRef, {
-          name: metadata.name, // Update diagram name
-          lastUpdated: Timestamp.fromMillis(localTimestamp), // Update lastUpdated
-          versions: arrayUnion({
-            xml, // Save XML data
-            timestamp: localTimestamp, // Timestamp of this version
-            notes: metadata.notes, // Save the updated notes
-            addOns: allAddOns
-          })
-        });
+      try {
+        const { db } = await getFirebase();
 
-        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        const diagrams = userDoc.data()?.diagrams || [];
+        // If we have an existing diagram, update it
+        if (currentDiagramId) {
+          // 🔁 UPDATE EXISTING DIAGRAM
+          const diagramRef = doc(db, 'users', currentUser.uid, 'diagrams', currentDiagramId);
 
-        const updatedIndex = diagrams.map(d =>
-          d.id === currentDiagramId
-            ? { ...d, name: metadata.name, notes: metadata.notes, lastUpdated: localTimestamp }
-            : d
-        );
+          // Add the new version to the diagram
+          await updateDoc(diagramRef, {
+            name: metadata.name, // Update diagram name
+            lastUpdated: Timestamp.fromMillis(localTimestamp), // Update lastUpdated
+            versions: arrayUnion({
+              xml, // Save XML data
+              timestamp: localTimestamp, // Timestamp of this version
+              notes: metadata.notes, // Save the updated notes
+              addOns: allAddOns
+            })
+          });
+
+          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+          const diagrams = userDoc.data()?.diagrams || [];
+
+          const updatedIndex = diagrams.map(d =>
+            d.id === currentDiagramId
+              ? { ...d, name: metadata.name, notes: metadata.notes, lastUpdated: localTimestamp }
+              : d
+          );
 
 
-        // Save the updated index list back to Firestore
-        await setDoc(
-          doc(db, 'users', currentUser.uid),
-          { diagrams: updatedIndex },
-          { merge: true }
-        );
+          // Save the updated index list back to Firestore
+          await setDoc(
+            doc(db, 'users', currentUser.uid),
+            { diagrams: updatedIndex },
+            { merge: true }
+          );
 
-        // Update local diagram metadata state
-        diagramDataStream.set({
-          ...currentDiagramData,
-          name: metadata.name, // Update name locally
-          notes: metadata.notes, // Update notes locally
-          lastUpdated: localTimestamp, // Update lastUpdated locally
-          versions: [...versions, { xml, timestamp: localTimestamp, notes: metadata.notes, addOns: allAddOns }]
-        });
+          // Update local diagram metadata state
+          diagramDataStream.set({
+            ...currentDiagramData,
+            name: metadata.name, // Update name locally
+            notes: metadata.notes, // Update notes locally
+            lastUpdated: localTimestamp, // Update lastUpdated locally
+            versions: [...versions, { xml, timestamp: localTimestamp, notes: metadata.notes, addOns: allAddOns }]
+          });
 
-      } else {
-        // 🆕 CREATE NEW DIAGRAM
-        const diagramRef = await addDoc(
-          collection(doc(db, 'users', currentUser.uid), 'diagrams'),
-          {
+        } else {
+          // 🆕 CREATE NEW DIAGRAM
+          const diagramRef = await addDoc(
+            collection(doc(db, 'users', currentUser.uid), 'diagrams'),
+            {
+              name: metadata.name || 'Untitled Diagram',
+              versions: [{ xml, timestamp: localTimestamp, notes: metadata.notes, addOns: allAddOns }],
+              lastUpdated: Timestamp.fromMillis(localTimestamp)
+            }
+          );
+
+          const newIndexEntry = {
+            id: diagramRef.id,
             name: metadata.name || 'Untitled Diagram',
-            versions: [{ xml, timestamp: localTimestamp, notes: metadata.notes, addOns: allAddOns }],
-            lastUpdated: Timestamp.fromMillis(localTimestamp)
-          }
-        );
+            notes: metadata.notes, // Ensure we add the notes
+            lastUpdated: localTimestamp
+          };
 
-        const newIndexEntry = {
-          id: diagramRef.id,
-          name: metadata.name || 'Untitled Diagram',
-          notes: metadata.notes, // Ensure we add the notes
-          lastUpdated: localTimestamp
-        };
+          // Add the new diagram to the user's index list
+          await setDoc(
+            doc(db, 'users', currentUser.uid),
+            {
+              diagrams: arrayUnion(newIndexEntry)
+            },
+            { merge: true }
+          );
 
-        // Add the new diagram to the user's index list
-        await setDoc(
-          doc(db, 'users', currentUser.uid),
-          {
-            diagrams: arrayUnion(newIndexEntry)
-          },
-          { merge: true }
-        );
+          // Update the diagram ID locally and metadata stream
+          currentDiagramId = diagramRef.id;
+          diagramDataStream.set({
+            ...currentDiagramData,
+            id: currentDiagramId,
+            name: metadata.name || 'Untitled Diagram',
+            notes: metadata.notes, // Update notes here as well
+            lastUpdated: localTimestamp,
+            versions: [{ xml, timestamp: localTimestamp, notes: metadata.notes, addOns: allAddOns }]
+          });
+        }
 
-        // Update the diagram ID locally and metadata stream
-        currentDiagramId = diagramRef.id;
-        diagramDataStream.set({
-          ...currentDiagramData,
-          id: currentDiagramId,
-          name: metadata.name || 'Untitled Diagram',
-          notes: metadata.notes, // Update notes here as well
-          lastUpdated: localTimestamp,
-          versions: [{ xml, timestamp: localTimestamp, notes: metadata.notes, addOns: allAddOns }]
-        });
+        // Set dirty state to false and show success toast
+        isDirty.set(false);
+        showToast("Diagram saved successfully!", { type: 'success' });
+      } catch (err) {
+        console.error('Failed to save diagram:', err);
+        showToast(`Failed to save diagram: ${err.message}`, { type: 'error' });
+      } finally {
+        hideFirebaseLoading();
       }
-
-      // Set dirty state to false and show success toast
-      isDirty.set(false);
-      showToast("Diagram saved successfully!", { type: 'success' });
     });
   },
   {

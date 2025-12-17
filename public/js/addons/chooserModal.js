@@ -2,8 +2,19 @@ import { Stream } from '../core/stream.js';
 import { currentTheme } from '../core/theme.js';
 import { editText, reactiveButton, dropdownStream, showConfirmationDialog, showToast } from '../components/index.js';
 import { column, row } from '../components/layout.js';
-import { db } from '../firebase.js';
+import { getFirebase, showFirebaseLoading, hideFirebaseLoading } from '../firebase.js';
 import { collection, doc, getDoc, addDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore';
+
+async function withDb(message, task) {
+  showFirebaseLoading(message);
+
+  try {
+    const { db } = await getFirebase();
+    return await task(db);
+  } finally {
+    hideFirebaseLoading();
+  }
+}
 
 function typeChoices(type) {
   let choices = [];
@@ -240,81 +251,85 @@ function openAddOnModal(mode = 'add', addOnData = null, themeStream = currentThe
       lastUpdated: serverTimestamp()
     };
 
-    const userRef = doc(db, 'users', window.currentUser.uid);
     try {
-      if (mode === 'add') {
-        const version = {
-          name: newAddOn.name,
-          notes: newAddOn.notes,
-          url: newAddOn.url,
-          type: newAddOn.type,
-          subtype: newAddOn.subtype,
-          timestamp: new Date().toISOString()
-        };
-        const ref = await addDoc(
-          collection(doc(db, 'users', window.currentUser.uid), 'addOns'),
-          {
-            versions: [version],
-            lastUpdated: serverTimestamp()
-          }
-        );
+      const version = await withDb(mode === 'add' ? 'Saving AddOn…' : 'Updating AddOn…', async db => {
+        const userRef = doc(db, 'users', window.currentUser.uid);
 
-        await updateDoc(userRef, {
-          addOns: arrayUnion({
-            address: ref.id,
-            type: newAddOn.type,
+        if (mode === 'add') {
+          const createdVersion = {
             name: newAddOn.name,
             notes: newAddOn.notes,
             url: newAddOn.url,
-            subtype: newAddOn.subtype
-          })
-        });
-
-        modalStream.set(version);
-        showToast("AddOn added!", { type: 'success' });
-      } else {
-        const version = {
-          name: newAddOn.name,
-          notes: newAddOn.notes,
-          url: newAddOn.url,
-          type: newAddOn.type,
-          subtype: newAddOn.subtype,
-          timestamp: new Date().toISOString()
-        };
-
-        await updateDoc(
-          doc(db, 'users', window.currentUser.uid, 'addOns', addOnData.id),
-          {
-            versions: arrayUnion(version),
-            lastUpdated: serverTimestamp()
-          }
-        );
-
-        await updateDoc(userRef, {
-          addOns: arrayRemove({
-            address: addOnData.id,
-            type: addOnData.type,
-            name: addOnData.name,
-            notes: addOnData.notes,
-            url: addOnData.url,
-            subtype: addOnData.subtype
-          })
-        });
-
-        await updateDoc(userRef, {
-          addOns: arrayUnion({
-            address: addOnData.id,
             type: newAddOn.type,
+            subtype: newAddOn.subtype,
+            timestamp: new Date().toISOString()
+          };
+          const ref = await addDoc(
+            collection(doc(db, 'users', window.currentUser.uid), 'addOns'),
+            {
+              versions: [createdVersion],
+              lastUpdated: serverTimestamp()
+            }
+          );
+
+          await updateDoc(userRef, {
+            addOns: arrayUnion({
+              address: ref.id,
+              type: newAddOn.type,
+              name: newAddOn.name,
+              notes: newAddOn.notes,
+              url: newAddOn.url,
+              subtype: newAddOn.subtype
+            })
+          });
+
+          return createdVersion;
+        } else {
+          const updatedVersion = {
             name: newAddOn.name,
             notes: newAddOn.notes,
             url: newAddOn.url,
-            subtype: newAddOn.subtype
-          })
-        });
+            type: newAddOn.type,
+            subtype: newAddOn.subtype,
+            timestamp: new Date().toISOString()
+          };
 
-        modalStream.set(version);
-        showToast("AddOn updated!", { type: 'success' });
-      }
+          await updateDoc(
+            doc(db, 'users', window.currentUser.uid, 'addOns', addOnData.id),
+            {
+              versions: arrayUnion(updatedVersion),
+              lastUpdated: serverTimestamp()
+            }
+          );
+
+          await updateDoc(userRef, {
+            addOns: arrayRemove({
+              address: addOnData.id,
+              type: addOnData.type,
+              name: addOnData.name,
+              notes: addOnData.notes,
+              url: addOnData.url,
+              subtype: addOnData.subtype
+            })
+          });
+
+          await updateDoc(userRef, {
+            addOns: arrayUnion({
+              address: addOnData.id,
+              type: newAddOn.type,
+              name: newAddOn.name,
+              notes: newAddOn.notes,
+              url: newAddOn.url,
+              subtype: newAddOn.subtype
+            })
+          });
+
+          return updatedVersion;
+        }
+      });
+
+      modalStream.set(version);
+      showToast(mode === 'add' ? "AddOn added!" : "AddOn updated!", { type: 'success' });
     } catch (err) {
       showToast("Error: " + err.message, { type: 'error' });
     } finally {
@@ -339,9 +354,11 @@ function openAddOnModal(mode = 'add', addOnData = null, themeStream = currentThe
 
 async function refreshAddOns() {
   try {
-    const snap = await getDoc(doc(db, 'users', window.currentUser.uid));
-    const list = (snap.data()?.addOns) || [];
-    window.addOnsStream.set(list);
+    await withDb('Loading AddOns…', async db => {
+      const snap = await getDoc(doc(db, 'users', window.currentUser.uid));
+      const list = (snap.data()?.addOns) || [];
+      window.addOnsStream.set(list);
+    });
   } catch (err) {
     console.error("Failed to fetch AddOns: ", err);
   }
@@ -513,19 +530,21 @@ export function openAddOnChooserModal(themeStream = currentTheme) {
 }
 
 async function loadLatestAddOnVersion(addOnId) {
-  const docSnap = await getDoc(doc(db, 'users', window.currentUser.uid, 'addOns', addOnId));
+  return withDb('Loading AddOn…', async db => {
+    const docSnap = await getDoc(doc(db, 'users', window.currentUser.uid, 'addOns', addOnId));
 
-  const data = docSnap.data();
-  if (!data || !data.versions || data.versions.length === 0) {
-    throw new Error("No versions found for this AddOn.");
-  }
+    const data = docSnap.data();
+    if (!data || !data.versions || data.versions.length === 0) {
+      throw new Error("No versions found for this AddOn.");
+    }
 
-  const latestVersion = data.versions[data.versions.length - 1];
+    const latestVersion = data.versions[data.versions.length - 1];
 
-  return {
-    ...latestVersion,
-    id: addOnId
-  };
+    return {
+      ...latestVersion,
+      id: addOnId
+    };
+  });
 }
 
 function openAddOnHistoryModal(addOnId, themeStream = currentTheme) {
@@ -573,50 +592,52 @@ function openAddOnHistoryModal(addOnId, themeStream = currentTheme) {
 
   const loadHistory = async () => {
     try {
-      const docSnap = await getDoc(doc(db, 'users', window.currentUser.uid, 'addOns', addOnId));
+      await withDb('Loading history…', async db => {
+        const docSnap = await getDoc(doc(db, 'users', window.currentUser.uid, 'addOns', addOnId));
 
-      const data = docSnap.data();
-      if (!data || !data.versions || data.versions.length === 0) {
-        const msg = document.createElement('p');
-        msg.textContent = "No versions found.";
-        versionsContainer.appendChild(msg);
-        return;
-      }
+        const data = docSnap.data();
+        if (!data || !data.versions || data.versions.length === 0) {
+          const msg = document.createElement('p');
+          msg.textContent = "No versions found.";
+          versionsContainer.appendChild(msg);
+          return;
+        }
 
-      versionsContainer.replaceChildren();
+        versionsContainer.replaceChildren();
 
-      data.versions.forEach((version, idx) => {
-        const versionItem = document.createElement('div');
-        Object.assign(versionItem.style, {
-          border: `1px solid ${themeStream.get().colors.border}`,
-          borderRadius: '6px',
-          padding: '0.5rem 1rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.3rem'
+        data.versions.forEach((version, idx) => {
+          const versionItem = document.createElement('div');
+          Object.assign(versionItem.style, {
+            border: `1px solid ${themeStream.get().colors.border}`,
+            borderRadius: '6px',
+            padding: '0.5rem 1rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.3rem'
+          });
+
+          const header = document.createElement('strong');
+          header.textContent = `Version ${idx + 1} — ${new Date(version.timestamp).toLocaleString()}`;
+          versionItem.appendChild(header);
+
+          const nameEl = document.createElement('div');
+          nameEl.textContent = `Name: ${version.name}`;
+          versionItem.appendChild(nameEl);
+
+          const typeEl = document.createElement('div');
+          typeEl.textContent = `Type: ${version.type}`;
+          versionItem.appendChild(typeEl);
+
+          const notesEl = document.createElement('div');
+          notesEl.textContent = `Notes: ${version.notes}`;
+          versionItem.appendChild(notesEl);
+
+          const urlEl = document.createElement('div');
+          urlEl.textContent = `URL: ${version.url || '—'}`;
+          versionItem.appendChild(urlEl);
+
+          versionsContainer.appendChild(versionItem);
         });
-
-        const header = document.createElement('strong');
-        header.textContent = `Version ${idx + 1} — ${new Date(version.timestamp).toLocaleString()}`;
-        versionItem.appendChild(header);
-
-        const nameEl = document.createElement('div');
-        nameEl.textContent = `Name: ${version.name}`;
-        versionItem.appendChild(nameEl);
-
-        const typeEl = document.createElement('div');
-        typeEl.textContent = `Type: ${version.type}`;
-        versionItem.appendChild(typeEl);
-
-        const notesEl = document.createElement('div');
-        notesEl.textContent = `Notes: ${version.notes}`;
-        versionItem.appendChild(notesEl);
-
-        const urlEl = document.createElement('div');
-        urlEl.textContent = `URL: ${version.url || '—'}`;
-        versionItem.appendChild(urlEl);
-
-        versionsContainer.appendChild(versionItem);
       });
     } catch (err) {
       const errorMsg = document.createElement('p');
