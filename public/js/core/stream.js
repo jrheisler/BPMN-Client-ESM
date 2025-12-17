@@ -1,11 +1,12 @@
 export class Stream {
   static onError = null;
+  static _nextId = 1;
 
   constructor(initial, options = {}) {
     this.subscribers = [];
     this.onError = options.onError ?? null;
-    this.id = options.id ?? options.name ?? options.streamName ?? null;
-    this.name = options.name ?? this.id ?? null;
+    this.id = options.id ?? Stream._nextId++;
+    this.name = options.name ?? options.streamName ?? null;
 
     if (
       typeof initial === 'object' &&
@@ -20,8 +21,7 @@ export class Stream {
       this.value = initial;
     }
 
-    this.id ??= this._key ?? null;
-    this.name ??= this.id;
+    this.name ??= this._key ?? null;
   }
 
   _reportError(err, context) {
@@ -41,7 +41,7 @@ export class Stream {
       }
     }
 
-    console.error('Stream error', errorContext.streamId || errorContext.streamName, err);
+    console.error('Stream error', { id: errorContext.streamId, name: errorContext.streamName }, err);
   }
 
   _safeInvoke(fn, value, phase, subscriberIndex) {
