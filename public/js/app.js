@@ -12,7 +12,7 @@ import GridSnappingModule from 'diagram-js/lib/features/grid-snapping';
 import './addons/store.js';
 import './palette-toggle.js';
 import { row } from './components/layout.js';
-import { getFirebase, showFirebaseLoading, hideFirebaseLoading } from './firebase.js';
+import * as firebaseModule from './firebase.js';
 import { doc, collection, updateDoc, setDoc, addDoc, getDoc, Timestamp, arrayUnion } from 'firebase/firestore';
 import { setupPageScaffolding, createHiddenFileInput } from './app/init.js';
 import { typeIcons, createOverlay, setupCanvasLayout, attachOverlay } from './app/overlay.js';
@@ -22,6 +22,14 @@ import { initializeAddOnServices, setupAvatarMenu } from './app/addons.js';
 import { bootstrapSimulation } from './app/simulation.js';
 import { promptTimelineEntryMetadata } from './timeline/entryModal.js';
 // Initialization function will handle dynamic imports and DOM setup later.
+
+const getFirebase = firebaseModule.getFirebase ?? firebaseModule.default;
+const showFirebaseLoading = firebaseModule.showFirebaseLoading ?? (() => {});
+const hideFirebaseLoading = firebaseModule.hideFirebaseLoading ?? (() => {});
+
+if (typeof getFirebase !== 'function') {
+  throw new Error('Firebase client failed to load. Ensure firebase.js exports getFirebase().');
+}
 
 // A reactive store of the current user’s addOns
 const addOnsStream = new Stream([]);
