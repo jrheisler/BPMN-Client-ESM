@@ -221,6 +221,10 @@ const { canvasEl, header } = shell;
     gridSnapping:    { active: true },
     moddleExtensions: { custom: customModdle }
   });
+
+  // Ensure any cloud loading indicator is cleared once a diagram finishes importing
+  modeler.on('import.done', hideFirebaseLoading);
+  modeler.on('import.error', hideFirebaseLoading);
   // ─── expose services ────────────────────────────────────────────────────────
   const moddle          = modeler.get('moddle');
   const elementFactory  = modeler.get('elementFactory');
