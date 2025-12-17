@@ -59,11 +59,15 @@ export function showFirebaseLoading(message = 'Connecting to cloud…') {
   }
 
   indicator.hidden = false;
+  indicator.style.display = 'flex';
+  indicator.setAttribute('aria-hidden', 'false');
 }
 
 export function hideFirebaseLoading() {
   const indicator = ensureFirebaseLoadingIndicator();
   indicator.hidden = true;
+  indicator.style.display = 'none';
+  indicator.setAttribute('aria-hidden', 'true');
 }
 
 export async function getFirebase() {
