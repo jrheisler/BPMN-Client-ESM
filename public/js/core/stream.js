@@ -1,6 +1,11 @@
 export class Stream {
-  constructor(initial) {
+  static onError = null;
+
+  constructor(initial, options = {}) {
     this.subscribers = [];
+    this.onError = options.onError ?? null;
+    this.id = options.id ?? options.name ?? options.streamName ?? null;
+    this.name = options.name ?? this.id ?? null;
 
     if (
       typeof initial === 'object' &&
@@ -14,11 +19,43 @@ export class Stream {
     } else {
       this.value = initial;
     }
+
+    this.id ??= this._key ?? null;
+    this.name ??= this.id;
+  }
+
+  _reportError(err, context) {
+    const handler = this.onError ?? Stream.onError;
+    const errorContext = {
+      streamId: this.id,
+      streamName: this.name,
+      ...context
+    };
+
+    if (handler) {
+      try {
+        handler(err, errorContext);
+        return;
+      } catch (hookError) {
+        console.error('Stream error handler threw an error', hookError);
+      }
+    }
+
+    console.error('Stream error', errorContext.streamId || errorContext.streamName, err);
+  }
+
+  _safeInvoke(fn, value, phase, subscriberIndex) {
+    try {
+      fn(value);
+    } catch (err) {
+      this._reportError(err, { phase, subscriberIndex });
+    }
   }
 
   subscribe(fn) {
     this.subscribers.push(fn);
-    fn(this.value);
+    const subscriberIndex = this.subscribers.length - 1;
+    this._safeInvoke(fn, this.value, 'subscribe_immediate', subscriberIndex);
     // 🔥 Return unsubscribe function
     return () => {
       this.subscribers = this.subscribers.filter(sub => sub !== fn);
@@ -30,7 +67,9 @@ export class Stream {
     if (this._json && this._key) {
       this._json[this._key] = val;
     }
-    this.subscribers.forEach(fn => fn(val));
+    for (let i = 0; i < this.subscribers.length; i++) {
+      this._safeInvoke(this.subscribers[i], val, 'notify_set', i);
+    }
   }
 
   get() {
