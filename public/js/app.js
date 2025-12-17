@@ -23,9 +23,22 @@ import { bootstrapSimulation } from './app/simulation.js';
 import { promptTimelineEntryMetadata } from './timeline/entryModal.js';
 // Initialization function will handle dynamic imports and DOM setup later.
 
-const getFirebase = firebaseModule.getFirebase ?? firebaseModule.default;
-const showFirebaseLoading = firebaseModule.showFirebaseLoading ?? (() => {});
-const hideFirebaseLoading = firebaseModule.hideFirebaseLoading ?? (() => {});
+function resolveFirebaseExports(module) {
+  return {
+    getFirebase: module?.getFirebase ?? module?.default,
+    showFirebaseLoading: module?.showFirebaseLoading ?? (() => {}),
+    hideFirebaseLoading: module?.hideFirebaseLoading ?? (() => {})
+  };
+}
+
+let { getFirebase, showFirebaseLoading, hideFirebaseLoading } = resolveFirebaseExports(firebaseModule);
+
+if (typeof getFirebase !== 'function') {
+  console.warn('Firebase module missing expected exports; attempting fallback client.');
+
+  const fallbackModule = await import('./firebase.example.js').catch(() => null);
+  ({ getFirebase, showFirebaseLoading, hideFirebaseLoading } = resolveFirebaseExports(fallbackModule ?? {}));
+}
 
 if (typeof getFirebase !== 'function') {
   throw new Error('Firebase client failed to load. Ensure firebase.js exports getFirebase().');
