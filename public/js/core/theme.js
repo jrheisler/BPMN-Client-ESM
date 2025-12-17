@@ -32,28 +32,65 @@ const defaultTheme = {
   font: 'system-ui, sans-serif'
 };
 
-let themes = { dark: defaultTheme };
+const builtInThemes = { dark: defaultTheme };
+let themes = { ...builtInThemes };
 
-export const currentTheme = new Stream(defaultTheme);
+export const currentTheme = new Stream(defaultTheme, { name: 'currentTheme' });
+export const themeLoadStatus = new Stream('loading', { name: 'themeLoadStatus' });
+
+const THEME_STORAGE_KEY = 'theme';
+const THEME_STORAGE_SCHEMA_VERSION = 1;
+
+function isPlainObject(obj) {
+  return obj !== null && typeof obj === 'object' && !Array.isArray(obj);
+}
+
+function normalizeThemeEntry(key, theme) {
+  if (!isPlainObject(theme)) {
+    console.warn(`Invalid theme entry for "${key}"`);
+    return null;
+  }
+
+  const colors = isPlainObject(theme.colors)
+    ? { ...defaultTheme.colors, ...theme.colors }
+    : { ...defaultTheme.colors };
+
+  const fonts = isPlainObject(theme.fonts)
+    ? { ...defaultTheme.fonts, ...theme.fonts }
+    : { ...defaultTheme.fonts };
+
+  return {
+    ...theme,
+    name: theme.name || key,
+    colors,
+    fonts,
+    background: theme.background || colors.background,
+    foreground: theme.foreground || colors.foreground,
+    accent: theme.accent || colors.accent,
+    font: theme.font || fonts.base
+  };
+}
 
 function validateThemes(data) {
   const valid = {};
-  if (!data || typeof data !== 'object') {
+
+  if (!isPlainObject(data)) {
     console.warn('Theme data missing or malformed');
+    themeLoadStatus.set('error');
     return valid;
   }
+
   Object.entries(data).forEach(([key, theme]) => {
-    if (
-      theme &&
-      typeof theme === 'object' &&
-      typeof theme.colors === 'object' &&
-      typeof theme.fonts === 'object'
-    ) {
-      valid[key] = theme;
-    } else {
-      console.warn(`Invalid theme entry for "${key}"`);
+    const normalized = normalizeThemeEntry(key, theme);
+    if (normalized) {
+      valid[key] = normalized;
     }
   });
+
+  if (Object.keys(valid).length === 0) {
+    themeLoadStatus.set('error');
+  }
+
   return valid;
 }
 
@@ -65,19 +102,80 @@ const themeDataPromise =
         .catch(err => {
           console.error('Failed to fetch themes.json', err);
           return {};
+        })
+        .finally(() => {
+          if (themeLoadStatus.get() === 'loading') {
+            themeLoadStatus.set('ready');
+          }
         });
+
+function readStoredThemeKey() {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(THEME_STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && typeof parsed.key === 'string') {
+      return parsed.key;
+    }
+
+    return typeof raw === 'string' ? raw : null;
+  } catch (err) {
+    console.warn('Failed to read stored theme key', err);
+    return null;
+  }
+}
+
+function persistThemeSelection(key) {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(
+      THEME_STORAGE_KEY,
+      JSON.stringify({ key, schemaVersion: THEME_STORAGE_SCHEMA_VERSION })
+    );
+  } catch (err) {
+    console.warn('Failed to persist theme selection', err);
+  }
+}
+
+function resolveInitialTheme() {
+  const storedKey = readStoredThemeKey();
+  const fallbackKey = getPreferredDarkKey() || getThemeEntries()[0]?.[0];
+  const fallbackTheme =
+    themes[fallbackKey] || getPreferredDarkTheme() || defaultTheme || getThemeEntries()[0]?.[1];
+
+  if (storedKey && themes[storedKey]) {
+    return { theme: themes[storedKey], key: storedKey };
+  }
+
+  if (storedKey && fallbackKey) {
+    persistThemeSelection(fallbackKey);
+  }
+
+  return { theme: fallbackTheme, key: fallbackKey };
+}
 
 export const themesLoaded = themeDataPromise
   .then(json => {
-    themes = { ...themes, ...validateThemes(json) };
-    const initial = getPreferredDarkTheme();
+    const validatedThemes = validateThemes(json);
+    const hasValid = Object.keys(validatedThemes).length > 0;
+
+    themes = hasValid ? { ...builtInThemes, ...validatedThemes } : { ...builtInThemes };
+
+    if (hasValid && themeLoadStatus.get() !== 'error') {
+      themeLoadStatus.set('ready');
+    }
+
+    const { theme: initial } = resolveInitialTheme();
     currentTheme.set(initial);
     maybeApplyThemeToPage(initial);
     return themes;
   })
   .catch(err => {
     console.error('Failed to load themes.json', err);
-    themes = { dark: defaultTheme };
+    themeLoadStatus.set('error');
+    themes = { ...builtInThemes };
     currentTheme.set(defaultTheme);
     maybeApplyThemeToPage(defaultTheme);
     return themes;
@@ -162,7 +260,7 @@ export function themeToggleButton(options = {}) {
         maybeApplyThemeToPage(next);
         const nextKey = getThemeKeyByValue(next);
         if (nextKey) {
-          localStorage.setItem('theme', nextKey);
+          persistThemeSelection(nextKey);
         }
       }
     });
@@ -202,11 +300,16 @@ export function themedThemeSelector(themeStream = currentTheme, options = {}) {
       select.appendChild(option);
     });
 
-    const savedKey = localStorage.getItem('theme');
+    const storedKey = readStoredThemeKey();
     const fallbackKey = getPreferredDarkKey() || getThemeEntries()[0]?.[0];
-    const selectedKey = themes[savedKey] ? savedKey : fallbackKey;
+    const selectedKey = themes[storedKey] ? storedKey : fallbackKey;
     const selectedTheme =
       themes[selectedKey] || getPreferredDarkTheme() || { colors: {}, fonts: {} };
+
+    if (storedKey && !themes[storedKey] && fallbackKey) {
+      persistThemeSelection(fallbackKey);
+    }
+
     currentTheme.set(selectedTheme);
     maybeApplyThemeToPage(selectedTheme);
     const keyToSelect = getThemeKeyByValue(selectedTheme);
@@ -235,7 +338,7 @@ export function themedThemeSelector(themeStream = currentTheme, options = {}) {
     const newKey = select.value;
     const newTheme = themes[newKey];
     if (newTheme) {
-      localStorage.setItem('theme', newKey);
+      persistThemeSelection(newKey);
       currentTheme.set(newTheme);
       maybeApplyThemeToPage(newTheme);
     } else {
