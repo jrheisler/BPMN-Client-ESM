@@ -97,14 +97,66 @@ export function derived(streams, transformFn, options = {}) {
   let timeoutId = null;
   const debounce = options.debounce ?? 0;
   const distinct = options.distinct ?? true;
+  const schedule = options.schedule ?? 'sync';
 
   const cleanupFns = [];
 
+  let disposed = false;
+  let microtaskQueued = false;
+  let queuedValue = lastValue;
+  let rafId = null;
+
+  const applyValue = value => {
+    lastValue = value;
+    derivedStream.set(value);
+  };
+
+  const scheduleMicrotask = value => {
+    queuedValue = value;
+    if (microtaskQueued) return;
+    microtaskQueued = true;
+    const enqueue = typeof queueMicrotask === 'function'
+      ? queueMicrotask
+      : cb => Promise.resolve().then(cb);
+    enqueue(() => {
+      microtaskQueued = false;
+      if (disposed) return;
+      if (distinct && queuedValue === lastValue) return;
+      applyValue(queuedValue);
+    });
+  };
+
+  const scheduleRaf = value => {
+    queuedValue = value;
+    if (rafId !== null) return;
+    const raf = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame
+      : cb => setTimeout(cb, 16);
+    rafId = raf(() => {
+      rafId = null;
+      if (disposed) return;
+      if (distinct && queuedValue === lastValue) return;
+      applyValue(queuedValue);
+    });
+  };
+
   const update = () => {
     const newValue = transformFn(...getValues());
+
+    if (schedule === 'microtask') {
+      if (!microtaskQueued && distinct && newValue === lastValue) return;
+      scheduleMicrotask(newValue);
+      return;
+    }
+
+    if (schedule === 'raf') {
+      if (rafId === null && distinct && newValue === lastValue) return;
+      scheduleRaf(newValue);
+      return;
+    }
+
     if (distinct && newValue === lastValue) return;
-    lastValue = newValue;
-    derivedStream.set(newValue);
+    applyValue(newValue);
   };
 
   const debouncedUpdate = debounce > 0
@@ -120,12 +172,15 @@ export function derived(streams, transformFn, options = {}) {
   });
 
   // Attach cleanup method
-  let disposed = false;
   const teardown = () => {
     if (disposed) return;
     disposed = true;
     cleanupFns.forEach(fn => fn && fn());
     clearTimeout(timeoutId);
+    if (rafId !== null) {
+      (typeof cancelAnimationFrame === 'function' ? cancelAnimationFrame : clearTimeout)(rafId);
+      rafId = null;
+    }
   };
 
   return withTeardown(derivedStream, teardown);
