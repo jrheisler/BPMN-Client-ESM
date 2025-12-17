@@ -66,7 +66,80 @@ const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
 // === Initial BPMN XML template ===
 const diagramXMLStream = new Stream(defaultXml);
 let cleanupCurrentModeler = null;
+
+const loadCustomModdle = (() => {
+  let moddlePromise = null;
+
+  return () => {
+    if (!moddlePromise) {
+      moddlePromise = fetch('js/custom-moddle.json', { cache: 'force-cache' }).then(r => r.json());
+    }
+
+    return moddlePromise;
+  };
+})();
+
+function waitForIdle() {
+  return new Promise(resolve => {
+    const start = () => queueMicrotask(resolve);
+
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(start);
+    } else {
+      setTimeout(start, 0);
+    }
+  });
+}
+
+let shellLayout = null;
+function ensureShellLayout() {
+  if (shellLayout) return shellLayout;
+
+  const { canvasEl, header } = setupPageScaffolding({ currentTheme });
+  setupCanvasLayout({ canvasEl, header, currentTheme });
+
+  if (!canvasEl.style.position) {
+    canvasEl.style.position = 'relative';
+  }
+
+  const spinner = document.createElement('div');
+  spinner.id = 'modeler-loading-indicator';
+  spinner.textContent = 'Loading diagram…';
+  Object.assign(spinner.style, {
+    position: 'absolute',
+    inset: '0',
+    display: 'grid',
+    placeItems: 'center',
+    background: 'var(--canvas-spinner-bg, rgba(0,0,0,0.04))',
+    color: 'var(--canvas-spinner-fg, #333)',
+    fontSize: '1rem',
+    zIndex: 5,
+    pointerEvents: 'none'
+  });
+  spinner.hidden = true;
+  canvasEl.appendChild(spinner);
+
+  shellLayout = { canvasEl, header, spinner };
+  return shellLayout;
+}
+
+function toggleShellSpinner(visible) {
+  const shell = ensureShellLayout();
+  shell.spinner.hidden = !visible;
+}
+
+function primeCustomModdleFetch() {
+  waitForIdle().then(() => loadCustomModdle().catch(err => {
+    console.warn('Failed to prefetch custom moddle descriptor:', err);
+  }));
+}
+
 async function init() {
+  const shell = ensureShellLayout();
+  toggleShellSpinner(true);
+
+  await waitForIdle();
+
   const { addOnStore } = window;
 
   cleanupCurrentModeler?.();
@@ -92,8 +165,7 @@ const overlay = createOverlay({
   currentTheme
 });
 
-const { canvasEl, header } = setupPageScaffolding({ currentTheme });
-setupCanvasLayout({ canvasEl, header, currentTheme });
+const { canvasEl, header } = shell;
 
   // ─── pull in the UMD globals ───────────────────────────────────────────────
   const { BpmnJS }       = window;
@@ -117,7 +189,7 @@ setupCanvasLayout({ canvasEl, header, currentTheme });
   if (navModule) additionalModules.push(navModule);
 
   // load custom moddle descriptor for variables and mappings
-  const customModdle = await fetch('js/custom-moddle.json').then(r => r.json());
+  const customModdle = await loadCustomModdle();
 
   const modeler = new BpmnJS({
     container:       canvasEl,
@@ -1491,10 +1563,40 @@ function clearModeler() {
 
 attachOverlay(overlay);
 
+  toggleShellSpinner(false);
+
+}
+const bootstrapShell = () => {
+  ensureShellLayout();
+  primeCustomModdleFetch();
+};
+
+function scheduleInit(reason = 'visibility') {
+  if (scheduleInit.scheduled) return;
+  scheduleInit.scheduled = true;
+
+  const start = () => {
+    init().catch(err => {
+      console.error(`Modeler initialization failed (${reason}):`, err);
+    }).finally(() => toggleShellSpinner(false));
+  };
+
+  requestAnimationFrame(start);
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', () => {
+    bootstrapShell();
+    scheduleInit('dom-ready');
+  });
 } else {
-  init();
+  bootstrapShell();
+  scheduleInit('dom-ready');
 }
+
+document.addEventListener('click', event => {
+  const trigger = event.target?.closest('[data-diagram-action="new"],[data-diagram-action="open"],[data-action="open-diagram"],[data-action="new-diagram"]');
+  if (!trigger) return;
+
+  scheduleInit('diagram-action');
+});
