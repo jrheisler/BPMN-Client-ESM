@@ -147,6 +147,8 @@ function ensureShellLayout() {
 function toggleShellSpinner(visible) {
   const shell = ensureShellLayout();
   shell.spinner.hidden = !visible;
+  shell.spinner.style.display = visible ? 'grid' : 'none';
+  shell.spinner.setAttribute('aria-hidden', String(!visible));
 }
 
 function primeCustomModdleFetch() {
