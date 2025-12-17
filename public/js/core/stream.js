@@ -120,9 +120,21 @@ export function derived(streams, transformFn, options = {}) {
   });
 
   // Attach cleanup method
-  derivedStream.cleanup = () => {
+  let disposed = false;
+  const teardown = () => {
+    if (disposed) return;
+    disposed = true;
     cleanupFns.forEach(fn => fn && fn());
     clearTimeout(timeoutId);
+  };
+
+  derivedStream.cleanup = teardown;
+  derivedStream.dispose = teardown;
+  derivedStream.teardown = teardown;
+
+  derivedStream[Symbol.iterator] = function* () {
+    yield derivedStream;
+    yield teardown;
   };
 
   return derivedStream;
