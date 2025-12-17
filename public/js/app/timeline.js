@@ -6,6 +6,7 @@ import {
   selectedTimelineEntryId,
   getTimelineEntry
 } from '../modules/timeline.js';
+import { derived } from '../core/stream.js';
 import { currentTheme } from '../core/theme.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -358,14 +359,26 @@ export function setupTimeline({
       ? themeStream.subscribe(applyTheme)
       : null;
 
-  const unsubscribeEntries = timelineEntries.subscribe(entries => {
+  const [entriesView, disposeEntriesView] = derived(
+    timelineEntries,
+    entries => entries,
+    { schedule: 'microtask' }
+  );
+
+  const unsubscribeEntries = entriesView.subscribe(entries => {
     renderMarkers(entries);
     dispatchTimelineEvent('timeline:entriesChanged', {
       entries: entries.map(entry => ({ ...entry }))
     });
   });
 
-  const unsubscribeSelection = selectedTimelineEntryId.subscribe(updateSelection);
+  const [selectionView, disposeSelectionView] = derived(
+    selectedTimelineEntryId,
+    id => id,
+    { schedule: 'microtask' }
+  );
+
+  const unsubscribeSelection = selectionView.subscribe(updateSelection);
 
   eventBus.on('import.done', updateLayout);
   eventBus.on('canvas.viewbox.changed', updateLayout);
@@ -379,6 +392,8 @@ export function setupTimeline({
       unsubscribeTheme?.();
       unsubscribeEntries?.();
       unsubscribeSelection?.();
+      disposeEntriesView?.();
+      disposeSelectionView?.();
       axis.removeEventListener('pointerdown', handleAxisPointerDown);
     }
   };
