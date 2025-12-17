@@ -166,85 +166,144 @@
   },
 
   "gilded": {
-    "name": "Gilded Gold",
-    "colors": {
-      "background": "#0F1115",
-      "foreground": "#F3E9D2",
-      "primary": "#171A21",
-      "accent": "#D4AF37",
-      "accent2": "#F2D16B",
-      "surface": "#141821",
-      "border": "#3A3220",
-      "muted": "#CBBE9A",
-      "ok": "#57D29C",
-      "warn": "#F5C451",
-      "err": "#F06A6A"
+  "name": "Gilded Gold",
+  "colors": {
+    "background": "#0B0E14",
+    "foreground": "#F6EED8",
+
+    "primary": "#121722",
+    "surface": "#141A26",
+
+    "accent": "#D4AF37",
+    "accent2": "#F5D77A",
+
+    "border": "#4A3F23",
+    "muted": "#C9BC94",
+
+    "ok": "#6AD6A3",
+    "warn": "#F2C94C",
+    "err": "#E26D6D"
+  },
+
+  "bpmn": {
+    "shape": {
+      "fill": "#121722",
+      "stroke": "#4A3F23",
+      "strokeWidth": 2
     },
-    "bpmn": {
-      "shape": { "fill": "#171A21", "stroke": "#3A3220", "strokeWidth": 2 },
-      "connection": { "stroke": "#D4AF37", "strokeWidth": 2 },
-      "marker": { "fill": "#F3E9D2", "stroke": "#F2D16B" },
-      "label": { "fontFamily": "system-ui, sans-serif", "fill": "#F3E9D2" },
-      "selected": { "stroke": "#F2D16B", "strokeWidth": 3 },
-      "palette": {
-        "background": "#141821",
-        "text": "#F3E9D2",
-        "border": "#3A3220",
-        "shadow": "0 6px 18px rgba(0, 0, 0, 0.55)",
-        "groupBackground": "#141821",
-        "groupText": "#D4AF37",
-        "groupBorder": "#3A3220",
-        "entryBackground": "transparent",
-        "entryText": "#F3E9D2",
-        "entryBorder": "#3A3220",
-        "entryHoverBackground": "#1C2230",
-        "entryHoverText": "#FFFFFF",
-        "entryHoverBorder": "#F2D16B",
-        "entryHoverShadow": "0 2px 8px rgba(0, 0, 0, 0.55)",
-        "entryActiveBackground": "#D4AF37",
-        "entryActiveText": "#0F1115",
-        "entryActiveBorder": "#F2D16B",
-        "entryActiveShadow": "0 0 0 2px rgba(212, 175, 55, 0.35)"
-      },
-      "startEvent": { "fill": "#57D29C", "stroke": "#3A3220" },
-      "endEvent": { "fill": "#F06A6A", "stroke": "#3A3220" },
-      "task": { "fill": "#171A21", "stroke": "#3A3220" },
-      "gateway": { "fill": "#F5C451", "stroke": "#3A3220" },
-      "quickMenu": {
-        "background": "#141821",
-        "hoverBackground": "#1C2230",
-        "text": "#D4AF37",
-        "hoverText": "#FFFFFF",
-        "border": "#3A3220",
-        "hoverBorder": "#F2D16B",
-        "shadow": "0 2px 6px rgba(0, 0, 0, 0.5)",
-        "hoverShadow": "0 4px 10px rgba(0, 0, 0, 0.65)"
-      },
-      "popupMenu": {
-        "background": "#141821",
-        "hoverBackground": "#1C2230",
-        "text": "#F3E9D2",
-        "hoverText": "#D4AF37",
-        "border": "#3A3220",
-        "hoverBorder": "#F2D16B",
-        "shadow": "0 10px 24px rgba(0, 0, 0, 0.65)",
-        "hoverShadow": "0 12px 28px rgba(0, 0, 0, 0.75)",
-        "searchBackground": "#171A21",
-        "searchText": "#F3E9D2",
-        "searchPlaceholder": "#CBBE9A",
-        "searchBorder": "#3A3220",
-        "searchFocusShadow": "0 0 0 1px rgba(212, 175, 55, 0.55)"
-      }
+
+    "connection": {
+      "stroke": "#D4AF37",
+      "strokeWidth": 2
     },
-    "modals": {
-      "diagramPicker": {
-        "background": "#141821",
-        "hoverBackground": "#1C2230",
-        "border": "#3A3220",
-        "textMuted": "#CBBE9A",
-        "deleteIcon": "#F06A6A"
-      }
+
+    "marker": {
+      "fill": "#F6EED8",
+      "stroke": "#F5D77A"
     },
-    "fonts": { "base": "system-ui, sans-serif", "monospace": "monospace" }
+
+    "label": {
+      "fontFamily": "system-ui, sans-serif",
+      "fill": "#F6EED8"
+    },
+
+    "selected": {
+      "stroke": "#F5D77A",
+      "strokeWidth": 3
+    },
+
+    "palette": {
+      "background": "#141A26",
+      "text": "#F6EED8",
+      "border": "#4A3F23",
+
+      "shadow": "0 10px 30px rgba(0, 0, 0, 0.75)",
+
+      "groupBackground": "#141A26",
+      "groupText": "#D4AF37",
+      "groupBorder": "#5A4A28",
+
+      "entryBackground": "transparent",
+      "entryText": "#F6EED8",
+      "entryBorder": "#4A3F23",
+
+      "entryHoverBackground": "#1B2333",
+      "entryHoverText": "#FFFFFF",
+      "entryHoverBorder": "#F5D77A",
+      "entryHoverShadow": "0 0 0 1px rgba(245, 215, 122, 0.45), 0 6px 16px rgba(0, 0, 0, 0.7)",
+
+      "entryActiveBackground": "#D4AF37",
+      "entryActiveText": "#0B0E14",
+      "entryActiveBorder": "#F8E6A0",
+      "entryActiveShadow": "0 0 0 2px rgba(212, 175, 55, 0.45), inset 0 0 12px rgba(255, 235, 160, 0.35)"
+    },
+
+    "startEvent": {
+      "fill": "#6AD6A3",
+      "stroke": "#4A3F23"
+    },
+
+    "endEvent": {
+      "fill": "#E26D6D",
+      "stroke": "#4A3F23"
+    },
+
+    "task": {
+      "fill": "#121722",
+      "stroke": "#4A3F23"
+    },
+
+    "gateway": {
+      "fill": "#F2C94C",
+      "stroke": "#4A3F23"
+    },
+
+    "quickMenu": {
+      "background": "#141A26",
+      "hoverBackground": "#1B2333",
+      "text": "#D4AF37",
+      "hoverText": "#FFFFFF",
+
+      "border": "#4A3F23",
+      "hoverBorder": "#F5D77A",
+
+      "shadow": "0 6px 18px rgba(0, 0, 0, 0.7)",
+      "hoverShadow": "0 8px 22px rgba(0, 0, 0, 0.85)"
+    },
+
+    "popupMenu": {
+      "background": "#141A26",
+      "hoverBackground": "#1B2333",
+      "text": "#F6EED8",
+      "hoverText": "#F5D77A",
+
+      "border": "#4A3F23",
+      "hoverBorder": "#F5D77A",
+
+      "shadow": "0 14px 36px rgba(0, 0, 0, 0.85)",
+      "hoverShadow": "0 18px 44px rgba(0, 0, 0, 0.9)",
+
+      "searchBackground": "#121722",
+      "searchText": "#F6EED8",
+      "searchPlaceholder": "#C9BC94",
+      "searchBorder": "#4A3F23",
+      "searchFocusShadow": "0 0 0 1px rgba(245, 215, 122, 0.65)"
+    }
+  },
+
+  "modals": {
+    "diagramPicker": {
+      "background": "#141A26",
+      "hoverBackground": "#1B2333",
+      "border": "#4A3F23",
+      "textMuted": "#C9BC94",
+      "deleteIcon": "#E26D6D"
+    }
+  },
+
+  "fonts": {
+    "base": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    "monospace": "monospace"
   }
+}
 }
