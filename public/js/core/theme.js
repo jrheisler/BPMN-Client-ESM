@@ -1,6 +1,6 @@
 // theme.js
 
-import { Stream } from './stream.js';
+import { Stream, observeDOMRemoval } from './stream.js';
 
 let themes = {};
 
@@ -101,11 +101,12 @@ export function applyTheme(el, options = {}) {
   });
 }
 
-export function themeToggleButton() {
+export function themeToggleButton(options = {}) {
+  const { autoDispose = true } = options;
   const button = document.createElement('button');
   button.textContent = '🌗 Toggle Theme';
 
-  button.onclick = () => {
+  const handleClick = () => {
     themesLoaded.then(() => {
       const current = currentTheme.get();
       const preferredDark = getPreferredDarkTheme();
@@ -133,11 +134,22 @@ export function themeToggleButton() {
     });
   };
 
+  button.addEventListener('click', handleClick);
+
+  const cleanup = () => {
+    button.removeEventListener('click', handleClick);
+  };
+
+  if (autoDispose !== false && typeof document !== 'undefined' && typeof MutationObserver === 'function') {
+    observeDOMRemoval(button, cleanup);
+  }
+
   applyTheme(button, { size: '1rem', weight: 'bold' });
   return button;
 }
 
-export function themedThemeSelector(themeStream = currentTheme) {
+export function themedThemeSelector(themeStream = currentTheme, options = {}) {
+  const { autoDispose = true } = options;
   const container = document.createElement('div');
   container.style.display = 'flex';
   container.style.alignItems = 'center';
@@ -183,9 +195,9 @@ export function themedThemeSelector(themeStream = currentTheme) {
     select.style.border = `1px solid ${colors.foreground}`;
   }
 
-  themeStream.subscribe(theme => applyStyles(theme));
+  const unsubscribeTheme = themeStream.subscribe(theme => applyStyles(theme));
 
-  select.onchange = () => {
+  const handleChange = () => {
     const newKey = select.value;
     const newTheme = themes[newKey];
     if (newTheme) {
@@ -196,6 +208,17 @@ export function themedThemeSelector(themeStream = currentTheme) {
       console.warn(`Theme "${newKey}" not found`);
     }
   };
+
+  select.addEventListener('change', handleChange);
+
+  const cleanup = () => {
+    unsubscribeTheme?.();
+    select.removeEventListener('change', handleChange);
+  };
+
+  if (autoDispose !== false && typeof document !== 'undefined' && typeof MutationObserver === 'function') {
+    observeDOMRemoval(container, cleanup);
+  }
 
   container.appendChild(label);
   container.appendChild(select);
