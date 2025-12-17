@@ -56,16 +56,16 @@ export class Stream {
     this.subscribers.push(fn);
     const subscriberIndex = this.subscribers.length - 1;
     this._safeInvoke(fn, this.value, 'subscribe_immediate', subscriberIndex);
-    // 🔥 Return unsubscribe function
-    let unsubscribed = false;
-    const unsubscribe = () => {
-      if (unsubscribed) return;
-      unsubscribed = true;
+
+    const unsubscribe = createTeardown(() => {
       this.subscribers = this.subscribers.filter(sub => sub !== fn);
-    };
+    });
 
     // Support both function-style and object-style subscription APIs
     unsubscribe.unsubscribe = unsubscribe;
+    unsubscribe.teardown = unsubscribe;
+    unsubscribe.dispose = unsubscribe;
+    unsubscribe.cleanup = unsubscribe;
 
     return unsubscribe;
   }
@@ -91,8 +91,18 @@ export function derived(streams, transformFn, options = {}) {
   const sources = isArray ? streams : [streams];
   const getValues = () => isArray ? streams.map(s => s.get()) : [streams.get()];
 
-  let lastValue = transformFn(...getValues());
-  const derivedStream = new Stream(lastValue);
+  let initialError = null;
+  let lastValue;
+  try {
+    lastValue = transformFn(...getValues());
+  } catch (err) {
+    initialError = err;
+    lastValue = undefined;
+  }
+  const derivedStream = new Stream(lastValue, { name: options.name });
+  if (initialError) {
+    derivedStream._reportError(initialError, { phase: 'transform_initial' });
+  }
 
   let timeoutId = null;
   const debounce = options.debounce ?? 0;
@@ -140,8 +150,19 @@ export function derived(streams, transformFn, options = {}) {
     });
   };
 
+  const computeValue = () => {
+    try {
+      return { ok: true, value: transformFn(...getValues()) };
+    } catch (err) {
+      derivedStream._reportError(err, { phase: 'transform_update' });
+      return { ok: false };
+    }
+  };
+
   const update = () => {
-    const newValue = transformFn(...getValues());
+    const result = computeValue();
+    if (!result.ok) return;
+    const newValue = result.value;
 
     if (schedule === 'microtask') {
       if (!microtaskQueued && distinct && newValue === lastValue) return;
@@ -244,16 +265,12 @@ if (typeof window !== 'undefined') {
 }
 
 function withTeardown(stream, disposeFn) {
-  let disposed = false;
-  const dispose = () => {
-    if (disposed) return;
-    disposed = true;
-    disposeFn?.();
-  };
+  const dispose = createTeardown(disposeFn);
 
   stream.cleanup = dispose;
   stream.dispose = dispose;
   stream.teardown = dispose;
+  stream.unsubscribe = dispose;
 
   return {
     stream,
@@ -265,5 +282,20 @@ function withTeardown(stream, disposeFn) {
       yield dispose;
     }
   };
+}
+
+function createTeardown(fn) {
+  let disposed = false;
+  const teardown = () => {
+    if (disposed) return;
+    disposed = true;
+    fn?.();
+  };
+
+  teardown.isDisposed = () => disposed;
+  Object.defineProperty(teardown, 'closed', { get: () => disposed });
+  teardown[Symbol.dispose] = teardown;
+
+  return teardown;
 }
 

@@ -272,6 +272,10 @@ export function themeToggleButton(options = {}) {
     button.removeEventListener('click', handleClick);
   };
 
+  button.cleanup = cleanup;
+  button.teardown = cleanup;
+  button.dispose = cleanup;
+
   if (autoDispose !== false && typeof document !== 'undefined' && typeof MutationObserver === 'function') {
     observeDOMRemoval(button, cleanup);
   }
@@ -371,6 +375,10 @@ export function themedThemeSelector(themeStream = currentTheme, options = {}) {
     unsubscribeStatus?.();
     select.removeEventListener('change', handleChange);
   };
+
+  container.cleanup = cleanup;
+  container.dispose = cleanup;
+  container.teardown = cleanup;
 
   if (autoDispose !== false && typeof document !== 'undefined' && typeof MutationObserver === 'function') {
     observeDOMRemoval(container, cleanup);
