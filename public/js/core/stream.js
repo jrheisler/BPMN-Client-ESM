@@ -57,9 +57,17 @@ export class Stream {
     const subscriberIndex = this.subscribers.length - 1;
     this._safeInvoke(fn, this.value, 'subscribe_immediate', subscriberIndex);
     // 🔥 Return unsubscribe function
-    return () => {
+    let unsubscribed = false;
+    const unsubscribe = () => {
+      if (unsubscribed) return;
+      unsubscribed = true;
       this.subscribers = this.subscribers.filter(sub => sub !== fn);
     };
+
+    // Support both function-style and object-style subscription APIs
+    unsubscribe.unsubscribe = unsubscribe;
+
+    return unsubscribe;
   }
 
   set(val) {
