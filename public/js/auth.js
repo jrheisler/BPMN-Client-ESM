@@ -10,6 +10,14 @@ window.currentUser = currentUser;
 
 export function authMenuOption({ avatarStream, showSaveButton, currentTheme, rebuildMenu, onLogin }) {
   const handleLogin = typeof onLogin === 'function' ? onLogin : () => {};
+
+  const runLoginSuccessActions = () => {
+    const loggedInUser = currentUser;
+
+    // Defer the follow-up actions so the login modal can finish cleaning up
+    // before we open any additional dialogs (e.g., Select or New Diagram).
+    queueMicrotask(() => handleLogin(loggedInUser));
+  };
   return {
     label: logUser.get(),
     onClick: async () => {
@@ -42,7 +50,7 @@ export function authMenuOption({ avatarStream, showSaveButton, currentTheme, reb
             avatarStream.set('flowLoggedIn.png');
             showSaveButton.set(true);
             rebuildMenu();
-            handleLogin();
+            runLoginSuccessActions();
           }
         });
       }
