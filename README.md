@@ -76,6 +76,9 @@ with all four roles specified looks like this:
 - `test/` – automated tests using Node's built‑in test runner
 - `sample*.bpmn` – example diagrams
 
+See `docs/streams.md` for details on the reactive stream helpers and
+`docs/themes.md` for theme loading, validation, and error indicators.
+
 ## License
 
 This project is licensed under the MIT License.
