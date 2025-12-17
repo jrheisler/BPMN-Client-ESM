@@ -128,16 +128,7 @@ export function derived(streams, transformFn, options = {}) {
     clearTimeout(timeoutId);
   };
 
-  derivedStream.cleanup = teardown;
-  derivedStream.dispose = teardown;
-  derivedStream.teardown = teardown;
-
-  derivedStream[Symbol.iterator] = function* () {
-    yield derivedStream;
-    yield teardown;
-  };
-
-  return derivedStream;
+  return withTeardown(derivedStream, teardown);
 }
 
 
@@ -163,8 +154,8 @@ export function fieldStream(sourceStream, fieldName) {
 export function intervalStream(ms, fn) {
   const stream = new Stream();
   const id = setInterval(() => stream.set(fn()), ms);
-  const cleanup = () => clearInterval(id);
-  return [stream, cleanup];
+
+  return withTeardown(stream, () => clearInterval(id));
 }
 
 // === Helper: timeout stream ===
@@ -179,8 +170,8 @@ export function intervalStream(ms, fn) {
 export function timeoutStream(ms, value) {
   const stream = new Stream();
   const id = setTimeout(() => stream.set(value), ms);
-  const cleanup = () => clearTimeout(id);
-  return [stream, cleanup];
+
+  return withTeardown(stream, () => clearTimeout(id));
 }
 
 export function observeDOMRemoval(el, ...cleanups) {
@@ -195,5 +186,29 @@ export function observeDOMRemoval(el, ...cleanups) {
 
 if (typeof window !== 'undefined') {
   window.Stream = Stream;
+}
+
+function withTeardown(stream, disposeFn) {
+  let disposed = false;
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
+    disposeFn?.();
+  };
+
+  stream.cleanup = dispose;
+  stream.dispose = dispose;
+  stream.teardown = dispose;
+
+  return {
+    stream,
+    dispose,
+    teardown: dispose,
+    cleanup: dispose,
+    [Symbol.iterator]: function* () {
+      yield stream;
+      yield dispose;
+    }
+  };
 }
 
