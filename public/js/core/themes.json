@@ -3,1346 +3,248 @@
     "name": "Dark",
     "colors": {
       "background": "#121212",
-      "foreground": "#e0e0e0",
-      "primary": "#1e1e1e",
-      "accent": "#bb86fc",
-      "surface": "#1e1e1e",
-      "border": "#666",
-      "muted": "#888888",
-      "ok": "#00e676",
-      "warn": "#ffb300",
-      "err": "#ff5252"
+      "foreground": "#E8E6E3",
+      "primary": "#1E1E1E",
+      "accent": "#BB86FC",
+      "accent2": "#03DAC6",
+      "surface": "#1E1E1E",
+      "border": "#666666",
+      "muted": "#A0A0A0",
+      "ok": "#00E676",
+      "warn": "#FFB300",
+      "err": "#FF5252"
     },
     "bpmn": {
-      "shape": {
-        "fill": "#1e1e1e",
-        "stroke": "#666",
-        "strokeWidth": 2
-      },
-      "connection": {
-        "stroke": "#d1b6ff",
-        "strokeWidth": 2
-      },
-      "marker": {
-        "fill": "#f9f2ff",
-        "stroke": "#e6d4ff"
-      },
-      "label": {
-        "fontFamily": "system-ui, sans-serif",
-        "fill": "#bb86fc"
-      },
-      "selected": {
-        "stroke": "#bb86fc",
-        "strokeWidth": 3
-      },
+      "shape": { "fill": "#1E1E1E", "stroke": "#666666", "strokeWidth": 2 },
+      "connection": { "stroke": "#D1B6FF", "strokeWidth": 2 },
+      "marker": { "fill": "#F9F2FF", "stroke": "#E6D4FF" },
+      "label": { "fontFamily": "system-ui, sans-serif", "fill": "#BB86FC" },
+      "selected": { "stroke": "#BB86FC", "strokeWidth": 3 },
       "palette": {
-        "background": "#1e1e1e",
-        "text": "#e0e0e0",
+        "background": "#1E1E1E",
+        "text": "#E8E6E3",
         "border": "#444444",
         "shadow": "0 4px 12px rgba(0, 0, 0, 0.4)",
-        "groupBackground": "#1e1e1e",
-        "groupText": "#bb86fc",
+        "groupBackground": "#1E1E1E",
+        "groupText": "#BB86FC",
         "groupBorder": "#444444",
         "entryBackground": "transparent",
-        "entryText": "#e0e0e0",
+        "entryText": "#E8E6E3",
         "entryBorder": "#444444",
-        "entryHoverBackground": "#2a2a2a",
-        "entryHoverText": "#ffffff",
-        "entryHoverBorder": "#bb86fc",
+        "entryHoverBackground": "#2A2A2A",
+        "entryHoverText": "#FFFFFF",
+        "entryHoverBorder": "#BB86FC",
         "entryHoverShadow": "0 2px 6px rgba(0, 0, 0, 0.45)",
-        "entryActiveBackground": "#bb86fc",
+        "entryActiveBackground": "#BB86FC",
         "entryActiveText": "#121212",
-        "entryActiveBorder": "#bb86fc",
+        "entryActiveBorder": "#BB86FC",
         "entryActiveShadow": "0 0 0 2px rgba(187, 134, 252, 0.35)"
       },
-      "startEvent": {
-        "fill": "#00e676",
-        "stroke": "#666"
-      },
-      "endEvent": {
-        "fill": "#ff5252",
-        "stroke": "#666"
-      },
-      "task": {
-        "fill": "#1e1e1e",
-        "stroke": "#666"
-      },
-      "gateway": {
-        "fill": "#ffb300",
-        "stroke": "#666"
-      },
+      "startEvent": { "fill": "#00E676", "stroke": "#666666" },
+      "endEvent": { "fill": "#FF5252", "stroke": "#666666" },
+      "task": { "fill": "#1E1E1E", "stroke": "#666666" },
+      "gateway": { "fill": "#FFB300", "stroke": "#666666" },
       "quickMenu": {
-        "background": "#1e1e1e",
-        "hoverBackground": "#2a2a2a",
-        "text": "#bb86fc",
-        "hoverText": "#ffffff",
+        "background": "#1E1E1E",
+        "hoverBackground": "#2A2A2A",
+        "text": "#BB86FC",
+        "hoverText": "#FFFFFF",
         "border": "#666666",
-        "hoverBorder": "#bb86fc",
+        "hoverBorder": "#BB86FC",
         "shadow": "0 2px 4px rgba(0, 0, 0, 0.4)",
         "hoverShadow": "0 4px 8px rgba(0, 0, 0, 0.5)"
       },
       "popupMenu": {
-        "background": "#1e1e1e",
-        "hoverBackground": "#2a2a2a",
-        "text": "#e0e0e0",
-        "hoverText": "#bb86fc",
+        "background": "#1E1E1E",
+        "hoverBackground": "#2A2A2A",
+        "text": "#E8E6E3",
+        "hoverText": "#BB86FC",
         "border": "#444444",
-        "hoverBorder": "#bb86fc",
+        "hoverBorder": "#BB86FC",
         "shadow": "0 10px 24px rgba(0, 0, 0, 0.6)",
         "hoverShadow": "0 12px 28px rgba(0, 0, 0, 0.65)",
         "searchBackground": "#262626",
-        "searchText": "#f5f5f5",
-        "searchPlaceholder": "#9f9f9f",
+        "searchText": "#F5F5F5",
+        "searchPlaceholder": "#9F9F9F",
         "searchBorder": "#444444",
         "searchFocusShadow": "0 0 0 1px rgba(187, 134, 252, 0.6)"
       }
     },
     "modals": {
       "diagramPicker": {
-        "background": "#1e1e1e",
-        "hoverBackground": "#2a2a2a",
+        "background": "#1E1E1E",
+        "hoverBackground": "#2A2A2A",
         "border": "#444444",
-        "textMuted": "#888888",
-        "deleteIcon": "#ff5252"
+        "textMuted": "#A0A0A0",
+        "deleteIcon": "#FF5252"
       }
     },
-    "fonts": {
-      "base": "system-ui, sans-serif",
-      "monospace": "monospace"
-    }
+    "fonts": { "base": "system-ui, sans-serif", "monospace": "monospace" }
   },
-  "desertSunset": {
-    "name": "Desert Sunset",
-    "colors": {
-      "background": "#2b1b17",
-      "foreground": "#f4e7d4",
-      "primary": "#3b2a24",
-      "accent": "#f97316",
-      "accent2": "#facc15",
-      "surface": "#3f2d28",
-      "border": "#8c6849",
-      "muted": "#d6bfa3",
-      "ok": "#34d399",
-      "warn": "#fbbf24",
-      "err": "#f87171"
-    },
-    "bpmn": {
-      "shape": {
-        "fill": "#3b2a24",
-        "stroke": "#f4e7d4",
-        "strokeWidth": 2
-      },
-      "connection": {
-        "stroke": "#facc15",
-        "strokeWidth": 2
-      },
-      "marker": {
-        "fill": "#f97316",
-        "stroke": "#facc15"
-      },
-      "label": {
-        "fontFamily": "system-ui, sans-serif",
-        "fill": "#f4e7d4"
-      },
-      "selected": {
-        "stroke": "#facc15",
-        "strokeWidth": 3
-      },
-      "palette": {
-        "background": "#34221d",
-        "text": "#f4e7d4",
-        "border": "#8c6849",
-        "shadow": "0 4px 12px rgba(0, 0, 0, 0.45)",
-        "groupBackground": "#34221d",
-        "groupText": "#f97316",
-        "groupBorder": "#8c6849",
-        "entryBackground": "transparent",
-        "entryText": "#f4e7d4",
-        "entryBorder": "#8c6849",
-        "entryHoverBackground": "#433027",
-        "entryHoverText": "#facc15",
-        "entryHoverBorder": "#f97316",
-        "entryHoverShadow": "0 2px 6px rgba(0, 0, 0, 0.5)",
-        "entryActiveBackground": "#f97316",
-        "entryActiveText": "#2b1b17",
-        "entryActiveBorder": "#f97316",
-        "entryActiveShadow": "0 0 0 2px rgba(250, 204, 21, 0.35)"
-      },
-      "startEvent": {
-        "fill": "#34d399",
-        "stroke": "#f4e7d4"
-      },
-      "endEvent": {
-        "fill": "#f87171",
-        "stroke": "#f4e7d4"
-      },
-      "task": {
-        "fill": "#3b2a24",
-        "stroke": "#8c6849"
-      },
-      "gateway": {
-        "fill": "#f97316",
-        "stroke": "#8c6849"
-      },
-      "quickMenu": {
-        "background": "#34221d",
-        "hoverBackground": "#433027",
-        "text": "#facc15",
-        "hoverText": "#f4e7d4",
-        "border": "#8c6849",
-        "hoverBorder": "#f97316",
-        "shadow": "0 2px 4px rgba(0, 0, 0, 0.45)",
-        "hoverShadow": "0 4px 8px rgba(0, 0, 0, 0.55)"
-      },
-      "popupMenu": {
-        "background": "#34221d",
-        "hoverBackground": "#433027",
-        "text": "#f4e7d4",
-        "hoverText": "#facc15",
-        "border": "#8c6849",
-        "hoverBorder": "#f97316",
-        "shadow": "0 10px 24px rgba(0, 0, 0, 0.65)",
-        "hoverShadow": "0 12px 28px rgba(0, 0, 0, 0.7)",
-        "searchBackground": "#3b2a24",
-        "searchText": "#f4e7d4",
-        "searchPlaceholder": "#d6bfa3",
-        "searchBorder": "#8c6849",
-        "searchFocusShadow": "0 0 0 1px rgba(249, 115, 22, 0.55)"
-      }
-    },
-    "modals": {
-      "diagramPicker": {
-        "background": "#34221d",
-        "hoverBackground": "#433027",
-        "border": "#8c6849",
-        "textMuted": "#d6bfa3",
-        "deleteIcon": "#f87171"
-      }
-    },
-    "fonts": {
-      "base": "system-ui, sans-serif",
-      "monospace": "monospace"
-    }
-  },
-  "desertSunrise": {
-    "name": "Desert Sunrise",
-    "colors": {
-      "background": "#f8e1c4",
-      "foreground": "#3f2d20",
-      "primary": "#f3d6b3",
-      "accent": "#d97706",
-      "accent2": "#2d8f8f",
-      "surface": "#fff4e6",
-      "border": "#d7b38a",
-      "muted": "#7a5a3b",
-      "ok": "#2f855a",
-      "warn": "#c05621",
-      "err": "#c53030"
-    },
-    "bpmn": {
-      "shape": {
-        "fill": "#fff4e6",
-        "stroke": "#d7b38a",
-        "strokeWidth": 2
-      },
-      "connection": {
-        "stroke": "#3f2d20",
-        "strokeWidth": 2
-      },
-      "marker": {
-        "fill": "#d97706",
-        "stroke": "#a16205"
-      },
-      "label": {
-        "fontFamily": "system-ui, sans-serif",
-        "fill": "#3f2d20"
-      },
-      "selected": {
-        "stroke": "#2d8f8f",
-        "strokeWidth": 3
-      },
-      "palette": {
-        "background": "#fff4e6",
-        "text": "#3f2d20",
-        "border": "#d7b38a",
-        "shadow": "0 4px 12px rgba(0, 0, 0, 0.1)",
-        "groupBackground": "#fff4e6",
-        "groupText": "#d97706",
-        "groupBorder": "#d7b38a",
-        "entryBackground": "transparent",
-        "entryText": "#3f2d20",
-        "entryBorder": "#e4c8a1",
-        "entryHoverBackground": "#fde4c9",
-        "entryHoverText": "#d97706",
-        "entryHoverBorder": "#d97706",
-        "entryHoverShadow": "0 2px 6px rgba(217, 119, 6, 0.15)",
-        "entryActiveBackground": "#2d8f8f",
-        "entryActiveText": "#fff4e6",
-        "entryActiveBorder": "#2d8f8f",
-        "entryActiveShadow": "0 0 0 2px rgba(45, 143, 143, 0.25)"
-      },
-      "startEvent": {
-        "fill": "#2f855a",
-        "stroke": "#d7b38a"
-      },
-      "endEvent": {
-        "fill": "#c53030",
-        "stroke": "#d7b38a"
-      },
-      "task": {
-        "fill": "#f3d6b3",
-        "stroke": "#d7b38a"
-      },
-      "gateway": {
-        "fill": "#d97706",
-        "stroke": "#d7b38a"
-      },
-      "quickMenu": {
-        "background": "#fff4e6",
-        "hoverBackground": "#fde4c9",
-        "text": "#3f2d20",
-        "hoverText": "#2d8f8f",
-        "border": "#d7b38a",
-        "hoverBorder": "#2d8f8f",
-        "shadow": "0 2px 4px rgba(0, 0, 0, 0.18)",
-        "hoverShadow": "0 4px 8px rgba(0, 0, 0, 0.2)"
-      },
-      "popupMenu": {
-        "background": "#fff4e6",
-        "hoverBackground": "#fde4c9",
-        "text": "#3f2d20",
-        "hoverText": "#2d8f8f",
-        "border": "#d7b38a",
-        "hoverBorder": "#2d8f8f",
-        "shadow": "0 10px 24px rgba(0, 0, 0, 0.2)",
-        "hoverShadow": "0 12px 28px rgba(0, 0, 0, 0.25)",
-        "searchBackground": "#f3d6b3",
-        "searchText": "#3f2d20",
-        "searchPlaceholder": "#7a5a3b",
-        "searchBorder": "#d7b38a",
-        "searchFocusShadow": "0 0 0 1px rgba(45, 143, 143, 0.35)"
-      }
-    },
-    "modals": {
-      "diagramPicker": {
-        "background": "#fff4e6",
-        "hoverBackground": "#fde4c9",
-        "border": "#d7b38a",
-        "textMuted": "#7a5a3b",
-        "deleteIcon": "#c53030"
-      }
-    },
-    "fonts": {
-      "base": "system-ui, sans-serif",
-      "monospace": "monospace"
-    }
-  },
+
   "light": {
     "name": "Light",
     "colors": {
-      "background": "#fafafa",
+      "background": "#FAFAFA",
       "foreground": "#222222",
-      "primary": "#f5f5f5",
-      "accent": "#6200ee",
-      "surface": "#ffffff",
-      "border": "#d0d0d0",
+      "primary": "#F5F5F5",
+      "accent": "#6200EE",
+      "accent2": "#1B998B",
+      "surface": "#FFFFFF",
+      "border": "#D0D0D0",
       "muted": "#555555",
-      "ok": "#4caf50",
-      "warn": "#fb8c00",
-      "err": "#f44336"
+      "ok": "#2E7D32",
+      "warn": "#EF6C00",
+      "err": "#D32F2F"
     },
     "bpmn": {
-      "shape": {
-        "fill": "#ffffff",
-        "stroke": "#d0d0d0",
-        "strokeWidth": 2
-      },
-      "connection": {
-        "stroke": "#222222",
-        "strokeWidth": 2
-      },
-      "marker": {
-        "fill": "#6200ee",
-        "stroke": "#3700b3"
-      },
-      "label": {
-        "fontFamily": "system-ui, sans-serif",
-        "fill": "#222222"
-      },
-      "selected": {
-        "stroke": "#6200ee",
-        "strokeWidth": 3
-      },
+      "shape": { "fill": "#FFFFFF", "stroke": "#D0D0D0", "strokeWidth": 2 },
+      "connection": { "stroke": "#222222", "strokeWidth": 2 },
+      "marker": { "fill": "#6200EE", "stroke": "#3700B3" },
+      "label": { "fontFamily": "system-ui, sans-serif", "fill": "#222222" },
+      "selected": { "stroke": "#6200EE", "strokeWidth": 3 },
       "palette": {
-        "background": "#ffffff",
+        "background": "#FFFFFF",
         "text": "#222222",
-        "border": "#d0d0d0",
+        "border": "#D0D0D0",
         "shadow": "0 4px 12px rgba(0, 0, 0, 0.1)",
-        "groupBackground": "#ffffff",
-        "groupText": "#6200ee",
-        "groupBorder": "#d0d0d0",
+        "groupBackground": "#FFFFFF",
+        "groupText": "#6200EE",
+        "groupBorder": "#D0D0D0",
         "entryBackground": "transparent",
         "entryText": "#222222",
-        "entryBorder": "#e0e0e0",
-        "entryHoverBackground": "#ede7ff",
-        "entryHoverText": "#6200ee",
-        "entryHoverBorder": "#6200ee",
+        "entryBorder": "#E0E0E0",
+        "entryHoverBackground": "#EDE7FF",
+        "entryHoverText": "#6200EE",
+        "entryHoverBorder": "#6200EE",
         "entryHoverShadow": "0 2px 6px rgba(98, 0, 238, 0.15)",
-        "entryActiveBackground": "#6200ee",
-        "entryActiveText": "#ffffff",
-        "entryActiveBorder": "#6200ee",
+        "entryActiveBackground": "#6200EE",
+        "entryActiveText": "#FFFFFF",
+        "entryActiveBorder": "#6200EE",
         "entryActiveShadow": "0 0 0 2px rgba(98, 0, 238, 0.25)"
       },
-      "startEvent": {
-        "fill": "#4caf50",
-        "stroke": "#d0d0d0"
-      },
-      "endEvent": {
-        "fill": "#f44336",
-        "stroke": "#d0d0d0"
-      },
-      "task": {
-        "fill": "#f5f5f5",
-        "stroke": "#d0d0d0"
-      },
-      "gateway": {
-        "fill": "#fb8c00",
-        "stroke": "#d0d0d0"
-      },
+      "startEvent": { "fill": "#2E7D32", "stroke": "#D0D0D0" },
+      "endEvent": { "fill": "#D32F2F", "stroke": "#D0D0D0" },
+      "task": { "fill": "#F5F5F5", "stroke": "#D0D0D0" },
+      "gateway": { "fill": "#EF6C00", "stroke": "#D0D0D0" },
       "quickMenu": {
-        "background": "#ffffff",
-        "hoverBackground": "#ede7ff",
+        "background": "#FFFFFF",
+        "hoverBackground": "#EDE7FF",
         "text": "#222222",
-        "hoverText": "#6200ee",
-        "border": "#d0d0d0",
-        "hoverBorder": "#6200ee",
+        "hoverText": "#6200EE",
+        "border": "#D0D0D0",
+        "hoverBorder": "#6200EE",
         "shadow": "0 2px 4px rgba(0, 0, 0, 0.15)",
         "hoverShadow": "0 4px 8px rgba(0, 0, 0, 0.2)"
       },
       "popupMenu": {
-        "background": "#ffffff",
-        "hoverBackground": "#ede7ff",
+        "background": "#FFFFFF",
+        "hoverBackground": "#EDE7FF",
         "text": "#222222",
-        "hoverText": "#6200ee",
-        "border": "#d0d0d0",
-        "hoverBorder": "#6200ee",
+        "hoverText": "#6200EE",
+        "border": "#D0D0D0",
+        "hoverBorder": "#6200EE",
         "shadow": "0 10px 24px rgba(0, 0, 0, 0.18)",
         "hoverShadow": "0 12px 28px rgba(0, 0, 0, 0.2)",
-        "searchBackground": "#f5f5f5",
+        "searchBackground": "#F5F5F5",
         "searchText": "#222222",
         "searchPlaceholder": "#777777",
-        "searchBorder": "#d0d0d0",
+        "searchBorder": "#D0D0D0",
         "searchFocusShadow": "0 0 0 1px rgba(98, 0, 238, 0.3)"
       }
     },
     "modals": {
       "diagramPicker": {
-        "background": "#ffffff",
-        "hoverBackground": "#ede7ff",
-        "border": "#d0d0d0",
+        "background": "#FFFFFF",
+        "hoverBackground": "#EDE7FF",
+        "border": "#D0D0D0",
         "textMuted": "#555555",
-        "deleteIcon": "#f44336"
+        "deleteIcon": "#D32F2F"
       }
     },
-    "fonts": {
-      "base": "system-ui, sans-serif",
-      "monospace": "monospace"
-    }
+    "fonts": { "base": "system-ui, sans-serif", "monospace": "monospace" }
   },
-  "solarizedDark": {
-    "name": "Solarized Dark",
+
+  "gilded": {
+    "name": "Gilded Gold",
     "colors": {
-      "background": "#002b36",
-      "foreground": "#00ffcc",
-      "primary": "#073642",
-      "accent": "#64ffda",
-      "surface": "#003847",
-      "border": "#586e75",
-      "muted": "#93a1a1",
-      "ok": "#859900",
-      "warn": "#b58900",
-      "err": "#dc322f"
+      "background": "#0F1115",
+      "foreground": "#F3E9D2",
+      "primary": "#171A21",
+      "accent": "#D4AF37",
+      "accent2": "#F2D16B",
+      "surface": "#141821",
+      "border": "#3A3220",
+      "muted": "#CBBE9A",
+      "ok": "#57D29C",
+      "warn": "#F5C451",
+      "err": "#F06A6A"
     },
     "bpmn": {
-      "shape": {
-        "fill": "#003847",
-        "stroke": "#586e75",
-        "strokeWidth": 2
-      },
-      "connection": {
-        "stroke": "#64ffda",
-        "strokeWidth": 2
-      },
-      "marker": {
-        "fill": "#2aa198",
-        "stroke": "#b2fff3"
-      },
-      "label": {
-        "fontFamily": "Arial, sans-serif",
-        "fill": "#00ffcc"
-      },
-      "selected": {
-        "stroke": "#64ffda",
-        "strokeWidth": 3
-      },
+      "shape": { "fill": "#171A21", "stroke": "#3A3220", "strokeWidth": 2 },
+      "connection": { "stroke": "#D4AF37", "strokeWidth": 2 },
+      "marker": { "fill": "#F3E9D2", "stroke": "#F2D16B" },
+      "label": { "fontFamily": "system-ui, sans-serif", "fill": "#F3E9D2" },
+      "selected": { "stroke": "#F2D16B", "strokeWidth": 3 },
       "palette": {
-        "background": "#003847",
-        "text": "#00ffcc",
-        "border": "#586e75",
-        "shadow": "0 6px 16px rgba(0, 43, 54, 0.55)",
-        "groupBackground": "#003847",
-        "groupText": "#64ffda",
-        "groupBorder": "#586e75",
+        "background": "#141821",
+        "text": "#F3E9D2",
+        "border": "#3A3220",
+        "shadow": "0 6px 18px rgba(0, 0, 0, 0.55)",
+        "groupBackground": "#141821",
+        "groupText": "#D4AF37",
+        "groupBorder": "#3A3220",
         "entryBackground": "transparent",
-        "entryText": "#00ffcc",
-        "entryBorder": "#586e75",
-        "entryHoverBackground": "#004d5c",
-        "entryHoverText": "#64ffda",
-        "entryHoverBorder": "#64ffda",
-        "entryHoverShadow": "0 2px 8px rgba(0, 43, 54, 0.5)",
-        "entryActiveBackground": "#64ffda",
-        "entryActiveText": "#002b36",
-        "entryActiveBorder": "#64ffda",
-        "entryActiveShadow": "0 0 0 2px rgba(100, 255, 218, 0.35)"
+        "entryText": "#F3E9D2",
+        "entryBorder": "#3A3220",
+        "entryHoverBackground": "#1C2230",
+        "entryHoverText": "#FFFFFF",
+        "entryHoverBorder": "#F2D16B",
+        "entryHoverShadow": "0 2px 8px rgba(0, 0, 0, 0.55)",
+        "entryActiveBackground": "#D4AF37",
+        "entryActiveText": "#0F1115",
+        "entryActiveBorder": "#F2D16B",
+        "entryActiveShadow": "0 0 0 2px rgba(212, 175, 55, 0.35)"
       },
-      "startEvent": {
-        "fill": "#859900",
-        "stroke": "#586e75"
-      },
-      "endEvent": {
-        "fill": "#dc322f",
-        "stroke": "#586e75"
-      },
-      "task": {
-        "fill": "#073642",
-        "stroke": "#586e75"
-      },
-      "gateway": {
-        "fill": "#b58900",
-        "stroke": "#586e75"
-      },
+      "startEvent": { "fill": "#57D29C", "stroke": "#3A3220" },
+      "endEvent": { "fill": "#F06A6A", "stroke": "#3A3220" },
+      "task": { "fill": "#171A21", "stroke": "#3A3220" },
+      "gateway": { "fill": "#F5C451", "stroke": "#3A3220" },
       "quickMenu": {
-        "background": "#003847",
-        "hoverBackground": "#004d5c",
-        "text": "#64ffda",
-        "hoverText": "#00ffcc",
-        "border": "#586e75",
-        "hoverBorder": "#64ffda",
-        "shadow": "0 2px 6px rgba(0, 43, 54, 0.45)",
-        "hoverShadow": "0 4px 10px rgba(0, 43, 54, 0.6)"
+        "background": "#141821",
+        "hoverBackground": "#1C2230",
+        "text": "#D4AF37",
+        "hoverText": "#FFFFFF",
+        "border": "#3A3220",
+        "hoverBorder": "#F2D16B",
+        "shadow": "0 2px 6px rgba(0, 0, 0, 0.5)",
+        "hoverShadow": "0 4px 10px rgba(0, 0, 0, 0.65)"
       },
       "popupMenu": {
-        "background": "#003847",
-        "hoverBackground": "#004d5c",
-        "text": "#00ffcc",
-        "hoverText": "#64ffda",
-        "border": "#586e75",
-        "hoverBorder": "#64ffda",
-        "shadow": "0 10px 24px rgba(0, 43, 54, 0.6)",
-        "hoverShadow": "0 12px 28px rgba(0, 43, 54, 0.7)",
-        "searchBackground": "#073642",
-        "searchText": "#64ffda",
-        "searchPlaceholder": "#5f8c94",
-        "searchBorder": "#586e75",
-        "searchFocusShadow": "0 0 0 1px rgba(100, 255, 218, 0.55)"
+        "background": "#141821",
+        "hoverBackground": "#1C2230",
+        "text": "#F3E9D2",
+        "hoverText": "#D4AF37",
+        "border": "#3A3220",
+        "hoverBorder": "#F2D16B",
+        "shadow": "0 10px 24px rgba(0, 0, 0, 0.65)",
+        "hoverShadow": "0 12px 28px rgba(0, 0, 0, 0.75)",
+        "searchBackground": "#171A21",
+        "searchText": "#F3E9D2",
+        "searchPlaceholder": "#CBBE9A",
+        "searchBorder": "#3A3220",
+        "searchFocusShadow": "0 0 0 1px rgba(212, 175, 55, 0.55)"
       }
     },
     "modals": {
       "diagramPicker": {
-        "background": "#003847",
-        "hoverBackground": "#004d5c",
-        "border": "#586e75",
-        "textMuted": "#93a1a1",
-        "deleteIcon": "#dc322f"
+        "background": "#141821",
+        "hoverBackground": "#1C2230",
+        "border": "#3A3220",
+        "textMuted": "#CBBE9A",
+        "deleteIcon": "#F06A6A"
       }
     },
-    "fonts": {
-      "base": "Arial, sans-serif",
-      "monospace": "Courier New"
-    }
-  },
-  "solarizedLight": {
-    "name": "Solarized Light",
-    "colors": {
-      "background": "#fdf6e3",
-      "foreground": "#657b83",
-      "primary": "#eee8d5",
-      "accent": "#268bd2",
-      "surface": "#faf3dc",
-      "border": "#93a1a1",
-      "muted": "#93a1a1",
-      "ok": "#859900",
-      "warn": "#b58900",
-      "err": "#dc322f"
-    },
-    "bpmn": {
-      "shape": {
-        "fill": "#faf3dc",
-        "stroke": "#93a1a1",
-        "strokeWidth": 2
-      },
-      "connection": {
-        "stroke": "#657b83",
-        "strokeWidth": 2
-      },
-      "marker": {
-        "fill": "#268bd2",
-        "stroke": "#1d6ea5"
-      },
-      "label": {
-        "fontFamily": "Georgia, serif",
-        "fill": "#586e75"
-      },
-      "selected": {
-        "stroke": "#268bd2",
-        "strokeWidth": 3
-      },
-      "palette": {
-        "background": "#faf3dc",
-        "text": "#657b83",
-        "border": "#93a1a1",
-        "shadow": "0 4px 12px rgba(101, 123, 131, 0.2)",
-        "groupBackground": "#f0e6c8",
-        "groupText": "#268bd2",
-        "groupBorder": "#93a1a1",
-        "entryBackground": "transparent",
-        "entryText": "#657b83",
-        "entryBorder": "#cfc7b4",
-        "entryHoverBackground": "#f0e6c8",
-        "entryHoverText": "#268bd2",
-        "entryHoverBorder": "#268bd2",
-        "entryHoverShadow": "0 2px 6px rgba(38, 139, 210, 0.2)",
-        "entryActiveBackground": "#268bd2",
-        "entryActiveText": "#fdf6e3",
-        "entryActiveBorder": "#268bd2",
-        "entryActiveShadow": "0 0 0 2px rgba(38, 139, 210, 0.25)"
-      },
-      "startEvent": {
-        "fill": "#859900",
-        "stroke": "#93a1a1"
-      },
-      "endEvent": {
-        "fill": "#dc322f",
-        "stroke": "#93a1a1"
-      },
-      "task": {
-        "fill": "#eee8d5",
-        "stroke": "#93a1a1"
-      },
-      "gateway": {
-        "fill": "#b58900",
-        "stroke": "#93a1a1"
-      },
-      "quickMenu": {
-        "background": "#faf3dc",
-        "hoverBackground": "#f0e6c8",
-        "text": "#657b83",
-        "hoverText": "#268bd2",
-        "border": "#93a1a1",
-        "hoverBorder": "#268bd2",
-        "shadow": "0 2px 4px rgba(101, 123, 131, 0.2)",
-        "hoverShadow": "0 4px 8px rgba(101, 123, 131, 0.3)"
-      },
-      "popupMenu": {
-        "background": "#faf3dc",
-        "hoverBackground": "#f0e6c8",
-        "text": "#657b83",
-        "hoverText": "#268bd2",
-        "border": "#93a1a1",
-        "hoverBorder": "#268bd2",
-        "shadow": "0 10px 24px rgba(101, 123, 131, 0.25)",
-        "hoverShadow": "0 12px 28px rgba(101, 123, 131, 0.3)",
-        "searchBackground": "#eee8d5",
-        "searchText": "#657b83",
-        "searchPlaceholder": "#93a1a1",
-        "searchBorder": "#93a1a1",
-        "searchFocusShadow": "0 0 0 1px rgba(38, 139, 210, 0.35)"
-      }
-    },
-    "modals": {
-      "diagramPicker": {
-        "background": "#faf3dc",
-        "hoverBackground": "#f0e6c8",
-        "border": "#93a1a1",
-        "textMuted": "#93a1a1",
-        "deleteIcon": "#dc322f"
-      }
-    },
-    "fonts": {
-      "base": "Georgia, serif",
-      "monospace": "Courier"
-    }
-  },
-  "forest": {
-    "name": "Forest",
-    "colors": {
-      "background": "#2e3d29",
-      "foreground": "#00ffcc",
-      "primary": "#3a4d37",
-      "accent": "#64ffda",
-      "surface": "#2d4f3a",
-      "border": "#4caf50",
-      "muted": "#99ccb3",
-      "ok": "#4caf50",
-      "warn": "#ffb74d",
-      "err": "#e57373"
-    },
-    "bpmn": {
-      "shape": {
-        "fill": "#2d4f3a",
-        "stroke": "#4caf50",
-        "strokeWidth": 2
-      },
-      "connection": {
-        "stroke": "#64ffda",
-        "strokeWidth": 2
-      },
-      "marker": {
-        "fill": "#c8ffef",
-        "stroke": "#2de2b7"
-      },
-      "label": {
-        "fontFamily": "Verdana, sans-serif",
-        "fill": "#00ffcc"
-      },
-      "selected": {
-        "stroke": "#64ffda",
-        "strokeWidth": 3
-      },
-      "palette": {
-        "background": "#2d4f3a",
-        "text": "#c8ffef",
-        "border": "#4caf50",
-        "shadow": "0 6px 18px rgba(23, 38, 27, 0.55)",
-        "groupBackground": "#2d4f3a",
-        "groupText": "#64ffda",
-        "groupBorder": "#4caf50",
-        "entryBackground": "transparent",
-        "entryText": "#c8ffef",
-        "entryBorder": "#3a6f52",
-        "entryHoverBackground": "#356448",
-        "entryHoverText": "#ffffff",
-        "entryHoverBorder": "#64ffda",
-        "entryHoverShadow": "0 2px 8px rgba(23, 38, 27, 0.55)",
-        "entryActiveBackground": "#64ffda",
-        "entryActiveText": "#1b2a1e",
-        "entryActiveBorder": "#64ffda",
-        "entryActiveShadow": "0 0 0 2px rgba(100, 255, 218, 0.35)"
-      },
-      "startEvent": {
-        "fill": "#4caf50",
-        "stroke": "#4caf50"
-      },
-      "endEvent": {
-        "fill": "#e57373",
-        "stroke": "#4caf50"
-      },
-      "task": {
-        "fill": "#3a4d37",
-        "stroke": "#4caf50"
-      },
-      "gateway": {
-        "fill": "#ffb74d",
-        "stroke": "#4caf50"
-      },
-      "quickMenu": {
-        "background": "#2d4f3a",
-        "hoverBackground": "#356448",
-        "text": "#64ffda",
-        "hoverText": "#ffffff",
-        "border": "#4caf50",
-        "hoverBorder": "#64ffda",
-        "shadow": "0 2px 6px rgba(23, 38, 27, 0.5)",
-        "hoverShadow": "0 4px 10px rgba(23, 38, 27, 0.65)"
-      },
-      "popupMenu": {
-        "background": "#2d4f3a",
-        "hoverBackground": "#356448",
-        "text": "#c8ffef",
-        "hoverText": "#ffffff",
-        "border": "#4caf50",
-        "hoverBorder": "#64ffda",
-        "shadow": "0 10px 24px rgba(23, 38, 27, 0.6)",
-        "hoverShadow": "0 12px 28px rgba(23, 38, 27, 0.7)",
-        "searchBackground": "#244030",
-        "searchText": "#c8ffef",
-        "searchPlaceholder": "#88c8b2",
-        "searchBorder": "#4caf50",
-        "searchFocusShadow": "0 0 0 1px rgba(100, 255, 218, 0.6)"
-      }
-    },
-    "modals": {
-      "diagramPicker": {
-        "background": "#2d4f3a",
-        "hoverBackground": "#356448",
-        "border": "#4caf50",
-        "textMuted": "#99ccb3",
-        "deleteIcon": "#e57373"
-      }
-    },
-    "fonts": {
-      "base": "Verdana, sans-serif",
-      "monospace": "Menlo"
-    }
-  },
-  "duneEmbers": {
-    "name": "Dune Embers",
-    "colors": {
-      "background": "#2b1d12",
-      "foreground": "#fbe2b8",
-      "primary": "#4a2f1b",
-      "accent": "#ff7847",
-      "surface": "#3b2616",
-      "border": "#8c5a32",
-      "muted": "#c0966a",
-      "ok": "#d8b46a",
-      "warn": "#ff9f43",
-      "err": "#d9544d"
-    },
-    "bpmn": {
-      "shape": {
-        "fill": "#3b2616",
-        "stroke": "#8c5a32",
-        "strokeWidth": 2
-      },
-      "connection": {
-        "stroke": "#ff7847",
-        "strokeWidth": 2
-      },
-      "marker": {
-        "fill": "#ffd1c2",
-        "stroke": "#ff7847"
-      },
-      "label": {
-        "fontFamily": "\"Trebuchet MS\", sans-serif",
-        "fill": "#fbe2b8"
-      },
-      "selected": {
-        "stroke": "#ff7847",
-        "strokeWidth": 3
-      },
-      "palette": {
-        "background": "#3b2616",
-        "text": "#fbe2b8",
-        "border": "#8c5a32",
-        "shadow": "0 6px 16px rgba(43, 29, 18, 0.55)",
-        "groupBackground": "#3b2616",
-        "groupText": "#ff7847",
-        "groupBorder": "#8c5a32",
-        "entryBackground": "transparent",
-        "entryText": "#fbe2b8",
-        "entryBorder": "#8c5a32",
-        "entryHoverBackground": "#4a2f1b",
-        "entryHoverText": "#ff7847",
-        "entryHoverBorder": "#ff7847",
-        "entryHoverShadow": "0 2px 8px rgba(43, 29, 18, 0.55)",
-        "entryActiveBackground": "#ff7847",
-        "entryActiveText": "#2b1d12",
-        "entryActiveBorder": "#ff7847",
-        "entryActiveShadow": "0 0 0 2px rgba(255, 120, 71, 0.35)"
-      },
-      "startEvent": {
-        "fill": "#d8b46a",
-        "stroke": "#8c5a32"
-      },
-      "endEvent": {
-        "fill": "#d9544d",
-        "stroke": "#8c5a32"
-      },
-      "task": {
-        "fill": "#4a2f1b",
-        "stroke": "#8c5a32"
-      },
-      "gateway": {
-        "fill": "#ff9f43",
-        "stroke": "#8c5a32"
-      },
-      "quickMenu": {
-        "background": "#3b2616",
-        "hoverBackground": "#4a2f1b",
-        "text": "#fbe2b8",
-        "hoverText": "#ff7847",
-        "border": "#8c5a32",
-        "hoverBorder": "#ff7847",
-        "shadow": "0 2px 6px rgba(43, 29, 18, 0.5)",
-        "hoverShadow": "0 4px 10px rgba(43, 29, 18, 0.65)"
-      },
-      "popupMenu": {
-        "background": "#3b2616",
-        "hoverBackground": "#4a2f1b",
-        "text": "#fbe2b8",
-        "hoverText": "#ff7847",
-        "border": "#8c5a32",
-        "hoverBorder": "#ff7847",
-        "shadow": "0 10px 24px rgba(43, 29, 18, 0.6)",
-        "hoverShadow": "0 12px 28px rgba(43, 29, 18, 0.7)",
-        "searchBackground": "#4a2f1b",
-        "searchText": "#fbe2b8",
-        "searchPlaceholder": "#d6b58d",
-        "searchBorder": "#8c5a32",
-        "searchFocusShadow": "0 0 0 1px rgba(255, 120, 71, 0.55)"
-      }
-    },
-    "modals": {
-      "diagramPicker": {
-        "background": "#3b2616",
-        "hoverBackground": "#4a2f1b",
-        "border": "#8c5a32",
-        "textMuted": "#c0966a",
-        "deleteIcon": "#d9544d"
-      }
-    },
-    "fonts": {
-      "base": "\"Trebuchet MS\", sans-serif",
-      "monospace": "\"Courier New\", monospace"
-    }
-  },
-  "candy": {
-    "name": "Candy",
-    "colors": {
-      "background": "#ffeefc",
-      "foreground": "#6b006b",
-      "primary": "#ffd6f3",
-      "accent": "#ff69b4",
-      "surface": "#fff0f9",
-      "border": "#ff99cc",
-      "muted": "#b26ba6",
-      "ok": "#66bb6a",
-      "warn": "#ffb74d",
-      "err": "#ef5350"
-    },
-    "bpmn": {
-      "shape": {
-        "fill": "#fff0f9",
-        "stroke": "#ff99cc",
-        "strokeWidth": 2
-      },
-      "connection": {
-        "stroke": "#6b006b",
-        "strokeWidth": 2
-      },
-      "marker": {
-        "fill": "#ff69b4",
-        "stroke": "#b3007d"
-      },
-      "label": {
-        "fontFamily": "Comic Sans MS, cursive",
-        "fill": "#6b006b"
-      },
-      "selected": {
-        "stroke": "#ff69b4",
-        "strokeWidth": 3
-      },
-      "palette": {
-        "background": "#fff0f9",
-        "text": "#6b006b",
-        "border": "#ff99cc",
-        "shadow": "0 4px 12px rgba(255, 105, 180, 0.25)",
-        "groupBackground": "#ffd6f3",
-        "groupText": "#ff69b4",
-        "groupBorder": "#ff99cc",
-        "entryBackground": "transparent",
-        "entryText": "#6b006b",
-        "entryBorder": "#ffb3d9",
-        "entryHoverBackground": "#ffd6f3",
-        "entryHoverText": "#ff69b4",
-        "entryHoverBorder": "#ff69b4",
-        "entryHoverShadow": "0 2px 6px rgba(255, 105, 180, 0.3)",
-        "entryActiveBackground": "#ff69b4",
-        "entryActiveText": "#fff0f9",
-        "entryActiveBorder": "#ff69b4",
-        "entryActiveShadow": "0 0 0 2px rgba(255, 105, 180, 0.35)"
-      },
-      "startEvent": {
-        "fill": "#66bb6a",
-        "stroke": "#ff99cc"
-      },
-      "endEvent": {
-        "fill": "#ef5350",
-        "stroke": "#ff99cc"
-      },
-      "task": {
-        "fill": "#ffd6f3",
-        "stroke": "#ff99cc"
-      },
-      "gateway": {
-        "fill": "#ffb74d",
-        "stroke": "#ff99cc"
-      },
-      "quickMenu": {
-        "background": "#fff0f9",
-        "hoverBackground": "#ffd6f3",
-        "text": "#6b006b",
-        "hoverText": "#ff69b4",
-        "border": "#ff99cc",
-        "hoverBorder": "#ff69b4",
-        "shadow": "0 2px 4px rgba(255, 105, 180, 0.25)",
-        "hoverShadow": "0 4px 8px rgba(255, 105, 180, 0.35)"
-      },
-      "popupMenu": {
-        "background": "#fff0f9",
-        "hoverBackground": "#ffd6f3",
-        "text": "#6b006b",
-        "hoverText": "#ff69b4",
-        "border": "#ff99cc",
-        "hoverBorder": "#ff69b4",
-        "shadow": "0 10px 20px rgba(255, 105, 180, 0.25)",
-        "hoverShadow": "0 12px 24px rgba(255, 105, 180, 0.3)",
-        "searchBackground": "#ffe6f7",
-        "searchText": "#6b006b",
-        "searchPlaceholder": "#b26ba6",
-        "searchBorder": "#ff99cc",
-        "searchFocusShadow": "0 0 0 1px rgba(255, 105, 180, 0.35)"
-      }
-    },
-    "modals": {
-      "diagramPicker": {
-        "background": "#fff0f9",
-        "hoverBackground": "#ffd6f3",
-        "border": "#ff99cc",
-        "textMuted": "#b26ba6",
-        "deleteIcon": "#ef5350"
-      }
-    },
-    "fonts": {
-      "base": "Comic Sans MS, cursive",
-      "monospace": "Courier"
-    }
-  },
-  "midnight": {
-    "name": "Midnight",
-    "colors": {
-      "background": "#1a1a2e",
-      "foreground": "#00ffcc",
-      "primary": "#16213e",
-      "accent": "#64ffda",
-      "surface": "#202040",
-      "border": "#2a2a5c",
-      "muted": "#7a7a9a",
-      "ok": "#00e676",
-      "warn": "#ffb74d",
-      "err": "#ff5252"
-    },
-    "bpmn": {
-      "shape": {
-        "fill": "#202040",
-        "stroke": "#2a2a5c",
-        "strokeWidth": 2
-      },
-      "connection": {
-        "stroke": "#36d9b7",
-        "strokeWidth": 2
-      },
-      "marker": {
-        "fill": "#b2fff2",
-        "stroke": "#e8fffb"
-      },
-      "label": {
-        "fontFamily": "Helvetica Neue, sans-serif",
-        "fill": "#00ffcc"
-      },
-      "selected": {
-        "stroke": "#64ffda",
-        "strokeWidth": 3
-      },
-      "palette": {
-        "background": "#202040",
-        "text": "#a5fff2",
-        "border": "#2a2a5c",
-        "shadow": "0 6px 16px rgba(22, 33, 62, 0.55)",
-        "groupBackground": "#202040",
-        "groupText": "#64ffda",
-        "groupBorder": "#2a2a5c",
-        "entryBackground": "transparent",
-        "entryText": "#a5fff2",
-        "entryBorder": "#2a2a5c",
-        "entryHoverBackground": "#2a2a5c",
-        "entryHoverText": "#ffffff",
-        "entryHoverBorder": "#64ffda",
-        "entryHoverShadow": "0 2px 8px rgba(22, 33, 62, 0.55)",
-        "entryActiveBackground": "#64ffda",
-        "entryActiveText": "#1a1a2e",
-        "entryActiveBorder": "#64ffda",
-        "entryActiveShadow": "0 0 0 2px rgba(100, 255, 218, 0.35)"
-      },
-      "startEvent": {
-        "fill": "#00e676",
-        "stroke": "#2a2a5c"
-      },
-      "endEvent": {
-        "fill": "#ff5252",
-        "stroke": "#2a2a5c"
-      },
-      "task": {
-        "fill": "#16213e",
-        "stroke": "#2a2a5c"
-      },
-      "gateway": {
-        "fill": "#ffb74d",
-        "stroke": "#2a2a5c"
-      },
-      "quickMenu": {
-        "background": "#202040",
-        "hoverBackground": "#2a2a5c",
-        "text": "#64ffda",
-        "hoverText": "#ffffff",
-        "border": "#2a2a5c",
-        "hoverBorder": "#64ffda",
-        "shadow": "0 2px 6px rgba(22, 33, 62, 0.5)",
-        "hoverShadow": "0 4px 10px rgba(22, 33, 62, 0.65)"
-      },
-      "popupMenu": {
-        "background": "#202040",
-        "hoverBackground": "#2a2a5c",
-        "text": "#a5fff2",
-        "hoverText": "#ffffff",
-        "border": "#2a2a5c",
-        "hoverBorder": "#64ffda",
-        "shadow": "0 10px 24px rgba(22, 33, 62, 0.6)",
-        "hoverShadow": "0 12px 28px rgba(22, 33, 62, 0.7)",
-        "searchBackground": "#1a1a2e",
-        "searchText": "#a5fff2",
-        "searchPlaceholder": "#6fd7c4",
-        "searchBorder": "#2a2a5c",
-        "searchFocusShadow": "0 0 0 1px rgba(100, 255, 218, 0.6)"
-      }
-    },
-    "modals": {
-      "diagramPicker": {
-        "background": "#202040",
-        "hoverBackground": "#2a2a5c",
-        "border": "#2a2a5c",
-        "textMuted": "#7a7a9a",
-        "deleteIcon": "#ff5252"
-      }
-    },
-    "fonts": {
-      "base": "Helvetica Neue, sans-serif",
-      "monospace": "Courier New"
-    }
-  },
-  "retro": {
-    "name": "Retro",
-    "colors": {
-      "background": "#f4f1bb",
-      "foreground": "#2d2d2a",
-      "primary": "#e6beae",
-      "accent": "#9bc1bc",
-      "surface": "#fcecc9",
-      "border": "#c5a880",
-      "muted": "#6e6e69",
-      "ok": "#6b8e23",
-      "warn": "#b8860b",
-      "err": "#8b0000"
-    },
-    "bpmn": {
-      "shape": {
-        "fill": "#fcecc9",
-        "stroke": "#c5a880",
-        "strokeWidth": 2
-      },
-      "connection": {
-        "stroke": "#2d2d2a",
-        "strokeWidth": 2
-      },
-      "marker": {
-        "fill": "#9bc1bc",
-        "stroke": "#4a6d69"
-      },
-      "label": {
-        "fontFamily": "\"Courier Prime\", monospace",
-        "fill": "#2d2d2a"
-      },
-      "selected": {
-        "stroke": "#9bc1bc",
-        "strokeWidth": 3
-      },
-      "palette": {
-        "background": "#fcecc9",
-        "text": "#2d2d2a",
-        "border": "#c5a880",
-        "shadow": "0 4px 12px rgba(45, 45, 42, 0.2)",
-        "groupBackground": "#f8dfa9",
-        "groupText": "#9bc1bc",
-        "groupBorder": "#c5a880",
-        "entryBackground": "transparent",
-        "entryText": "#2d2d2a",
-        "entryBorder": "#d8c19d",
-        "entryHoverBackground": "#f8dfa9",
-        "entryHoverText": "#9bc1bc",
-        "entryHoverBorder": "#9bc1bc",
-        "entryHoverShadow": "0 2px 6px rgba(45, 45, 42, 0.25)",
-        "entryActiveBackground": "#9bc1bc",
-        "entryActiveText": "#2d2d2a",
-        "entryActiveBorder": "#9bc1bc",
-        "entryActiveShadow": "0 0 0 2px rgba(155, 193, 188, 0.3)"
-      },
-      "startEvent": {
-        "fill": "#6b8e23",
-        "stroke": "#c5a880"
-      },
-      "endEvent": {
-        "fill": "#8b0000",
-        "stroke": "#c5a880"
-      },
-      "task": {
-        "fill": "#e6beae",
-        "stroke": "#c5a880"
-      },
-      "gateway": {
-        "fill": "#b8860b",
-        "stroke": "#c5a880"
-      },
-      "quickMenu": {
-        "background": "#fcecc9",
-        "hoverBackground": "#f8dfa9",
-        "text": "#2d2d2a",
-        "hoverText": "#9bc1bc",
-        "border": "#c5a880",
-        "hoverBorder": "#9bc1bc",
-        "shadow": "0 2px 4px rgba(45, 45, 42, 0.2)",
-        "hoverShadow": "0 4px 8px rgba(45, 45, 42, 0.3)"
-      },
-      "popupMenu": {
-        "background": "#fcecc9",
-        "hoverBackground": "#f8dfa9",
-        "text": "#2d2d2a",
-        "hoverText": "#9bc1bc",
-        "border": "#c5a880",
-        "hoverBorder": "#9bc1bc",
-        "shadow": "0 10px 24px rgba(45, 45, 42, 0.2)",
-        "hoverShadow": "0 12px 28px rgba(45, 45, 42, 0.25)",
-        "searchBackground": "#f4f1bb",
-        "searchText": "#2d2d2a",
-        "searchPlaceholder": "#6e6e69",
-        "searchBorder": "#c5a880",
-        "searchFocusShadow": "0 0 0 1px rgba(155, 193, 188, 0.35)"
-      }
-    },
-    "modals": {
-      "diagramPicker": {
-        "background": "#fcecc9",
-        "hoverBackground": "#f8dfa9",
-        "border": "#c5a880",
-        "textMuted": "#6e6e69",
-        "deleteIcon": "#8b0000"
-      }
-    },
-    "fonts": {
-      "base": "\"Courier Prime\", monospace",
-      "monospace": "\"Courier Prime\", monospace"
-    }
-  },
-  "matrix": {
-    "name": "Matrix",
-    "colors": {
-      "background": "#000000",
-      "foreground": "#e0ffe0",
-      "primary": "#004400",
-      "accent": "#00ff00",
-      "surface": "#002200",
-      "border": "#00aa00",
-      "muted": "#008800",
-      "ok": "#00ff00",
-      "warn": "#ffff00",
-      "err": "#ff0000"
-    },
-    "bpmn": {
-      "shape": {
-        "fill": "#002200",
-        "stroke": "#00aa00",
-        "strokeWidth": 2
-      },
-      "connection": {
-        "stroke": "#00bfa5",
-        "strokeWidth": 2
-      },
-      "marker": {
-        "fill": "#00ff00",
-        "stroke": "#003300"
-      },
-      "label": {
-        "fontFamily": "\"Share Tech Mono\", monospace",
-        "fill": "#00ff00"
-      },
-      "selected": {
-        "stroke": "#00ff00",
-        "strokeWidth": 3
-      },
-      "palette": {
-        "background": "#002200",
-        "text": "#00ff00",
-        "border": "#00aa00",
-        "shadow": "0 6px 16px rgba(0, 68, 0, 0.65)",
-        "groupBackground": "#002200",
-        "groupText": "#00ff00",
-        "groupBorder": "#00aa00",
-        "entryBackground": "transparent",
-        "entryText": "#00ff00",
-        "entryBorder": "#008800",
-        "entryHoverBackground": "#003300",
-        "entryHoverText": "#e0ffe0",
-        "entryHoverBorder": "#00ff00",
-        "entryHoverShadow": "0 2px 8px rgba(0, 68, 0, 0.6)",
-        "entryActiveBackground": "#00ff00",
-        "entryActiveText": "#001100",
-        "entryActiveBorder": "#00ff00",
-        "entryActiveShadow": "0 0 0 2px rgba(0, 255, 0, 0.4)"
-      },
-      "startEvent": {
-        "fill": "#00ff00",
-        "stroke": "#00aa00"
-      },
-      "endEvent": {
-        "fill": "#ff0000",
-        "stroke": "#00aa00"
-      },
-      "task": {
-        "fill": "#004400",
-        "stroke": "#00aa00"
-      },
-      "gateway": {
-        "fill": "#ffff00",
-        "stroke": "#00aa00"
-      },
-      "quickMenu": {
-        "background": "#002200",
-        "hoverBackground": "#003300",
-        "text": "#00ff00",
-        "hoverText": "#e0ffe0",
-        "border": "#00aa00",
-        "hoverBorder": "#00ff00",
-        "shadow": "0 2px 6px rgba(0, 68, 0, 0.55)",
-        "hoverShadow": "0 4px 10px rgba(0, 68, 0, 0.7)"
-      },
-      "popupMenu": {
-        "background": "#002200",
-        "hoverBackground": "#003300",
-        "text": "#00ff00",
-        "hoverText": "#e0ffe0",
-        "border": "#00aa00",
-        "hoverBorder": "#00ff00",
-        "shadow": "0 10px 24px rgba(0, 68, 0, 0.65)",
-        "hoverShadow": "0 12px 28px rgba(0, 68, 0, 0.75)",
-        "searchBackground": "#001600",
-        "searchText": "#66ff66",
-        "searchPlaceholder": "#00b44c",
-        "searchBorder": "#008800",
-        "searchFocusShadow": "0 0 0 1px rgba(0, 255, 0, 0.6)"
-      }
-    },
-    "modals": {
-      "diagramPicker": {
-        "background": "#002200",
-        "hoverBackground": "#003300",
-        "border": "#00aa00",
-        "textMuted": "#008800",
-        "deleteIcon": "#ff0000"
-      }
-    },
-    "fonts": {
-      "base": "\"Share Tech Mono\", monospace",
-      "monospace": "\"Share Tech Mono\", monospace"
-    }
+    "fonts": { "base": "system-ui, sans-serif", "monospace": "monospace" }
   }
 }
