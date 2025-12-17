@@ -292,6 +292,16 @@ export function themedThemeSelector(themeStream = currentTheme, options = {}) {
 
   const select = document.createElement('select');
 
+  const statusMessage = document.createElement('div');
+  statusMessage.textContent = 'Theme pack failed to load. Using default theme.';
+  statusMessage.className = 'theme-load-error';
+  statusMessage.style.display = 'none';
+  statusMessage.style.fontSize = '0.9rem';
+  statusMessage.style.fontWeight = '600';
+  statusMessage.style.padding = '0.35rem 0.5rem';
+  statusMessage.style.borderRadius = '4px';
+  statusMessage.style.whiteSpace = 'nowrap';
+
   themesLoaded.then(() => {
     Object.entries(themes).forEach(([key, theme]) => {
       const option = document.createElement('option');
@@ -330,9 +340,17 @@ export function themedThemeSelector(themeStream = currentTheme, options = {}) {
     select.style.backgroundColor = colors.primary;
     select.style.color = colors.foreground;
     select.style.border = `1px solid ${colors.foreground}`;
+
+    statusMessage.style.backgroundColor = colors.panel2 || colors.surface || colors.background;
+    statusMessage.style.border = `1px solid ${colors.err || colors.border || colors.foreground}`;
+    statusMessage.style.color = colors.err || colors.foreground;
   }
 
   const unsubscribeTheme = themeStream.subscribe(theme => applyStyles(theme));
+
+  const unsubscribeStatus = themeLoadStatus.subscribe(status => {
+    statusMessage.style.display = status === 'error' ? 'block' : 'none';
+  });
 
   const handleChange = () => {
     const newKey = select.value;
@@ -350,6 +368,7 @@ export function themedThemeSelector(themeStream = currentTheme, options = {}) {
 
   const cleanup = () => {
     unsubscribeTheme?.();
+    unsubscribeStatus?.();
     select.removeEventListener('change', handleChange);
   };
 
@@ -359,6 +378,7 @@ export function themedThemeSelector(themeStream = currentTheme, options = {}) {
 
   container.appendChild(label);
   container.appendChild(select);
+  container.appendChild(statusMessage);
   return container;
 }
 

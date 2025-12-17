@@ -171,3 +171,46 @@ test('themedThemeSelector autoDispose opt-out preserves subscription', async t =
 
   assert.equal(themeStream.subscribers.length, initialSubscribers + 1);
 });
+
+test('theme load error indicator shows only on error', async t => {
+  const originalGlobals = {
+    document: global.document,
+    MutationObserver: global.MutationObserver,
+    localStorage: global.localStorage,
+    fetch: global.fetch
+  };
+
+  const { document, MutationObserver } = createMockDom();
+  global.document = document;
+  global.MutationObserver = MutationObserver;
+  global.localStorage = createLocalStorageMock();
+  global.fetch = () =>
+    Promise.resolve({
+      json: () => Promise.resolve({ desertSunset: { colors: {}, fonts: {} } })
+    });
+
+  t.after(() => {
+    global.document = originalGlobals.document;
+    global.MutationObserver = originalGlobals.MutationObserver;
+    global.localStorage = originalGlobals.localStorage;
+    global.fetch = originalGlobals.fetch;
+  });
+
+  const { themedThemeSelector, themeLoadStatus } = await import(
+    `../public/js/core/theme.js?test=${Math.random()}`
+  );
+
+  const selector = themedThemeSelector();
+  const statusEl = selector.children.find(child => child.className === 'theme-load-error');
+
+  assert.ok(statusEl, 'expected a status element to be rendered');
+
+  themeLoadStatus.set('ready');
+  assert.equal(statusEl.style.display, 'none');
+
+  themeLoadStatus.set('error');
+  assert.equal(statusEl.style.display, 'block');
+
+  themeLoadStatus.set('ready');
+  assert.equal(statusEl.style.display, 'none');
+});
