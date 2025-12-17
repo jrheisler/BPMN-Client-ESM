@@ -2,9 +2,39 @@
 
 import { Stream, observeDOMRemoval } from './stream.js';
 
-let themes = {};
+const defaultTheme = {
+  name: 'Default Dark',
+  colors: {
+    background: '#121212',
+    foreground: '#e0e0e0',
+    text: '#e0e0e0',
+    primary: '#1e1e1e',
+    surface: '#1e1e1e',
+    panel: '#1e1e1e',
+    panel2: '#1a1a1a',
+    border: '#666666',
+    muted: '#888888',
+    accent: '#bb86fc',
+    accent2: '#03dac6',
+    ok: '#00e676',
+    warn: '#ffb300',
+    err: '#ff5252',
+    bg: '#121212',
+    'bg-alt': '#1a1a1a'
+  },
+  background: '#121212',
+  foreground: '#e0e0e0',
+  accent: '#bb86fc',
+  fonts: {
+    base: 'system-ui, sans-serif',
+    monospace: 'monospace'
+  },
+  font: 'system-ui, sans-serif'
+};
 
-export const currentTheme = new Stream({ colors: {}, fonts: {} });
+let themes = { dark: defaultTheme };
+
+export const currentTheme = new Stream(defaultTheme);
 
 function validateThemes(data) {
   const valid = {};
@@ -39,14 +69,18 @@ const themeDataPromise =
 
 export const themesLoaded = themeDataPromise
   .then(json => {
-    themes = validateThemes(json);
-    const initial = getPreferredDarkTheme() || { colors: {}, fonts: {} };
+    themes = { ...themes, ...validateThemes(json) };
+    const initial = getPreferredDarkTheme();
     currentTheme.set(initial);
     maybeApplyThemeToPage(initial);
     return themes;
   })
   .catch(err => {
     console.error('Failed to load themes.json', err);
+    themes = { dark: defaultTheme };
+    currentTheme.set(defaultTheme);
+    maybeApplyThemeToPage(defaultTheme);
+    return themes;
   });
 
 function getThemeEntries() {
@@ -54,11 +88,11 @@ function getThemeEntries() {
 }
 
 function getPreferredDarkTheme() {
-  return themes.desertSunset || themes.dark || getThemeEntries()[0]?.[1];
+  return themes.desertSunset || themes.dark || defaultTheme || getThemeEntries()[0]?.[1];
 }
 
 function getPreferredLightTheme() {
-  return themes.desertSunrise || themes.light || getThemeEntries()[0]?.[1];
+  return themes.desertSunrise || themes.light || defaultTheme || getThemeEntries()[0]?.[1];
 }
 
 function getPreferredDarkKey() {
