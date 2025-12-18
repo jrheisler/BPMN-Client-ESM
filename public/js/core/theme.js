@@ -164,12 +164,6 @@ function normalizeThemeEntry(key, theme, diagOut) {
     focusRing: colors.focusRing || colors.accent || TOKEN_DEFAULTS.focusRing
   };
 
-  // Warn (don’t block) on low contrast text vs surface
-  const ratio = contrastRatio(tokens.text, tokens.surface);
-  if (ratio != null && ratio < 4.5) {
-    warnings.push(`Theme "${key}" low contrast: text vs surface ratio ${ratio.toFixed(2)} (< 4.5).`);
-  }
-
   const normalized = {
     ...theme,
     name: theme.name || key,
