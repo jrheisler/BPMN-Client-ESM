@@ -100,6 +100,50 @@ function debugSvgText(canvasEl) {
   svg.style.webkitFontSmoothing = 'antialiased';
   svg.style.mozOsxFontSmoothing = 'grayscale';
 
+  const blurFilterIds = new Set();
+
+  svg.querySelectorAll('defs filter').forEach(filter => {
+    if (filter.querySelector('feGaussianBlur')) {
+      blurFilterIds.add(filter.id);
+    }
+  });
+
+  const removedFilterAttributes = Array.from(svg.querySelectorAll('[filter]')).reduce(
+    (count, node) => {
+      const id = node
+        .getAttribute('filter')
+        ?.replace(/^url\(#/, '')
+        .replace(/\)$/, '');
+
+      if (!id || blurFilterIds.has(id)) {
+        node.removeAttribute('filter');
+        return count + 1;
+      }
+
+      return count;
+    },
+    0
+  );
+
+  if (removedFilterAttributes) {
+    console.info(`[text-debug] Removed filter attribute from ${removedFilterAttributes} node(s).`);
+  }
+
+  let removedBlurDefs = 0;
+
+  svg.querySelectorAll('defs filter').forEach(filter => {
+    if (!blurFilterIds.has(filter.id)) return;
+
+    if (filter.querySelector('feGaussianBlur')) {
+      filter.remove();
+      removedBlurDefs++;
+    }
+  });
+
+  if (removedBlurDefs) {
+    console.info(`[text-debug] Removed ${removedBlurDefs} blur filter definition(s).`);
+  }
+
   const textNodes = Array.from(svg.querySelectorAll('text'));
 
   if (textNodes.length) {
