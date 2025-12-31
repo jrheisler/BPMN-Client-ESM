@@ -88,6 +88,10 @@ const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
 const diagramXMLStream = new Stream(defaultXml);
 let cleanupCurrentModeler = null;
 
+function isBlurFilter(filter) {
+  return Boolean(filter?.querySelector('feGaussianBlur, feDropShadow'));
+}
+
 function debugSvgText(canvasEl) {
   const svg = canvasEl?.querySelector('svg');
 
@@ -103,7 +107,7 @@ function debugSvgText(canvasEl) {
   const blurFilterIds = new Set();
 
   svg.querySelectorAll('defs filter').forEach(filter => {
-    if (filter.querySelector('feGaussianBlur')) {
+    if (isBlurFilter(filter)) {
       blurFilterIds.add(filter.id);
     }
   });
@@ -134,7 +138,7 @@ function debugSvgText(canvasEl) {
   svg.querySelectorAll('defs filter').forEach(filter => {
     if (!blurFilterIds.has(filter.id)) return;
 
-    if (filter.querySelector('feGaussianBlur')) {
+    if (isBlurFilter(filter)) {
       filter.remove();
       removedBlurDefs++;
     }
@@ -178,7 +182,7 @@ function debugSvgText(canvasEl) {
 
     defs.forEach(filter => {
       if (!referencedFilterIds.has(filter.id)) return;
-      if (filter.querySelector('feGaussianBlur')) {
+      if (isBlurFilter(filter)) {
         filter.remove();
         removed++;
       }
