@@ -84,6 +84,19 @@ function contrastRatio(hexA, hexB) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
+function adjustTextForBackground(textColor, backgroundColor) {
+  const baseText = textColor || '#000000';
+  const bg = hexToRgb(backgroundColor || '');
+  const tx = hexToRgb(baseText || '');
+
+  if (!bg || !tx) return baseText;
+
+  const bgLum = relLuminance(bg);
+  // Dark backgrounds get brighter text, light backgrounds get darker text.
+  const adjustPercent = bgLum < 0.5 ? 15 : -35;
+  return shadeColor(baseText, adjustPercent) || baseText;
+}
+
 // ---------------------------------------------------------------------------
 
 const builtInThemes = { dark: defaultTheme };
@@ -576,8 +589,11 @@ export function applyThemeToPage(theme, container = document.body) {
     focusRing: tokens.focusRing || colors.focusRing || colors.accent || colors.foreground || '#000000'
   };
 
+  const adjustedText = adjustTextForBackground(t.text, t.surface);
+  const adjustedMuted = adjustTextForBackground(t.textMuted, t.surface);
+
   container.style.backgroundColor = t.surface;
-  container.style.color = t.text;
+  container.style.color = adjustedText;
   container.style.fontFamily = fonts.base || 'sans-serif';
   container.style.transition = 'background-color 0.3s ease, color 0.3s ease';
 
@@ -586,8 +602,8 @@ export function applyThemeToPage(theme, container = document.body) {
     '--bg-alt': t.surfaceAlt,
     '--panel': t.panel,
     '--panel2': t.panelAlt,
-    '--text': t.text,
-    '--muted': t.textMuted,
+    '--text': adjustedText,
+    '--muted': adjustedMuted,
     '--accent': t.accent,
     '--accent-2': t.accent2,
     '--border': t.border,
