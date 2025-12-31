@@ -1400,14 +1400,14 @@ currentTheme.subscribe(theme => {
     }
 
     /* ── base shape styles ──────────────────────────────────────────────── */
-    .djs-element.djs-shape .djs-visual > :first-child {
+    .djs-element.djs-shape:not(.djs-label) .djs-visual > :first-child {
       fill: ${shapeFill} !important;
       stroke: ${shapeStroke} !important;
       stroke-width: ${shapeStrokeWidth}px !important;
     }
 
     /* ensure multi-primitive shapes inherit fills */
-    .djs-element.djs-shape .djs-visual > :first-child + :where(rect, circle, ellipse) {
+    .djs-element.djs-shape:not(.djs-label) .djs-visual > :first-child + :where(rect, circle, ellipse) {
       fill: ${shapeFill} !important;
     }
 
@@ -1443,6 +1443,7 @@ currentTheme.subscribe(theme => {
     .djs-element .djs-label {
       fill: ${label.fill ?? colors.foreground ?? '#000'} !important;
       font-family: ${label.fontFamily ?? 'sans-serif'} !important;
+      stroke: none !important;
     }
 
     /* ── connections & arrows ───────────────────────────────────────────── */
