@@ -88,6 +88,36 @@ const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
 const diagramXMLStream = new Stream(defaultXml);
 let cleanupCurrentModeler = null;
 
+function debugSvgText(canvasEl) {
+  const svg = canvasEl?.querySelector('svg');
+
+  if (!svg) {
+    console.debug('[text-debug] No SVG found under #canvas; skipping text diagnostics.');
+    return;
+  }
+
+  const sampleText = svg.querySelector('text');
+
+  if (sampleText) {
+    const computed = getComputedStyle(sampleText);
+    console.debug('[text-debug] Computed text styles', {
+      filter: computed.filter,
+      textShadow: computed.textShadow,
+      paintOrder: computed.paintOrder,
+      fontFamily: computed.fontFamily,
+      fill: computed.fill
+    });
+  } else {
+    console.debug('[text-debug] No <text> nodes found for diagnostics.');
+  }
+
+  const filtered = Array.from(svg.querySelectorAll('text[filter]'));
+  if (filtered.length) {
+    console.debug(`[text-debug] Removing filter attribute from ${filtered.length} text node(s).`);
+    filtered.forEach(node => node.removeAttribute('filter'));
+  }
+}
+
 const loadCustomModdle = (() => {
   let moddlePromise = null;
 
@@ -235,6 +265,23 @@ const { canvasEl, header } = shell;
   const canvas          = modeler.get('canvas');
   const eventBus        = modeler.get('eventBus');
   const overlays        = modeler.get('overlays');
+
+  let textDebugScheduled = false;
+  const scheduleTextDebug = () => {
+    if (textDebugScheduled) return;
+    textDebugScheduled = true;
+    queueMicrotask(() => {
+      textDebugScheduled = false;
+      debugSvgText(canvasEl);
+    });
+  };
+
+  eventBus.on('import.done', scheduleTextDebug);
+  eventBus.on('commandStack.changed', scheduleTextDebug);
+  registerCleanup(() => {
+    eventBus.off('import.done', scheduleTextDebug);
+    eventBus.off('commandStack.changed', scheduleTextDebug);
+  });
 
   const timelineController = setupTimeline({
     canvas,
