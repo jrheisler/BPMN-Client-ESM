@@ -6,6 +6,12 @@
   background-size: 10px 10px;
 }
 
+#canvas svg {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 #canvas svg text {
   filter: none !important;
   text-shadow: none !important;
