@@ -92,7 +92,7 @@ function debugSvgText(canvasEl) {
   const svg = canvasEl?.querySelector('svg');
 
   if (!svg) {
-    console.debug('[text-debug] No SVG found under #canvas; skipping text diagnostics.');
+    console.info('[text-debug] No SVG found under #canvas; skipping text diagnostics.');
     return;
   }
 
@@ -100,7 +100,7 @@ function debugSvgText(canvasEl) {
 
   if (sampleText) {
     const computed = getComputedStyle(sampleText);
-    console.debug('[text-debug] Computed text styles', {
+    console.info('[text-debug] Computed text styles', {
       filter: computed.filter,
       textShadow: computed.textShadow,
       paintOrder: computed.paintOrder,
@@ -108,12 +108,12 @@ function debugSvgText(canvasEl) {
       fill: computed.fill
     });
   } else {
-    console.debug('[text-debug] No <text> nodes found for diagnostics.');
+    console.info('[text-debug] No <text> nodes found for diagnostics.');
   }
 
   const filtered = Array.from(svg.querySelectorAll('text[filter]'));
   if (filtered.length) {
-    console.debug(`[text-debug] Removing filter attribute from ${filtered.length} text node(s).`);
+    console.info(`[text-debug] Removing filter attribute from ${filtered.length} text node(s).`);
     filtered.forEach(node => node.removeAttribute('filter'));
   }
 }
