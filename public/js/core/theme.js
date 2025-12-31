@@ -594,7 +594,8 @@ export function applyThemeToPage(theme, container = document.body) {
     '--ok': t.ok,
     '--warn': t.warn,
     '--err': t.err,
-    '--focus': t.focusRing
+    '--focus': t.focusRing,
+    '--font-base': fonts.base || 'system-ui, sans-serif'
   };
 
   Object.entries(vars).forEach(([key, value]) => {
