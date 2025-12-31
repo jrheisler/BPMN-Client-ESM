@@ -11,6 +11,9 @@
   text-shadow: none !important;
   paint-order: fill !important;
   text-rendering: optimizeLegibility;
+  fill: var(--text, #e0e0e0);
+  font-family: var(--font-base, 'system-ui, sans-serif');
+  font-weight: 600;
 }
 
 .djs-direct-editing-parent,
