@@ -1441,6 +1441,7 @@ currentTheme.subscribe(theme => {
   const connection = bpmn.connection ?? {};
   const marker = bpmn.marker ?? {};
   const selected = bpmn.selected ?? {};
+  const labelFontSize = label.fontSize ?? '12px';
   const quickMenu = bpmn.quickMenu ?? {
     background: colors.surface ?? '#fff',
     hoverBackground: colors.primary ?? colors.surface ?? '#fff',
@@ -1618,10 +1619,14 @@ currentTheme.subscribe(theme => {
     }
 
     /* ── text labels use theme-defined fill with foreground fallback ───── */
-    .djs-element .djs-label {
+    .djs-element .djs-label,
+    .djs-element.djs-label .djs-visual > text,
+    .djs-element .djs-visual > text.djs-label,
+    .djs-element[data-element-type="bpmn:TextAnnotation"] .djs-visual > text {
       fill: ${label.fill ?? colors.foreground ?? '#000'} !important;
       font-family: ${label.fontFamily ?? 'sans-serif'} !important;
       font-weight: ${label.fontWeight ?? '400'} !important;
+      font-size: ${labelFontSize} !important;
       stroke: none !important;
       stroke-width: 0 !important;
       text-shadow: none !important;
