@@ -18,7 +18,7 @@
       "shape": { "fill": "#1E1E1E", "stroke": "#666666", "strokeWidth": 2 },
       "connection": { "stroke": "#D1B6FF", "strokeWidth": 2 },
       "marker": { "fill": "#F9F2FF", "stroke": "#E6D4FF" },
-      "label": { "fontFamily": "system-ui, sans-serif", "fill": "#BB86FC" },
+      "label": { "fontFamily": "system-ui, sans-serif", "fill": "#BB86FC", "fontSize": "12px" },
       "selected": { "stroke": "#BB86FC", "strokeWidth": 3 },
       "palette": {
         "background": "#1E1E1E",
@@ -101,7 +101,7 @@
       "shape": { "fill": "#FFFFFF", "stroke": "#D0D0D0", "strokeWidth": 2 },
       "connection": { "stroke": "#222222", "strokeWidth": 2 },
       "marker": { "fill": "#6200EE", "stroke": "#3700B3" },
-      "label": { "fontFamily": "system-ui, sans-serif", "fill": "#222222" },
+      "label": { "fontFamily": "system-ui, sans-serif", "fill": "#222222", "fontSize": "12px" },
       "selected": { "stroke": "#6200EE", "strokeWidth": 3 },
       "palette": {
         "background": "#FFFFFF",
