@@ -1443,7 +1443,12 @@ currentTheme.subscribe(theme => {
     .djs-element .djs-label {
       fill: ${label.fill ?? colors.foreground ?? '#000'} !important;
       font-family: ${label.fontFamily ?? 'sans-serif'} !important;
+      font-weight: ${label.fontWeight ?? '400'} !important;
       stroke: none !important;
+      stroke-width: 0 !important;
+      text-shadow: none !important;
+      filter: none !important;
+      paint-order: fill !important;
     }
 
     /* ── connections & arrows ───────────────────────────────────────────── */
