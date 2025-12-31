@@ -96,10 +96,14 @@ function debugSvgText(canvasEl) {
     return;
   }
 
-  const sampleText = svg.querySelector('text');
+  svg.style.textRendering = 'optimizeLegibility';
+  svg.style.webkitFontSmoothing = 'antialiased';
+  svg.style.mozOsxFontSmoothing = 'grayscale';
 
-  if (sampleText) {
-    const computed = getComputedStyle(sampleText);
+  const textNodes = Array.from(svg.querySelectorAll('text'));
+
+  if (textNodes.length) {
+    const computed = getComputedStyle(textNodes[0]);
     console.info('[text-debug] Computed text styles', {
       filter: computed.filter,
       textShadow: computed.textShadow,
@@ -111,10 +115,34 @@ function debugSvgText(canvasEl) {
     console.info('[text-debug] No <text> nodes found for diagnostics.');
   }
 
-  const filtered = Array.from(svg.querySelectorAll('text[filter]'));
+  const filtered = textNodes.filter(node => node.hasAttribute('filter'));
   if (filtered.length) {
     console.info(`[text-debug] Removing filter attribute from ${filtered.length} text node(s).`);
     filtered.forEach(node => node.removeAttribute('filter'));
+  }
+
+  const referencedFilterIds = new Set(
+    filtered
+      .map(node => node.getAttribute('filter'))
+      .filter(Boolean)
+      .map(value => value.replace(/^url\(#/, '').replace(/\)$/, ''))
+  );
+
+  if (referencedFilterIds.size) {
+    const defs = svg.querySelectorAll('defs filter');
+    let removed = 0;
+
+    defs.forEach(filter => {
+      if (!referencedFilterIds.has(filter.id)) return;
+      if (filter.querySelector('feGaussianBlur')) {
+        filter.remove();
+        removed++;
+      }
+    });
+
+    if (removed) {
+      console.info(`[text-debug] Removed ${removed} blur filter(s) referenced by text nodes.`);
+    }
   }
 }
 
