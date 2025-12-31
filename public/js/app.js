@@ -169,6 +169,61 @@ function debugSvgText(canvasEl) {
     filtered.forEach(node => node.removeAttribute('filter'));
   }
 
+  let clearedStrokeAttributes = 0;
+  let clearedInlineFilters = 0;
+  let normalizedFontWeight = 0;
+
+  textNodes.forEach(node => {
+    const priorStroke = node.getAttribute('stroke');
+    if (priorStroke) {
+      node.removeAttribute('stroke');
+      clearedStrokeAttributes++;
+    }
+
+    const priorStrokeWidth = node.getAttribute('stroke-width');
+    if (priorStrokeWidth) {
+      node.removeAttribute('stroke-width');
+      clearedStrokeAttributes++;
+    }
+
+    if (node.style?.stroke) {
+      node.style.stroke = '';
+      clearedStrokeAttributes++;
+    }
+
+    if (node.style?.strokeWidth) {
+      node.style.strokeWidth = '';
+      clearedStrokeAttributes++;
+    }
+
+    if (node.style?.filter) {
+      node.style.filter = '';
+      clearedInlineFilters++;
+    }
+
+    if (node.style?.textShadow) {
+      node.style.textShadow = '';
+      clearedInlineFilters++;
+    }
+
+    if (node.style?.fontWeight && node.style.fontWeight !== '400') {
+      node.style.fontWeight = '400';
+      normalizedFontWeight++;
+    }
+  });
+
+  if (clearedStrokeAttributes) {
+    console.info(`[text-debug] Removed ${clearedStrokeAttributes} stroke attribute(s) from text nodes.`);
+  }
+
+  if (clearedInlineFilters) {
+    console.info(`[text-debug] Cleared ${clearedInlineFilters} inline filter/text-shadow style(s) from text nodes.`);
+  }
+
+  if (normalizedFontWeight) {
+    console.info(`[text-debug] Normalized font weight on ${normalizedFontWeight} text node(s).`);
+  }
+
   const referencedFilterIds = new Set(
     filtered
       .map(node => node.getAttribute('filter'))
