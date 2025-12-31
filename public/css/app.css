@@ -6,6 +6,13 @@
   background-size: 10px 10px;
 }
 
+#canvas svg text {
+  filter: none !important;
+  text-shadow: none !important;
+  paint-order: fill !important;
+  text-rendering: optimizeLegibility;
+}
+
 .djs-direct-editing-parent,
 .djs-direct-editing-content {
   background: var(--panel);
