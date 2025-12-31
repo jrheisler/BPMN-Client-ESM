@@ -1440,9 +1440,7 @@ currentTheme.subscribe(theme => {
     }
 
     /* ── text labels use theme-defined fill with foreground fallback ───── */
-    .djs-element .djs-label,
-    .djs-element.djs-label .djs-visual > text,
-    .djs-element .djs-visual > text.djs-label {
+    .djs-element .djs-label {
       fill: ${label.fill ?? colors.foreground ?? '#000'} !important;
       font-family: ${label.fontFamily ?? 'sans-serif'} !important;
       font-weight: ${label.fontWeight ?? '400'} !important;
