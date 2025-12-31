@@ -15,7 +15,7 @@
 }
 
 
-.djs-element.bpmn-addOn-highlight .djs-visual > :nth-child(1) {
+.djs-element:not(.djs-label).bpmn-addOn-highlight .djs-visual > :nth-child(1) {
   stroke: var(--accent);
   stroke-width: 4px;
   fill: var(--accent);
@@ -24,7 +24,7 @@
 }
 
 
-.djs-element.drop-ok .djs-visual > :nth-child(1) {
+.djs-element:not(.djs-label).drop-ok .djs-visual > :nth-child(1) {
   stroke: var(--ok);
   stroke-width: 4px;
   fill: var(--ok);
