@@ -1544,25 +1544,7 @@ function applyBpmnTheme(theme) {
     }
   `;
 
-  if (minimalThemeEnabled.get()) {
-    bpmnThemeStyle.textContent = `
-      /* canvas background */
-      #canvas,
-      #canvas .djs-container,
-      #canvas .djs-container svg {
-        background: ${backgroundColor} !important;
-        --canvas-fill-color: ${backgroundColor};
-      }
-
-      ${labelTextRules}
-    `;
-
-    warnIfLabelInvisible();
-    debugBpmnLabelStyles();
-    return;
-  }
-
-  bpmnThemeStyle.textContent = `
+  const minimalBpmnStyles = `
     /* canvas background */
     #canvas,
     #canvas .djs-container,
@@ -1570,6 +1552,20 @@ function applyBpmnTheme(theme) {
       background: ${backgroundColor} !important;
       --canvas-fill-color: ${backgroundColor};
     }
+
+    ${labelTextRules}
+  `;
+
+  if (minimalThemeEnabled.get()) {
+    bpmnThemeStyle.textContent = minimalBpmnStyles;
+
+    warnIfLabelInvisible();
+    debugBpmnLabelStyles();
+    return;
+  }
+
+  bpmnThemeStyle.textContent = `
+    ${minimalBpmnStyles}
 
     #canvas .djs-container,
     #canvas .djs-parent {
@@ -1698,8 +1694,6 @@ function applyBpmnTheme(theme) {
     .djs-element.djs-event .djs-visual > :first-child {
       stroke-width: ${shapeStrokeWidth}px !important;
     }
-
-    ${labelTextRules}
 
     /* ── connections & arrows ───────────────────────────────────────────── */
     .djs-connection .djs-connection-inner,
