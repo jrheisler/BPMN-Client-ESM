@@ -88,167 +88,6 @@ const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
 const diagramXMLStream = new Stream(defaultXml);
 let cleanupCurrentModeler = null;
 
-function isBlurFilter(filter) {
-  return Boolean(filter?.querySelector('feGaussianBlur, feDropShadow'));
-}
-
-function debugSvgText(canvasEl) {
-  const svg = canvasEl?.querySelector('svg');
-
-  if (!svg) {
-    console.info('[text-debug] No SVG found under #canvas; skipping text diagnostics.');
-    return;
-  }
-
-  svg.style.textRendering = 'optimizeLegibility';
-  svg.style.webkitFontSmoothing = 'antialiased';
-  svg.style.mozOsxFontSmoothing = 'grayscale';
-
-  const blurFilterIds = new Set();
-
-  svg.querySelectorAll('defs filter').forEach(filter => {
-    if (isBlurFilter(filter)) {
-      blurFilterIds.add(filter.id);
-    }
-  });
-
-  const removedFilterAttributes = Array.from(svg.querySelectorAll('[filter]')).reduce(
-    (count, node) => {
-      const id = node
-        .getAttribute('filter')
-        ?.replace(/^url\(#/, '')
-        .replace(/\)$/, '');
-
-      if (!id || blurFilterIds.has(id)) {
-        node.removeAttribute('filter');
-        return count + 1;
-      }
-
-      return count;
-    },
-    0
-  );
-
-  if (removedFilterAttributes) {
-    console.info(`[text-debug] Removed filter attribute from ${removedFilterAttributes} node(s).`);
-  }
-
-  let removedBlurDefs = 0;
-
-  svg.querySelectorAll('defs filter').forEach(filter => {
-    if (!blurFilterIds.has(filter.id)) return;
-
-    if (isBlurFilter(filter)) {
-      filter.remove();
-      removedBlurDefs++;
-    }
-  });
-
-  if (removedBlurDefs) {
-    console.info(`[text-debug] Removed ${removedBlurDefs} blur filter definition(s).`);
-  }
-
-  const textNodes = Array.from(svg.querySelectorAll('text'));
-
-  if (textNodes.length) {
-    const computed = getComputedStyle(textNodes[0]);
-    console.info('[text-debug] Computed text styles', {
-      filter: computed.filter,
-      textShadow: computed.textShadow,
-      paintOrder: computed.paintOrder,
-      fontFamily: computed.fontFamily,
-      fill: computed.fill
-    });
-  } else {
-    console.info('[text-debug] No <text> nodes found for diagnostics.');
-  }
-
-  const filtered = textNodes.filter(node => node.hasAttribute('filter'));
-  if (filtered.length) {
-    console.info(`[text-debug] Removing filter attribute from ${filtered.length} text node(s).`);
-    filtered.forEach(node => node.removeAttribute('filter'));
-  }
-
-  let clearedStrokeAttributes = 0;
-  let clearedInlineFilters = 0;
-  let normalizedFontWeight = 0;
-
-  textNodes.forEach(node => {
-    const priorStroke = node.getAttribute('stroke');
-    if (priorStroke) {
-      node.removeAttribute('stroke');
-      clearedStrokeAttributes++;
-    }
-
-    const priorStrokeWidth = node.getAttribute('stroke-width');
-    if (priorStrokeWidth) {
-      node.removeAttribute('stroke-width');
-      clearedStrokeAttributes++;
-    }
-
-    if (node.style?.stroke) {
-      node.style.stroke = '';
-      clearedStrokeAttributes++;
-    }
-
-    if (node.style?.strokeWidth) {
-      node.style.strokeWidth = '';
-      clearedStrokeAttributes++;
-    }
-
-    if (node.style?.filter) {
-      node.style.filter = '';
-      clearedInlineFilters++;
-    }
-
-    if (node.style?.textShadow) {
-      node.style.textShadow = '';
-      clearedInlineFilters++;
-    }
-
-    if (node.style?.fontWeight && node.style.fontWeight !== '400') {
-      node.style.fontWeight = '400';
-      normalizedFontWeight++;
-    }
-  });
-
-  if (clearedStrokeAttributes) {
-    console.info(`[text-debug] Removed ${clearedStrokeAttributes} stroke attribute(s) from text nodes.`);
-  }
-
-  if (clearedInlineFilters) {
-    console.info(`[text-debug] Cleared ${clearedInlineFilters} inline filter/text-shadow style(s) from text nodes.`);
-  }
-
-  if (normalizedFontWeight) {
-    console.info(`[text-debug] Normalized font weight on ${normalizedFontWeight} text node(s).`);
-  }
-
-  const referencedFilterIds = new Set(
-    filtered
-      .map(node => node.getAttribute('filter'))
-      .filter(Boolean)
-      .map(value => value.replace(/^url\(#/, '').replace(/\)$/, ''))
-  );
-
-  if (referencedFilterIds.size) {
-    const defs = svg.querySelectorAll('defs filter');
-    let removed = 0;
-
-    defs.forEach(filter => {
-      if (!referencedFilterIds.has(filter.id)) return;
-      if (isBlurFilter(filter)) {
-        filter.remove();
-        removed++;
-      }
-    });
-
-    if (removed) {
-      console.info(`[text-debug] Removed ${removed} blur filter(s) referenced by text nodes.`);
-    }
-  }
-}
-
 const loadCustomModdle = (() => {
   let moddlePromise = null;
 
@@ -396,23 +235,6 @@ const { canvasEl, header } = shell;
   const canvas          = modeler.get('canvas');
   const eventBus        = modeler.get('eventBus');
   const overlays        = modeler.get('overlays');
-
-  let textDebugScheduled = false;
-  const scheduleTextDebug = () => {
-    if (textDebugScheduled) return;
-    textDebugScheduled = true;
-    queueMicrotask(() => {
-      textDebugScheduled = false;
-      debugSvgText(canvasEl);
-    });
-  };
-
-  eventBus.on('import.done', scheduleTextDebug);
-  eventBus.on('commandStack.changed', scheduleTextDebug);
-  registerCleanup(() => {
-    eventBus.off('import.done', scheduleTextDebug);
-    eventBus.off('commandStack.changed', scheduleTextDebug);
-  });
 
   const timelineController = setupTimeline({
     canvas,
@@ -1432,12 +1254,14 @@ currentTheme.subscribe(theme => {
     return;
   }
 
+  const fallbackLabelFont = "'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
   const shape = bpmn.shape ?? {};
   const startEvent = bpmn.startEvent ?? {};
   const endEvent = bpmn.endEvent ?? {};
   const task = bpmn.task ?? {};
   const gateway = bpmn.gateway ?? {};
   const label = bpmn.label ?? {};
+  const labelFontFamily = label.fontFamily ?? fallbackLabelFont;
   const connection = bpmn.connection ?? {};
   const marker = bpmn.marker ?? {};
   const selected = bpmn.selected ?? {};
@@ -1624,8 +1448,7 @@ currentTheme.subscribe(theme => {
     .djs-element .djs-visual > text.djs-label,
     .djs-element[data-element-type="bpmn:TextAnnotation"] .djs-visual > text {
       fill: ${label.fill ?? colors.foreground ?? '#000'} !important;
-      font-family: ${label.fontFamily ?? 'sans-serif'} !important;
-      font-weight: ${label.fontWeight ?? '400'} !important;
+      font-family: ${labelFontFamily};
       font-size: ${labelFontSize} !important;
       stroke: none !important;
       stroke-width: 0 !important;
