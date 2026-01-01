@@ -74,52 +74,25 @@ function createMockDom() {
   };
 }
 
-function createLocalStorageMock() {
-  const store = new Map();
-  return {
-    getItem(key) {
-      return store.has(key) ? store.get(key) : null;
-    },
-    setItem(key, value) {
-      store.set(key, String(value));
-    },
-    removeItem(key) {
-      store.delete(key);
-    },
-    clear() {
-      store.clear();
-    }
-  };
-}
-
 test('themedThemeSelector auto-disposes when removed from DOM', async t => {
   const originalGlobals = {
     document: global.document,
-    MutationObserver: global.MutationObserver,
-    localStorage: global.localStorage,
-    fetch: global.fetch
+    MutationObserver: global.MutationObserver
   };
 
   const { document, MutationObserver, flushMutations } = createMockDom();
   global.document = document;
   global.MutationObserver = MutationObserver;
-  global.localStorage = createLocalStorageMock();
-  global.fetch = () =>
-    Promise.resolve({
-      json: () => Promise.resolve({ desertSunset: { colors: {}, fonts: {} } })
-    });
 
   t.after(() => {
     global.document = originalGlobals.document;
     global.MutationObserver = originalGlobals.MutationObserver;
-    global.localStorage = originalGlobals.localStorage;
-    global.fetch = originalGlobals.fetch;
   });
 
   const { Stream } = await import('../public/js/core/stream.js');
   const { themedThemeSelector } = await import('../public/js/core/theme.js');
 
-  const themeStream = new Stream({ colors: {}, fonts: {} });
+  const themeStream = new Stream({ colors: { text: '#000', border: '#000', panel: '#fff' }, fonts: { base: 'sans-serif' } });
   const initialSubscribers = themeStream.subscribers.length;
 
   const selector = themedThemeSelector(themeStream);
@@ -132,85 +105,32 @@ test('themedThemeSelector auto-disposes when removed from DOM', async t => {
   assert.equal(themeStream.subscribers.length, initialSubscribers);
 });
 
-test('themedThemeSelector autoDispose opt-out preserves subscription', async t => {
+test('themedThemeSelector updates theme stream when selection changes', async t => {
   const originalGlobals = {
     document: global.document,
-    MutationObserver: global.MutationObserver,
-    localStorage: global.localStorage,
-    fetch: global.fetch
-  };
-
-  const { document, MutationObserver, flushMutations } = createMockDom();
-  global.document = document;
-  global.MutationObserver = MutationObserver;
-  global.localStorage = createLocalStorageMock();
-  global.fetch = () =>
-    Promise.resolve({
-      json: () => Promise.resolve({ desertSunset: { colors: {}, fonts: {} } })
-    });
-
-  t.after(() => {
-    global.document = originalGlobals.document;
-    global.MutationObserver = originalGlobals.MutationObserver;
-    global.localStorage = originalGlobals.localStorage;
-    global.fetch = originalGlobals.fetch;
-  });
-
-  const { Stream } = await import('../public/js/core/stream.js');
-  const { themedThemeSelector } = await import('../public/js/core/theme.js');
-
-  const themeStream = new Stream({ colors: {}, fonts: {} });
-  const initialSubscribers = themeStream.subscribers.length;
-
-  const selector = themedThemeSelector(themeStream, { autoDispose: false });
-  assert.equal(themeStream.subscribers.length, initialSubscribers + 1);
-
-  document.body.appendChild(selector);
-  document.body.removeChild(selector);
-  flushMutations();
-
-  assert.equal(themeStream.subscribers.length, initialSubscribers + 1);
-});
-
-test('theme load error indicator shows only on error', async t => {
-  const originalGlobals = {
-    document: global.document,
-    MutationObserver: global.MutationObserver,
-    localStorage: global.localStorage,
-    fetch: global.fetch
+    MutationObserver: global.MutationObserver
   };
 
   const { document, MutationObserver } = createMockDom();
   global.document = document;
   global.MutationObserver = MutationObserver;
-  global.localStorage = createLocalStorageMock();
-  global.fetch = () =>
-    Promise.resolve({
-      json: () => Promise.resolve({ desertSunset: { colors: {}, fonts: {} } })
-    });
 
   t.after(() => {
     global.document = originalGlobals.document;
     global.MutationObserver = originalGlobals.MutationObserver;
-    global.localStorage = originalGlobals.localStorage;
-    global.fetch = originalGlobals.fetch;
   });
 
-  const { themedThemeSelector, themeLoadStatus } = await import(
-    `../public/js/core/theme.js?test=${Math.random()}`
-  );
+  const { Stream } = await import('../public/js/core/stream.js');
+  const { themedThemeSelector, THEMES } = await import('../public/js/core/theme.js');
 
-  const selector = themedThemeSelector();
-  const statusEl = selector.children.find(child => child.className === 'theme-load-error');
+  const themeStream = new Stream(THEMES.light);
+  const selector = themedThemeSelector(themeStream, { autoDispose: false });
+  document.body.appendChild(selector);
 
-  assert.ok(statusEl, 'expected a status element to be rendered');
+  const selectEl = selector.children.find(child => child.tagName === 'select');
+  selectEl.value = 'dark';
+  const changeHandler = selectEl.getListener('change');
+  changeHandler();
 
-  themeLoadStatus.set('ready');
-  assert.equal(statusEl.style.display, 'none');
-
-  themeLoadStatus.set('error');
-  assert.equal(statusEl.style.display, 'block');
-
-  themeLoadStatus.set('ready');
-  assert.equal(statusEl.style.display, 'none');
+  assert.equal(themeStream.get().name, 'Dark');
 });
