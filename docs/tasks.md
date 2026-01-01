@@ -1,152 +1,140 @@
-Yep — that “labels went thick → then disappeared” pattern screams **your label `fill` fallback became `#000` (black)** on a dark canvas, so it *looks* like the text vanished.
+Task 1 — Add a “SVG label forensic dump” utility (single function)
 
-### What’s happening (based on your files)
+Goal: print the computed style and the DOM attributes of a few representative BPMN labels so we stop guessing.
 
-You currently have **two competing label color strategies**:
+In app.js, add a function debugBpmnLabelStyles() that:
 
-1. **CSS file approach** (good for light/dark):
-   `#canvas text.djs-label { fill: var(--text, #111); font-weight: normal !important; }` 
-   This relies on theme variables like `--text`.
+selects 3–10 nodes: document.querySelectorAll('#canvas text.djs-label')
 
-2. **Injected “theme style” approach in app.js** (this is where it breaks):
-   Your injected CSS sets label fill to:
-   `fill: ${label.fill ?? colors.foreground ?? '#000'} !important;` 
-   If `colors.foreground` isn’t present (or you moved to semantic tokens), it falls back to **`#000`**.
+for each, logs:
 
-Meanwhile, your theme system *does* compute and publish a `--text` CSS variable onto the page:
-`'--text': adjustedText` 
+getComputedStyle(el).fontFamily
 
-So the “fix” is: **make BPMN label styling use `var(--text)`**, not `colors.foreground ?? '#000'`.
+fontWeight, fontSize, fill, stroke, strokeWidth, filter
 
----
+textRendering (computed)
 
-## Codex tasks (strong, drill-to-the-issue)
+el.getAttribute('font-weight'), el.getAttribute('text-rendering'), el.getAttribute('style')
 
-### Task 1 — Prove the root cause in DevTools
+font synthesis check: log getComputedStyle(el).fontSynthesis (and/or fontSynthesisWeight if supported)
 
-**Goal:** confirm label elements are being colored black (or same as background).
+logs document.fonts.check('400 12px Inter') and document.fonts.check('400 12px "Segoe UI"') to confirm whether Inter weight 400 is actually loaded.
 
-**Steps**
+Call this function after diagram import/render, and after theme changes (where currentTheme.subscribe runs).
 
-* Inspect a BPMN label `<text class="djs-label">`.
-* Check **Computed → fill**.
-* Confirm whether the applied rule comes from the injected style tag (app.js) and whether fill is `rgb(0,0,0)` or close.
+Exit condition: console output clearly shows which property differs when text is “thick”.
 
-**Expected finding**
+Task 2 — Temporarily force a “known-good” label style (binary test)
 
-* Injected rule is winning with `fill: #000 !important;` (or similarly dark). 
+Goal: determine if thickness is coming from font rendering or font-weight vs stroke/filter vs synthesis.
 
----
+Add a dev-only toggle (a boolean constant at top of app.js like const DEBUG_FORCE_LABEL_NORMAL = true;)
 
-### Task 2 — Stop app.js from hardcoding label color
+If enabled, inject a last <style> element (after the existing bpmnThemeStyle) with:
 
-**Goal:** make label fill always track theme variables.
+#canvas text.djs-label,
+#canvas text.djs-label tspan {
+  font-weight: 400 !important;
+  font-synthesis: none !important;
+  text-rendering: auto !important;
+  stroke: none !important;
+  stroke-width: 0 !important;
+  filter: none !important;
+  paint-order: fill !important;
+}
 
-**Change in app.js**
-In the `bpmnThemeStyle.textContent` label block, replace:
 
-* `fill: ${label.fill ?? colors.foreground ?? '#000'} !important;`
-  with:
-* `fill: ${label.fill ?? 'var(--text)'} !important;`
+Re-test. If thickness changes immediately, you’ve proven it’s not BPMN.js itself; it’s your CSS/rendering knobs.
 
-Also make sure annotations follow the same path.
+Exit condition: you can flip one switch and see thickness normalize or not.
 
-**Why**
+Task 3 — Remove competing authorities: choose ONE label styling owner
 
-* Your theme system already publishes `--text` based on background contrast. 
+Right now both app.css and injected CSS are styling labels:
 
----
+#canvas text.djs-label { … } in app.css 
 
-### Task 3 — Make the injected CSS *not fight* app.css
+app
 
-**Goal:** reduce selector wars and avoid “sometimes this, sometimes that”.
+label block in injected CSS in app.js 
 
-Right now:
+app
 
-* app.css targets `#canvas text.djs-label` 
-* app.js injects several label selectors and uses `!important` 
+Do this refactor:
 
-**Codex instructions**
+Make app.css contain only structural/layout rules, not BPMN label styling.
 
-* Pick ONE source of truth for label typography:
+Delete (or comment out) the entire #canvas text.djs-label { … } block from app.css.
 
-  * Either keep it in app.css, OR keep it in injected CSS.
-* If you keep injected CSS, delete / neutralize the label styling in app.css (or vice versa).
-* Ensure only one place sets `font-weight`.
+Decide whether #canvas svg { text-rendering: geometricPrecision; } should exist at all. If you keep it, constrain it to labels only (don’t apply to the whole svg).
 
----
+Exit condition: label styling comes from one place (preferably the injected theme style).
 
-### Task 4 — Fix the original “thick text” without breaking visibility
+Task 4 — Stop applying text-rendering to the entire SVG
 
-**Goal:** keep weight stable across browsers and SVG.
+Even if text-rendering is the culprit, applying it at #canvas svg is a sledgehammer.
 
-**Codex instructions**
+In app.css, remove:
 
-* In the label rule (wherever you keep it), set:
+#canvas svg { text-rendering: geometricPrecision; }
 
-  * `font-weight: 400 !important;` (not `normal`)
-  * `stroke: none !important; stroke-width: 0 !important; paint-order: fill !important;`
-* Avoid SVG tricks that simulate bolding (stroke-on-text, filters).
 
-You already do most of this in injected CSS; keep it consistent. 
+( वर्तमान file shows this exact rule 
 
----
+app
 
-### Task 5 — Guarantee `colors.foreground` exists (backward compatibility)
+ )
 
-**Goal:** prevent future regressions even if someone reintroduces `colors.foreground` in fallbacks.
+If you need text-rendering at all, apply it only to:
 
-In `normalizeThemeEntry()` (theme.js), after `colors` is created:
+#canvas text,
+#canvas tspan { text-rendering: auto; }
 
-* If `colors.foreground` is missing, set it from:
 
-  * `colors.text`, then `tokens.text`, then default.
+Exit condition: label thickness doesn’t vary just because other SVG primitives exist.
 
-This protects older code paths that still use `colors.foreground`.
+Task 5 — Fix the “labels disappeared” regression permanently (contrast + fallback fill)
 
-(Your theming already computes `tokens.text`, but does not necessarily backfill `colors.foreground` for every theme pack.) 
+You already have a warnIfLabelInvisible() 
 
----
+app
 
-### Task 6 — Add a “theme contract” assertion (fast diagnostic)
+. Make it actionable:
 
-**Goal:** instantly detect missing keys in a theme pack.
+In the injected label CSS in app.js, ensure fill always resolves to a non-transparent value:
 
-**Codex instructions**
+Prefer theme label fill
 
-* Add a dev-only console warning when:
+Else fallback to colors.foreground
 
-  * `theme.colors.foreground` is missing AND
-  * you detect any code path referencing `colors.foreground`.
-* Log current theme key + the resolved label fill string.
+Else fallback to #111 (light) / #eee (dark) based on canvas background luminance.
 
----
+After applying theme CSS, call warnIfLabelInvisible() automatically.
 
-### Task 7 — Add a micro “label visibility” self-test
+Exit condition: labels never vanish in dark mode due to fill=background.
 
-**Goal:** automated guardrail.
+Task 6 — Add a one-click “minimal theme” mode to isolate BPMN.css influence
 
-**Codex instructions**
+Goal: prove whether the default bpmn-js stylesheet is participating.
 
-* After applying theme + injecting CSS:
+Add a “Minimal Theme” checkbox that:
 
-  * query a `.djs-label` element
-  * read computed `fill`
-  * if it equals computed canvas background (or contrast ratio < 2.0), warn loudly.
+disables all custom BPMN overrides (clears bpmnThemeStyle.textContent)
 
----
+leaves only a tiny baseline rule set for label fill + font family
 
-## The short answer to “standard BPMN.js dark/light mode”
+Compare thick vs normal.
 
-There isn’t a single official “BPMN.js dark mode API”. The common pattern is:
+Exit condition: you know whether the default bpmn-js CSS is part of the problem.
 
-* apply a theme class to the page (or set CSS variables), and
-* override BPMN-js SVG styles via CSS (or a single injected stylesheet),
-* ideally using CSS variables so you don’t hardcode colors.
+Task 7 — Document the final decision: theming architecture
 
-You’re already *very* close — your `applyThemeToPage()` sets good variables like `--text`. 
-The main fix is to make the BPMN SVG label fill **use those variables** instead of falling back to `#000`. 
+Write a short THEMING.md describing:
 
----
+where theme tokens live (theme.js)
 
-If you want the **cleanest** outcome: I’d make `app.js` label fill be `var(--text)` by default, and only allow `label.fill` to override it. That solves *both* dark/light and the “disappearing” regression in one shot.
+where BPMN overrides are generated (the single injected style in app.js)
+
+what is allowed in app.css (layout only, no BPMN label rendering)
+
+Exit condition: no future “mystery CSS fights”.
