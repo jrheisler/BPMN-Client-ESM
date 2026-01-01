@@ -12,6 +12,7 @@
 
 #canvas text.djs-label {
   font-family: 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  fill: var(--text, #111);
   font-weight: normal !important;
   stroke: none !important;
   filter: none !important;
