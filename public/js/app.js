@@ -1241,6 +1241,68 @@ function buildDropdownOptions() {
   });
 
 
+function parseColor(color) {
+  if (!color) return null;
+  if (color.startsWith('#')) {
+    const hex = color.replace('#', '');
+    if (hex.length === 3) {
+      const r = parseInt(hex[0] + hex[0], 16);
+      const g = parseInt(hex[1] + hex[1], 16);
+      const b = parseInt(hex[2] + hex[2], 16);
+      return { r, g, b };
+    }
+    if (hex.length === 6) {
+      const num = parseInt(hex, 16);
+      return { r: (num >> 16) & 0xff, g: (num >> 8) & 0xff, b: num & 0xff };
+    }
+  }
+  const match = color.match(/rgba?\(([^)]+)\)/);
+  if (match) {
+    const parts = match[1].split(',').map(v => Number.parseFloat(v.trim()));
+    if (parts.length >= 3 && parts.every(Number.isFinite)) {
+      return { r: parts[0], g: parts[1], b: parts[2] };
+    }
+  }
+  return null;
+}
+
+function luminance({ r, g, b }) {
+  const srgb = [r, g, b]
+    .map(v => v / 255)
+    .map(v => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+  return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+}
+
+function contrastRatioFromCss(colorA, colorB) {
+  const a = parseColor(colorA);
+  const b = parseColor(colorB);
+  if (!a || !b) return null;
+  const L1 = luminance(a);
+  const L2 = luminance(b);
+  const lighter = Math.max(L1, L2);
+  const darker = Math.min(L1, L2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function warnIfLabelInvisible() {
+  const label = document.querySelector('#canvas text.djs-label');
+  if (!label) return;
+  const canvas = document.querySelector('#canvas .djs-container') || document.querySelector('#canvas');
+  if (!canvas) return;
+
+  const labelStyle = getComputedStyle(label);
+  const canvasStyle = getComputedStyle(canvas);
+  const labelFill = labelStyle.fill || labelStyle.color;
+  const canvasFill = canvasStyle.getPropertyValue('--canvas-fill-color') || canvasStyle.backgroundColor;
+  const contrast = contrastRatioFromCss(labelFill, canvasFill);
+
+  if (contrast !== null && contrast < 2) {
+    console.warn('[theme] Label fill has low contrast against canvas', { labelFill, canvasFill, contrast });
+  } else if (labelFill && canvasFill && labelFill.trim() === canvasFill.trim()) {
+    console.warn('[theme] Label fill matches canvas background', { labelFill, canvasFill });
+  }
+}
+
   // ─── theming overrides ────────────────────────────────────────────────────
 const bpmnThemeStyle = document.createElement('style');
 document.head.appendChild(bpmnThemeStyle);
@@ -1327,6 +1389,13 @@ currentTheme.subscribe(theme => {
   const connectionStrokeValue = connection.stroke ?? colors.accent ?? colors.foreground ?? shapeStroke ?? '#000';
   const markerFillValue = marker.fill ?? marker.accent ?? colors.accent ?? connectionStrokeValue ?? colors.foreground ?? '#000';
   const markerStrokeValue = marker.stroke ?? marker.outline ?? colors.foreground ?? colors.accent ?? connectionStrokeValue ?? '#000';
+
+  const resolvedLabelFill = label.fill ?? 'var(--text)';
+  const isDevEnv = typeof process !== 'undefined' ? process?.env?.NODE_ENV !== 'production' : true;
+
+  if (isDevEnv && !colors.foreground && Object.values(bpmn ?? {}).some(section => (section || {}))) {
+    console.warn('[theme] Missing colors.foreground; label fill resolved to', resolvedLabelFill, 'for theme', theme?.name ?? 'unknown');
+  }
 
   bpmnThemeStyle.textContent = `
     /* canvas background */
@@ -1447,9 +1516,10 @@ currentTheme.subscribe(theme => {
     .djs-element.djs-label .djs-visual > text,
     .djs-element .djs-visual > text.djs-label,
     .djs-element[data-element-type="bpmn:TextAnnotation"] .djs-visual > text {
-      fill: ${label.fill ?? colors.foreground ?? '#000'} !important;
+      fill: ${resolvedLabelFill} !important;
       font-family: ${labelFontFamily};
       font-size: ${labelFontSize} !important;
+      font-weight: 400 !important;
       stroke: none !important;
       stroke-width: 0 !important;
       text-shadow: none !important;
@@ -1573,7 +1643,11 @@ currentTheme.subscribe(theme => {
       border: 1px solid ${colors.border ?? '#000'} !important;
       outline: 1px solid ${colors.border ?? '#000'} !important;
     }
+
+    /* ── diagnostic: ensure labels stay readable ─────────────────────────── */
   `;
+
+  warnIfLabelInvisible();
 });
 
 function clearModeler() {
