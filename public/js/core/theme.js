@@ -8,6 +8,27 @@ const baseFonts = {
   monospace: MONO_STACK
 };
 
+const withBpmnDefaults = (name, colors) => ({
+  name,
+  colors,
+  fonts: { ...baseFonts },
+  bpmn: {
+    canvas: colors.background,
+    label: { fontFamily: FONT_STACK, fill: colors.text, fontSize: '12px' },
+    shape: { fill: colors.surface, stroke: colors.text, strokeWidth: 1.25 },
+    connection: { stroke: colors.accent, strokeWidth: 1.5 },
+    marker: { fill: colors.accent, stroke: colors.text },
+    selected: { stroke: colors.accent, strokeWidth: 2 },
+    palette: { background: colors.surface, text: colors.text, border: colors.border },
+    quickMenu: {
+      background: colors.panel,
+      text: colors.text,
+      hoverBackground: colors.panel2,
+      hoverText: colors.text
+    }
+  }
+});
+
 const lightTheme = {
   name: 'Light',
   colors: {
@@ -70,7 +91,190 @@ const darkTheme = {
   }
 };
 
-export const THEMES = { light: lightTheme, dark: darkTheme };
+const auroraLight = withBpmnDefaults('Aurora Light', {
+  background: '#f3f5ff',
+  foreground: '#0b1224',
+  text: '#0b1224',
+  muted: '#475569',
+  primary: '#f8f9ff',
+  surface: '#f8f9ff',
+  panel: '#e8edff',
+  panel2: '#dfe7ff',
+  border: '#c7d2fe',
+  accent: '#6366f1',
+  accent2: '#22d3ee',
+  ok: '#16a34a',
+  warn: '#d97706',
+  err: '#dc2626'
+});
+
+const auroraDark = withBpmnDefaults('Aurora Dark', {
+  background: '#0b1221',
+  foreground: '#e0f2fe',
+  text: '#e0f2fe',
+  muted: '#94a3b8',
+  primary: '#0f172a',
+  surface: '#0f172a',
+  panel: '#111827',
+  panel2: '#0b1221',
+  border: '#1f2937',
+  accent: '#22d3ee',
+  accent2: '#a855f7',
+  ok: '#34d399',
+  warn: '#f59e0b',
+  err: '#f87171'
+});
+
+const moonlitLight = withBpmnDefaults('Moonlit Light', {
+  background: '#edf2ff',
+  foreground: '#0c1229',
+  text: '#0c1229',
+  muted: '#475569',
+  primary: '#f7f9ff',
+  surface: '#f7f9ff',
+  panel: '#e5edff',
+  panel2: '#d9e4ff',
+  border: '#c3dafe',
+  accent: '#3b82f6',
+  accent2: '#6366f1',
+  ok: '#16a34a',
+  warn: '#d97706',
+  err: '#dc2626'
+});
+
+const moonlitDark = withBpmnDefaults('Moonlit Dark', {
+  background: '#0b132b',
+  foreground: '#e2e8f0',
+  text: '#e2e8f0',
+  muted: '#94a3b8',
+  primary: '#0f1a36',
+  surface: '#0f1a36',
+  panel: '#111f3d',
+  panel2: '#0b132b',
+  border: '#1f2a44',
+  accent: '#60a5fa',
+  accent2: '#a5b4fc',
+  ok: '#34d399',
+  warn: '#f59e0b',
+  err: '#f87171'
+});
+
+const desertLight = withBpmnDefaults('Desert Light', {
+  background: '#f7f1e3',
+  foreground: '#3b2f1b',
+  text: '#3b2f1b',
+  muted: '#6b5a3c',
+  primary: '#fffaf0',
+  surface: '#fffaf0',
+  panel: '#f2e8d8',
+  panel2: '#e8dcc5',
+  border: '#d6c6a5',
+  accent: '#d97706',
+  accent2: '#b45309',
+  ok: '#15803d',
+  warn: '#d97706',
+  err: '#b91c1c'
+});
+
+const desertDark = withBpmnDefaults('Desert Dark', {
+  background: '#1f160b',
+  foreground: '#f8f5ec',
+  text: '#f8f5ec',
+  muted: '#d6c3a4',
+  primary: '#2a1c0f',
+  surface: '#2a1c0f',
+  panel: '#332110',
+  panel2: '#1f160b',
+  border: '#4a3418',
+  accent: '#f59e0b',
+  accent2: '#d97706',
+  ok: '#22c55e',
+  warn: '#f59e0b',
+  err: '#fca5a5'
+});
+
+const emberLight = withBpmnDefaults('Ember Light', {
+  background: '#fff7f5',
+  foreground: '#3c0d0d',
+  text: '#3c0d0d',
+  muted: '#7f1d1d',
+  primary: '#fff3f0',
+  surface: '#fff3f0',
+  panel: '#ffe5de',
+  panel2: '#ffd9d0',
+  border: '#fbb8a9',
+  accent: '#ef4444',
+  accent2: '#fb923c',
+  ok: '#16a34a',
+  warn: '#f97316',
+  err: '#b91c1c'
+});
+
+const emberDark = withBpmnDefaults('Ember Dark', {
+  background: '#1a0b0b',
+  foreground: '#fee2e2',
+  text: '#fee2e2',
+  muted: '#fca5a5',
+  primary: '#2b0f0f',
+  surface: '#2b0f0f',
+  panel: '#3b0f0f',
+  panel2: '#1a0b0b',
+  border: '#4c1d1d',
+  accent: '#f87171',
+  accent2: '#fb923c',
+  ok: '#22c55e',
+  warn: '#fb923c',
+  err: '#fca5a5'
+});
+
+const horusGoldLight = withBpmnDefaults('Horus Gold Light', {
+  background: '#fffaf0',
+  foreground: '#3f2c00',
+  text: '#3f2c00',
+  muted: '#6b4b0f',
+  primary: '#fff8e1',
+  surface: '#fff8e1',
+  panel: '#f2e8c9',
+  panel2: '#e8dcb0',
+  border: '#d6c37f',
+  accent: '#d4a017',
+  accent2: '#b7791f',
+  ok: '#15803d',
+  warn: '#d97706',
+  err: '#b91c1c'
+});
+
+const horusGoldDark = withBpmnDefaults('Horus Gold Dark', {
+  background: '#1f1705',
+  foreground: '#f7e7c3',
+  text: '#f7e7c3',
+  muted: '#e0c58f',
+  primary: '#2a1f09',
+  surface: '#2a1f09',
+  panel: '#36270c',
+  panel2: '#1f1705',
+  border: '#4a3610',
+  accent: '#f2c94c',
+  accent2: '#e0a82e',
+  ok: '#22c55e',
+  warn: '#f59e0b',
+  err: '#fca5a5'
+});
+
+export const THEMES = {
+  light: lightTheme,
+  dark: darkTheme,
+  auroraLight,
+  auroraDark,
+  moonlitLight,
+  moonlitDark,
+  desertLight,
+  desertDark,
+  emberLight,
+  emberDark,
+  horusGoldLight,
+  horusGoldDark
+};
 
 const STORAGE_KEY = 'theme.v2';
 const DEFAULT_KEY = 'light';
