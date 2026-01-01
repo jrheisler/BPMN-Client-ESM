@@ -1344,6 +1344,24 @@ function warnIfLabelInvisible() {
   }
 }
 
+function isTransparentColor(value) {
+  if (!value) return true;
+
+  const normalized = String(value).trim().toLowerCase();
+  if (normalized === 'transparent') return true;
+
+  const rgbaMatch = normalized.match(/^rgba?\(([^)]+)\)/);
+  if (rgbaMatch) {
+    const parts = rgbaMatch[1].split(',').map(v => Number.parseFloat(v.trim()));
+    if (parts.length >= 4) {
+      const alpha = parts[3];
+      if (Number.isFinite(alpha) && alpha <= 0) return true;
+    }
+  }
+
+  return false;
+}
+
 function debugBpmnLabelStyles() {
   const labels = Array.from(document.querySelectorAll('#canvas text.djs-label')).slice(0, 10);
   if (!labels.length) {
@@ -1493,7 +1511,9 @@ function applyBpmnTheme(theme) {
   const backgroundColor = colors.background ?? 'transparent';
   const backgroundRgb = parseColor(backgroundColor);
   const fallbackContrastFill = backgroundRgb ? (luminance(backgroundRgb) >= 0.5 ? '#111' : '#eee') : '#111';
-  const resolvedLabelFill = label.fill ?? colors.foreground ?? fallbackContrastFill;
+  const labelFill = !isTransparentColor(label.fill) ? label.fill : null;
+  const foregroundFill = !isTransparentColor(colors.foreground) ? colors.foreground : null;
+  const resolvedLabelFill = labelFill || foregroundFill || fallbackContrastFill;
   const isDevEnv = typeof process !== 'undefined' ? process?.env?.NODE_ENV !== 'production' : true;
 
   if (isDevEnv && !colors.foreground && Object.values(bpmn ?? {}).some(section => (section || {}))) {
