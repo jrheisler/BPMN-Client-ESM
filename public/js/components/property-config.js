@@ -1,234 +1,109 @@
+const DEFAULT_META_FIELDS = [
+  'name', 'documentation',
+  'estimatedDuration', 'actualDuration',
+  'costEstimate', 'ownerRole',
+  'inputQuality', 'outputQuality',
+  'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
+  'variables', 'inputMappings', 'outputMappings',
+  'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+];
+
 export const BPMN_PROPERTY_MAP = {
+  '*': DEFAULT_META_FIELDS,
   'bpmn:Task': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'variables', 'inputMappings', 'outputMappings',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:UserTask': [
-    'name', 'documentation', 'assignee',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'variables', 'inputMappings', 'outputMappings', 'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS,
+    'assignee'
   ],
   'bpmn:ServiceTask': [
-    'name', 'documentation', 'implementation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'variables', 'inputMappings', 'outputMappings',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS,
+    'implementation'
   ],
   'bpmn:ScriptTask': [
-    'name', 'documentation', 'script', 'scriptFormat',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'variables', 'inputMappings', 'outputMappings',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS,
+    'script', 'scriptFormat'
   ],
   'bpmn:CallActivity': [
-    'name', 'documentation', 'calledElement',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'variables', 'inputMappings', 'outputMappings', 'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS,
+    'calledElement'
   ],
   'bpmn:SubProcess': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'variables', 'inputMappings', 'outputMappings',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:StartEvent': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime', 'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:EndEvent': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:IntermediateCatchEvent': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:IntermediateThrowEvent': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:BoundaryEvent': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime', 'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:ExclusiveGateway': [
-    'name', 'documentation', 'default',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'variables', 'inputMappings', 'outputMappings',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS,
+    'default'
   ],
   'bpmn:InclusiveGateway': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'variables', 'inputMappings', 'outputMappings',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:ParallelGateway': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'variables', 'inputMappings', 'outputMappings',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:ComplexGateway': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'variables', 'inputMappings', 'outputMappings',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:EventBasedGateway': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'variables', 'inputMappings', 'outputMappings',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:SequenceFlow': [
-    'name', 'documentation', 'conditionExpression',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS,
+    'conditionExpression'
   ],
   'bpmn:DataObjectReference': [
-    'name', 'itemSubjectRef',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS,
+    'itemSubjectRef'
   ],
   'bpmn:DataStoreReference': [
-    'name', 'itemSubjectRef',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS,
+    'itemSubjectRef'
   ],
   'bpmn:Participant': [
-    'name', 'processRef',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS,
+    'processRef'
   ],
   'bpmn:Lane': [
-    'name',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:TextAnnotation': [
-    'text',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS,
+    'text'
   ],
   'bpmn:Group': [
-    'name', 'categoryValueRef',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS,
+    'categoryValueRef'
   ],
   'bpmn:Message': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:Signal': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:Error': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:Escalation': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ],
   'bpmn:EndPoint': [
-    'name', 'documentation',
-    'estimatedDuration', 'actualDuration',
-    'costEstimate', 'ownerRole',
-    'inputQuality', 'outputQuality',
-    'processOwner', 'creator', 'downTime', 'upTime', 'changeOverTime', 'perCompleteAccurate', 'availability', 'leadTime',
-    'kpiNotes', 'responsible', 'accountable', 'consulted', 'informed'
+    ...DEFAULT_META_FIELDS
   ]
 };
 

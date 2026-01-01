@@ -75,7 +75,7 @@ export function showProperties(element, modeling, moddle) {
   const bo = element.businessObject;
   const attrs = bo.$attrs;
   const type = element.businessObject.$type;
-  const fieldKeys = BPMN_PROPERTY_MAP[type] || [];
+  const fieldKeys = BPMN_PROPERTY_MAP[type] || BPMN_PROPERTY_MAP['*'] || [];
 
   const fieldsToShow = FIELD_DEFINITIONS.filter(f => fieldKeys.includes(f.key));
 
