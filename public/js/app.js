@@ -23,6 +23,8 @@ import { bootstrapSimulation } from './app/simulation.js';
 import { promptTimelineEntryMetadata } from './timeline/entryModal.js';
 // Initialization function will handle dynamic imports and DOM setup later.
 
+const DEBUG_FORCE_LABEL_NORMAL = true;
+
 function resolveFirebaseExports(module) {
   return {
     getFirebase: module?.getFirebase ?? module?.default,
@@ -53,6 +55,7 @@ const avatarOptions = { width: '60px', height: '60px', rounded: true };
 
 const notesStream = new Stream(null);
 window.notesStream = notesStream;
+const minimalThemeEnabled = new Stream(false);
 const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
   <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
                     xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
@@ -575,6 +578,7 @@ async function appendXml(xml) {
       if (svg) svg.style.height = '100%';
       simulation.clearTokenLog();
       simulation.reset();
+      debugBpmnLabelStyles();
     } catch (err) {
       console.error("Import error:", err);
     }
@@ -1068,6 +1072,42 @@ function buildDropdownOptions() {
     modal.addEventListener('click', onOverlayClick);
   }
 
+  function createMinimalThemeToggle() {
+    const label = document.createElement('label');
+    label.style.display = 'inline-flex';
+    label.style.alignItems = 'center';
+    label.style.gap = '0.25rem';
+    label.style.fontSize = '0.9rem';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = minimalThemeEnabled.get();
+
+    const text = document.createElement('span');
+    text.textContent = 'Minimal Theme';
+
+    checkbox.addEventListener('change', () => {
+      minimalThemeEnabled.set(checkbox.checked);
+      applyBpmnTheme(currentTheme.get());
+      debugBpmnLabelStyles();
+    });
+
+    minimalThemeEnabled.subscribe(enabled => {
+      checkbox.checked = enabled;
+      label.title = enabled
+        ? 'Minimal BPMN overrides active to isolate bpmn-js defaults'
+        : 'Full themed BPMN overrides active';
+    });
+
+    currentTheme.subscribe(theme => {
+      const fg = theme?.colors?.foreground ?? 'inherit';
+      label.style.color = fg;
+    });
+
+    label.append(checkbox, text);
+    return label;
+  }
+
   const controls = [
   // 1) avatar menu
   avatarMenu,
@@ -1205,6 +1245,7 @@ function buildDropdownOptions() {
       }
     )
   );
+  controls.push(createMinimalThemeToggle());
   controls.push(themedThemeSelector());
 
   const controlsBar = row(controls, {
@@ -1303,18 +1344,77 @@ function warnIfLabelInvisible() {
   }
 }
 
+function debugBpmnLabelStyles() {
+  const labels = Array.from(document.querySelectorAll('#canvas text.djs-label')).slice(0, 10);
+  if (!labels.length) {
+    console.info('[debug] No BPMN labels found for style dump.');
+    return;
+  }
+
+  if (document.fonts?.check) {
+    console.info('[debug] Font availability check', {
+      inter400: document.fonts.check('400 12px Inter'),
+      segoe400: document.fonts.check('400 12px "Segoe UI"')
+    });
+  } else {
+    console.info('[debug] document.fonts.check not supported in this browser.');
+  }
+
+  labels.forEach((el, idx) => {
+    const computed = getComputedStyle(el);
+    const summary = {
+      fontFamily: computed.fontFamily,
+      fontWeight: computed.fontWeight,
+      fontSize: computed.fontSize,
+      fill: computed.fill,
+      stroke: computed.stroke,
+      strokeWidth: computed.strokeWidth,
+      filter: computed.filter,
+      textRendering: computed.textRendering || computed.getPropertyValue('text-rendering'),
+      fontSynthesis: computed.fontSynthesis ?? computed.getPropertyValue('font-synthesis'),
+      fontSynthesisWeight: computed.fontSynthesisWeight ?? computed.getPropertyValue('font-synthesis-weight')
+    };
+
+    const attributes = {
+      fontWeight: el.getAttribute('font-weight'),
+      textRendering: el.getAttribute('text-rendering'),
+      style: el.getAttribute('style')
+    };
+
+    console.groupCollapsed(`[debug] Label ${idx + 1}: "${(el.textContent || '').trim().slice(0, 30)}"`);
+    console.log('Computed:', summary);
+    console.log('Attributes:', attributes);
+    console.groupEnd();
+  });
+}
+
   // ─── theming overrides ────────────────────────────────────────────────────
 const bpmnThemeStyle = document.createElement('style');
 document.head.appendChild(bpmnThemeStyle);
 
-currentTheme.subscribe(theme => {
-  const colors = theme?.colors ?? {};
-  const bpmn = theme?.bpmn;
+const forcedNormalLabelStyle = document.createElement('style');
+document.head.appendChild(forcedNormalLabelStyle);
 
-  if (!bpmn) {
-    bpmnThemeStyle.textContent = '';
-    return;
-  }
+function applyDebugLabelNormalization(enabled) {
+  forcedNormalLabelStyle.textContent = enabled ? `
+#canvas text.djs-label,
+#canvas text.djs-label tspan {
+  font-weight: 400 !important;
+  font-synthesis: none !important;
+  text-rendering: auto !important;
+  stroke: none !important;
+  stroke-width: 0 !important;
+  filter: none !important;
+  paint-order: fill !important;
+}
+` : '';
+}
+
+applyDebugLabelNormalization(DEBUG_FORCE_LABEL_NORMAL);
+
+function applyBpmnTheme(theme) {
+  const colors = theme?.colors ?? {};
+  const bpmn = theme?.bpmn ?? {};
 
   const fallbackLabelFont = "'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
   const shape = bpmn.shape ?? {};
@@ -1390,11 +1490,56 @@ currentTheme.subscribe(theme => {
   const markerFillValue = marker.fill ?? marker.accent ?? colors.accent ?? connectionStrokeValue ?? colors.foreground ?? '#000';
   const markerStrokeValue = marker.stroke ?? marker.outline ?? colors.foreground ?? colors.accent ?? connectionStrokeValue ?? '#000';
 
-  const resolvedLabelFill = label.fill ?? 'var(--text)';
+  const backgroundColor = colors.background ?? 'transparent';
+  const backgroundRgb = parseColor(backgroundColor);
+  const fallbackContrastFill = backgroundRgb ? (luminance(backgroundRgb) >= 0.5 ? '#111' : '#eee') : '#111';
+  const resolvedLabelFill = label.fill ?? colors.foreground ?? fallbackContrastFill;
   const isDevEnv = typeof process !== 'undefined' ? process?.env?.NODE_ENV !== 'production' : true;
 
   if (isDevEnv && !colors.foreground && Object.values(bpmn ?? {}).some(section => (section || {}))) {
     console.warn('[theme] Missing colors.foreground; label fill resolved to', resolvedLabelFill, 'for theme', theme?.name ?? 'unknown');
+  }
+
+  const labelTextRules = `
+    /* text rendering is scoped to labels only */
+    #canvas text,
+    #canvas tspan {
+      text-rendering: auto;
+    }
+
+    /* ── text labels use theme-defined fill with foreground fallback ───── */
+    .djs-element .djs-label,
+    .djs-element.djs-label .djs-visual > text,
+    .djs-element .djs-visual > text.djs-label,
+    .djs-element[data-element-type="bpmn:TextAnnotation"] .djs-visual > text {
+      fill: ${resolvedLabelFill} !important;
+      font-family: ${labelFontFamily};
+      font-size: ${labelFontSize} !important;
+      font-weight: 400 !important;
+      stroke: none !important;
+      stroke-width: 0 !important;
+      text-shadow: none !important;
+      filter: none !important;
+      paint-order: fill !important;
+    }
+  `;
+
+  if (minimalThemeEnabled.get()) {
+    bpmnThemeStyle.textContent = `
+      /* canvas background */
+      #canvas,
+      #canvas .djs-container,
+      #canvas .djs-container svg {
+        background: ${backgroundColor} !important;
+        --canvas-fill-color: ${backgroundColor};
+      }
+
+      ${labelTextRules}
+    `;
+
+    warnIfLabelInvisible();
+    debugBpmnLabelStyles();
+    return;
   }
 
   bpmnThemeStyle.textContent = `
@@ -1402,8 +1547,8 @@ currentTheme.subscribe(theme => {
     #canvas,
     #canvas .djs-container,
     #canvas .djs-container svg {
-      background: ${colors.background ?? 'transparent'} !important;
-      --canvas-fill-color: ${colors.background ?? 'transparent'};
+      background: ${backgroundColor} !important;
+      --canvas-fill-color: ${backgroundColor};
     }
 
     #canvas .djs-container,
@@ -1420,59 +1565,82 @@ currentTheme.subscribe(theme => {
       box-shadow: ${paletteShadow} !important;
     }
 
-    #palette .djs-palette,
-    #canvas .djs-palette {
-      background: ${paletteBackground} !important;
-      color: ${paletteText} !important;
-      border: 1px solid ${paletteBorder} !important;
-      box-shadow: ${paletteShadow} !important;
-    }
-
-    #palette .djs-palette-entries,
-    #canvas .djs-palette .djs-palette-entries,
-    #palette .djs-palette .group,
-    #canvas .djs-palette .group {
+    #palette .djs-palette-entries {
       background: ${paletteGroupBackground} !important;
       color: ${paletteGroupText} !important;
-      border-color: ${paletteGroupBorder} !important;
+      border-top: 1px solid ${paletteGroupBorder} !important;
     }
 
-    #palette .djs-palette .group .group-title,
-    #palette .djs-palette .group > h3,
-    #canvas .djs-palette .group .group-title,
-    #canvas .djs-palette .group > h3 {
-      color: ${paletteGroupText} !important;
-      border-bottom: 1px solid ${paletteGroupBorder} !important;
-    }
-
-    #palette .djs-palette .entry,
-    #canvas .djs-palette .entry {
+    #palette .entry {
       background: ${paletteEntryBackground} !important;
       color: ${paletteEntryText} !important;
       border: 1px solid ${paletteEntryBorder} !important;
-      box-shadow: none !important;
     }
 
-    #palette .djs-palette .entry:hover,
-    #palette .djs-palette .entry:focus,
-    #canvas .djs-palette .entry:hover,
-    #canvas .djs-palette .entry:focus {
+    #palette .entry:hover {
       background: ${paletteEntryHoverBackground} !important;
       color: ${paletteEntryHoverText} !important;
-      border-color: ${paletteEntryHoverBorder} !important;
+      border: 1px solid ${paletteEntryHoverBorder} !important;
       box-shadow: ${paletteEntryHoverShadow} !important;
     }
 
-    #palette .djs-palette .entry.active,
-    #canvas .djs-palette .entry.active {
+    #palette .entry:active {
       background: ${paletteEntryActiveBackground} !important;
       color: ${paletteEntryActiveText} !important;
-      border-color: ${paletteEntryActiveBorder} !important;
+      border: 1px solid ${paletteEntryActiveBorder} !important;
       box-shadow: ${paletteEntryActiveShadow} !important;
     }
 
-    /* ── base shape styles ──────────────────────────────────────────────── */
-    .djs-element.djs-shape:not(.djs-label) .djs-visual > :first-child {
+    /* quick menu styling */
+    #canvas .djs-context-pad .djs-overlay-container {
+      background: ${colors.surface ?? '#fff'} !important;
+    }
+
+    .djs-context-pad .entry {
+      color: ${quickMenu.text ?? colors.foreground ?? '#000'} !important;
+    }
+
+    #canvas .djs-context-pad .djs-overlay {
+      background: ${quickMenu.background ?? colors.surface ?? '#fff'} !important;
+      border: 1px solid ${quickMenu.border ?? 'transparent'} !important;
+      box-shadow: ${quickMenu.shadow ?? 'none'} !important;
+    }
+
+    /* ensure buttons stay legible */
+    .djs-context-pad .entry:hover,
+    .djs-context-pad .entry:focus,
+    .djs-context-pad .entry:active {
+      background: ${quickMenu.hoverBackground ?? quickMenu.background ?? colors.primary ?? colors.surface ?? '#fff'} !important;
+      color: ${quickMenu.hoverText ?? quickMenu.text ?? colors.foreground ?? '#000'} !important;
+      border-color: ${quickMenu.hoverBorder ?? quickMenu.border ?? 'transparent'} !important;
+      box-shadow: ${quickMenu.hoverShadow ?? quickMenu.shadow ?? 'none'} !important;
+    }
+
+    /* keep palette toggle buttons neutral */
+    #palette .djs-toggle { color: ${paletteText} !important; }
+
+    /* 👻 Ghost visuals (during drag / drop) should stay muted */
+    .djs-drag-active .djs-visual :not(text) {
+      opacity: 0.6 !important;
+    }
+
+    /* 🔍 Align handles */
+    .bjsl-button:hover,
+    .bjsl-button:focus { background: ${colors.surface ?? '#fff'} !important; }
+
+    /* ⌨️ Keyboard helpers */
+    .djs-context-pad .entry:focus { box-shadow: 0 0 0 1px ${colors.accent ?? '#00f'} !important; }
+
+    /* 🎯 highlight selected items */
+    .djs-highlights .djs-outline,
+    .djs-highlights .djs-visual > rect,
+    .djs-highlights .djs-visual > path,
+    .djs-highlights .djs-visual > circle {
+      stroke: ${colors.accent ?? '#00f'} !important;
+    }
+
+    /* 🔳 general shapes */
+    .djs-element.djs-shape .djs-visual > :first-child {
       fill: ${shapeFill} !important;
       stroke: ${shapeStroke} !important;
       stroke-width: ${shapeStrokeWidth}px !important;
@@ -1511,21 +1679,7 @@ currentTheme.subscribe(theme => {
       stroke-width: ${shapeStrokeWidth}px !important;
     }
 
-    /* ── text labels use theme-defined fill with foreground fallback ───── */
-    .djs-element .djs-label,
-    .djs-element.djs-label .djs-visual > text,
-    .djs-element .djs-visual > text.djs-label,
-    .djs-element[data-element-type="bpmn:TextAnnotation"] .djs-visual > text {
-      fill: ${resolvedLabelFill} !important;
-      font-family: ${labelFontFamily};
-      font-size: ${labelFontSize} !important;
-      font-weight: 400 !important;
-      stroke: none !important;
-      stroke-width: 0 !important;
-      text-shadow: none !important;
-      filter: none !important;
-      paint-order: fill !important;
-    }
+    ${labelTextRules}
 
     /* ── connections & arrows ───────────────────────────────────────────── */
     .djs-connection .djs-connection-inner,
@@ -1599,9 +1753,9 @@ currentTheme.subscribe(theme => {
       border: 1px solid transparent !important;
     }
 
-    #canvas .djs-popup-body .entry:hover,
-    #canvas .djs-popup-body .entry:focus,
-    #canvas .djs-popup-body .entry.active {
+    #canvas .djs-popup .djs-popup-body .entry:hover,
+    #canvas .djs-popup .djs-popup-body .entry:focus,
+    #canvas .djs-popup .djs-popup-body .entry.active {
       background: var(--popup-hover-background) !important;
       color: var(--popup-hover-text) !important;
       border-color: var(--popup-hover-border) !important;
@@ -1648,7 +1802,11 @@ currentTheme.subscribe(theme => {
   `;
 
   warnIfLabelInvisible();
-});
+  debugBpmnLabelStyles();
+}
+
+currentTheme.subscribe(applyBpmnTheme);
+minimalThemeEnabled.subscribe(() => applyBpmnTheme(currentTheme.get()));
 
 function clearModeler() {
 

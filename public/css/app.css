@@ -6,10 +6,6 @@
   background-size: 10px 10px;
 }
 
-#canvas svg {
-  text-rendering: geometricPrecision;
-}
-
 .djs-direct-editing-parent,
 .djs-direct-editing-content {
   background: var(--panel);
