@@ -139,7 +139,7 @@ function unwrapThemePack(json) {
   return json;
 }
 
-function normalizeThemeEntry(key, theme, diagOut) {
+export function normalizeThemeEntry(key, theme, diagOut) {
   const warnings = [];
 
   if (!isPlainObject(theme)) {
@@ -153,6 +153,10 @@ function normalizeThemeEntry(key, theme, diagOut) {
   if (!colorsOk) warnings.push(`Theme "${key}" missing "colors" object; using defaults.`);
 
   const colors = colorsOk ? { ...defaultTheme.colors, ...theme.colors } : { ...defaultTheme.colors };
+  const foregroundMissing = !colorsOk || !Object.prototype.hasOwnProperty.call(theme.colors, 'foreground');
+  if (foregroundMissing) {
+    colors.foreground = colors.text || TOKEN_DEFAULTS.text;
+  }
 
   const fontsOk = isPlainObject(theme.fonts);
   if (!fontsOk) warnings.push(`Theme "${key}" missing "fonts" object; using defaults.`);
@@ -177,6 +181,10 @@ function normalizeThemeEntry(key, theme, diagOut) {
     focusRing: colors.focusRing || colors.accent || TOKEN_DEFAULTS.focusRing
   };
 
+  if (!colors.foreground || foregroundMissing) {
+    colors.foreground = tokens.text || TOKEN_DEFAULTS.text;
+  }
+
   const normalized = {
     ...theme,
     name: theme.name || key,
@@ -198,7 +206,7 @@ function normalizeThemeEntry(key, theme, diagOut) {
   return normalized;
 }
 
-function validateThemes(json) {
+export function validateThemes(json) {
   const diag = { errors: [], warnings: [], byTheme: {} };
   const valid = {};
 
