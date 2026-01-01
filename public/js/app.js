@@ -55,7 +55,6 @@ const avatarOptions = { width: '60px', height: '60px', rounded: true };
 
 const notesStream = new Stream(null);
 window.notesStream = notesStream;
-const minimalThemeEnabled = new Stream(false);
 const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
   <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
                     xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
@@ -1072,42 +1071,6 @@ function buildDropdownOptions() {
     modal.addEventListener('click', onOverlayClick);
   }
 
-  function createMinimalThemeToggle() {
-    const label = document.createElement('label');
-    label.style.display = 'inline-flex';
-    label.style.alignItems = 'center';
-    label.style.gap = '0.25rem';
-    label.style.fontSize = '0.9rem';
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = minimalThemeEnabled.get();
-
-    const text = document.createElement('span');
-    text.textContent = 'Minimal Theme';
-
-    checkbox.addEventListener('change', () => {
-      minimalThemeEnabled.set(checkbox.checked);
-      applyBpmnTheme(currentTheme.get());
-      debugBpmnLabelStyles();
-    });
-
-    minimalThemeEnabled.subscribe(enabled => {
-      checkbox.checked = enabled;
-      label.title = enabled
-        ? 'Minimal BPMN overrides active to isolate bpmn-js defaults'
-        : 'Full themed BPMN overrides active';
-    });
-
-    currentTheme.subscribe(theme => {
-      const fg = theme?.colors?.foreground ?? 'inherit';
-      label.style.color = fg;
-    });
-
-    label.append(checkbox, text);
-    return label;
-  }
-
   const controls = [
   // 1) avatar menu
   avatarMenu,
@@ -1245,7 +1208,6 @@ function buildDropdownOptions() {
       }
     )
   );
-  controls.push(createMinimalThemeToggle());
   controls.push(themedThemeSelector());
 
   const controlsBar = row(controls, {
@@ -1430,389 +1392,119 @@ function applyDebugLabelNormalization(enabled) {
 
 applyDebugLabelNormalization(DEBUG_FORCE_LABEL_NORMAL);
 
+
 function applyBpmnTheme(theme) {
   const colors = theme?.colors ?? {};
   const bpmn = theme?.bpmn ?? {};
-
-  const fallbackLabelFont = "'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
-  const shape = bpmn.shape ?? {};
-  const startEvent = bpmn.startEvent ?? {};
-  const endEvent = bpmn.endEvent ?? {};
-  const task = bpmn.task ?? {};
-  const gateway = bpmn.gateway ?? {};
   const label = bpmn.label ?? {};
-  const labelFontFamily = label.fontFamily ?? fallbackLabelFont;
+  const shape = bpmn.shape ?? {};
   const connection = bpmn.connection ?? {};
   const marker = bpmn.marker ?? {};
   const selected = bpmn.selected ?? {};
-  const labelFontSize = label.fontSize ?? '12px';
-  const quickMenu = bpmn.quickMenu ?? {
-    background: colors.surface ?? '#fff',
-    hoverBackground: colors.primary ?? colors.surface ?? '#fff',
-    text: colors.foreground ?? '#000',
-    hoverText: colors.accent ?? colors.foreground ?? '#000',
-    border: colors.border ?? 'transparent',
-    hoverBorder: colors.accent ?? colors.border ?? 'transparent',
-    shadow: 'none',
-    hoverShadow: 'none'
-  };
-
   const palette = bpmn.palette ?? {};
-  const paletteBackground = palette.background ?? colors.surface ?? '#fff';
-  const paletteText = palette.text ?? colors.foreground ?? '#000';
-  const paletteBorder = palette.border ?? colors.border ?? 'transparent';
-  const paletteShadow = palette.shadow ?? 'none';
-  const paletteGroupBackground = palette.groupBackground ?? paletteBackground;
-  const paletteGroupText = palette.groupText ?? paletteText;
-  const paletteGroupBorder = palette.groupBorder ?? paletteBorder;
-  const paletteEntryBackground = palette.entryBackground ?? 'transparent';
-  const paletteEntryText = palette.entryText ?? paletteText;
-  const paletteEntryBorder = palette.entryBorder ?? 'transparent';
-  const paletteEntryHoverBackground = palette.entryHoverBackground ?? (paletteEntryBackground === 'transparent' ? paletteBackground : paletteEntryBackground);
-  const paletteEntryHoverText = palette.entryHoverText ?? paletteEntryText;
-  const paletteEntryHoverBorder = palette.entryHoverBorder ?? paletteEntryBorder;
-  const paletteEntryHoverShadow = palette.entryHoverShadow ?? 'none';
-  const paletteEntryActiveBackground = palette.entryActiveBackground ?? colors.accent ?? paletteEntryHoverBackground;
-  const paletteEntryActiveText = palette.entryActiveText ?? paletteEntryHoverText;
-  const paletteEntryActiveBorder = palette.entryActiveBorder ?? colors.accent ?? paletteEntryHoverBorder;
-  const paletteEntryActiveShadow = palette.entryActiveShadow ?? paletteEntryHoverShadow;
+  const quickMenu = bpmn.quickMenu ?? {};
+  const fallbackFont = theme?.fonts?.base || "'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 
-  const popupMenuConfig = bpmn.popupMenu ?? {};
-  const popupBackground = popupMenuConfig.background ?? colors.surface ?? '#fff';
-  const popupText = popupMenuConfig.text ?? colors.foreground ?? '#000';
-  const popupBorder = popupMenuConfig.border ?? colors.border ?? 'transparent';
-  const popupShadow = popupMenuConfig.shadow ?? 'none';
-  const popupHoverBackground = popupMenuConfig.hoverBackground ?? colors.primary ?? popupBackground;
-  const popupHoverText = popupMenuConfig.hoverText ?? colors.accent ?? popupText;
-  const popupHoverBorder = popupMenuConfig.hoverBorder ?? colors.accent ?? popupBorder;
-  const popupHoverShadow = popupMenuConfig.hoverShadow ?? popupShadow;
-  const popupSearchBackground = popupMenuConfig.searchBackground ?? popupBackground;
-  const popupSearchText = popupMenuConfig.searchText ?? popupText;
-  const popupSearchPlaceholder = popupMenuConfig.searchPlaceholder ?? colors.muted ?? popupSearchText;
-  const popupSearchBorder = popupMenuConfig.searchBorder ?? popupBorder;
-  const popupSearchFocusShadow = popupMenuConfig.searchFocusShadow ?? `0 0 0 1px ${popupHoverBorder}`;
+  const labelFontFamily = label.fontFamily || fallbackFont;
+  const labelFill = label.fill || colors.text || colors.foreground || '#111';
+  const labelFontSize = label.fontSize || '12px';
+  const canvasBackground = bpmn.canvas || colors.background || '#ffffff';
+  const shapeStrokeWidth = shape.strokeWidth ?? 1.25;
+  const connectionStrokeWidth = connection.strokeWidth ?? 1.5;
 
-  const shapeFill = shape.fill ?? 'transparent';
-  const shapeStroke = shape.stroke ?? 'transparent';
-  const shapeStrokeWidth = shape.strokeWidth ?? 1;
+  bpmnThemeStyle.textContent = `
+    #canvas,
+    #canvas .djs-container,
+    #canvas .djs-container svg {
+      background: ${canvasBackground} !important;
+      --canvas-fill-color: ${canvasBackground};
+    }
 
-  const startFill = startEvent.fill ?? shapeFill;
-  const startStroke = startEvent.stroke ?? shapeStroke;
-  const endFill = endEvent.fill ?? shapeFill;
-  const endStroke = endEvent.stroke ?? shapeStroke;
-  const taskFill = task.fill ?? shapeFill;
-  const taskStroke = task.stroke ?? shapeStroke;
-  const gatewayFill = gateway.fill ?? shapeFill;
-  const gatewayStroke = gateway.stroke ?? shapeStroke;
-  const connectionStrokeValue = connection.stroke ?? colors.accent ?? colors.foreground ?? shapeStroke ?? '#000';
-  const markerFillValue = marker.fill ?? marker.accent ?? colors.accent ?? connectionStrokeValue ?? colors.foreground ?? '#000';
-  const markerStrokeValue = marker.stroke ?? marker.outline ?? colors.foreground ?? colors.accent ?? connectionStrokeValue ?? '#000';
-
-  const backgroundColor = colors.background ?? 'transparent';
-  const backgroundRgb = parseColor(backgroundColor);
-  const fallbackContrastFill = backgroundRgb ? (luminance(backgroundRgb) >= 0.5 ? '#111' : '#eee') : '#111';
-  const labelFill = !isTransparentColor(label.fill) ? label.fill : null;
-  const foregroundFill = !isTransparentColor(colors.foreground) ? colors.foreground : null;
-  const resolvedLabelFill = labelFill || foregroundFill || fallbackContrastFill;
-  const isDevEnv = typeof process !== 'undefined' ? process?.env?.NODE_ENV !== 'production' : true;
-
-  if (isDevEnv && !colors.foreground && Object.values(bpmn ?? {}).some(section => (section || {}))) {
-    console.warn('[theme] Missing colors.foreground; label fill resolved to', resolvedLabelFill, 'for theme', theme?.name ?? 'unknown');
-  }
-
-  const labelTextRules = `
-    /* text rendering is scoped to labels only */
     #canvas text,
     #canvas tspan {
       text-rendering: auto !important;
-    }
-
-    /* ── text labels use theme-defined fill with foreground fallback ───── */
-    .djs-element .djs-label,
-    .djs-element.djs-label .djs-visual > text,
-    .djs-element .djs-visual > text.djs-label,
-    .djs-element[data-element-type="bpmn:TextAnnotation"] .djs-visual > text {
-      fill: ${resolvedLabelFill} !important;
       font-family: ${labelFontFamily};
+      fill: ${labelFill} !important;
       font-size: ${labelFontSize} !important;
       font-weight: 400 !important;
       stroke: none !important;
       stroke-width: 0 !important;
-      text-shadow: none !important;
-      filter: none !important;
       paint-order: fill !important;
     }
-  `;
 
-  const minimalBpmnStyles = `
-    /* canvas background */
-    #canvas,
-    #canvas .djs-container,
-    #canvas .djs-container svg {
-      background: ${backgroundColor} !important;
-      --canvas-fill-color: ${backgroundColor};
-    }
-
-    ${labelTextRules}
-  `;
-
-  if (minimalThemeEnabled.get()) {
-    bpmnThemeStyle.textContent = minimalBpmnStyles;
-
-    warnIfLabelInvisible();
-    debugBpmnLabelStyles();
-    return;
-  }
-
-  bpmnThemeStyle.textContent = `
-    ${minimalBpmnStyles}
-
-    #canvas .djs-container,
-    #canvas .djs-parent {
-      --context-pad-entry-background-color: ${quickMenu.background ?? colors.surface ?? 'transparent'};
-      --context-pad-entry-hover-background-color: ${quickMenu.hoverBackground ?? quickMenu.background ?? colors.primary ?? colors.surface ?? 'transparent'};
-    }
-
-    /* palette styling */
-    #palette {
-      background: ${paletteBackground} !important;
-      color: ${paletteText} !important;
-      border-right: 1px solid ${paletteBorder} !important;
-      box-shadow: ${paletteShadow} !important;
-    }
-
-    #palette .djs-palette-entries {
-      background: ${paletteGroupBackground} !important;
-      color: ${paletteGroupText} !important;
-      border-top: 1px solid ${paletteGroupBorder} !important;
-    }
-
-    #palette .entry {
-      background: ${paletteEntryBackground} !important;
-      color: ${paletteEntryText} !important;
-      border: 1px solid ${paletteEntryBorder} !important;
-    }
-
-    #palette .entry:hover {
-      background: ${paletteEntryHoverBackground} !important;
-      color: ${paletteEntryHoverText} !important;
-      border: 1px solid ${paletteEntryHoverBorder} !important;
-      box-shadow: ${paletteEntryHoverShadow} !important;
-    }
-
-    #palette .entry:active {
-      background: ${paletteEntryActiveBackground} !important;
-      color: ${paletteEntryActiveText} !important;
-      border: 1px solid ${paletteEntryActiveBorder} !important;
-      box-shadow: ${paletteEntryActiveShadow} !important;
-    }
-
-    /* quick menu styling */
-    #canvas .djs-context-pad .djs-overlay-container {
-      background: ${colors.surface ?? '#fff'} !important;
-    }
-
-    .djs-context-pad .entry {
-      color: ${quickMenu.text ?? colors.foreground ?? '#000'} !important;
-    }
-
-    #canvas .djs-context-pad .djs-overlay {
-      background: ${quickMenu.background ?? colors.surface ?? '#fff'} !important;
-      border: 1px solid ${quickMenu.border ?? 'transparent'} !important;
-      box-shadow: ${quickMenu.shadow ?? 'none'} !important;
-    }
-
-    /* ensure buttons stay legible */
-    .djs-context-pad .entry:hover,
-    .djs-context-pad .entry:focus,
-    .djs-context-pad .entry:active {
-      background: ${quickMenu.hoverBackground ?? quickMenu.background ?? colors.primary ?? colors.surface ?? '#fff'} !important;
-      color: ${quickMenu.hoverText ?? quickMenu.text ?? colors.foreground ?? '#000'} !important;
-      border-color: ${quickMenu.hoverBorder ?? quickMenu.border ?? 'transparent'} !important;
-      box-shadow: ${quickMenu.hoverShadow ?? quickMenu.shadow ?? 'none'} !important;
-    }
-
-    /* keep palette toggle buttons neutral */
-    #palette .djs-toggle { color: ${paletteText} !important; }
-
-    /* 👻 Ghost visuals (during drag / drop) should stay muted */
-    .djs-drag-active .djs-visual :not(text) {
-      opacity: 0.6 !important;
-    }
-
-    /* 🔍 Align handles */
-    .bjsl-button:hover,
-    .bjsl-button:focus { background: ${colors.surface ?? '#fff'} !important; }
-
-    /* ⌨️ Keyboard helpers */
-    .djs-context-pad .entry:focus { box-shadow: 0 0 0 1px ${colors.accent ?? '#00f'} !important; }
-
-    /* 🎯 highlight selected items */
-    .djs-highlights .djs-outline,
-    .djs-highlights .djs-visual > rect,
-    .djs-highlights .djs-visual > path,
-    .djs-highlights .djs-visual > circle {
-      stroke: ${colors.accent ?? '#00f'} !important;
-    }
-
-    /* 🔳 general shapes */
     .djs-element.djs-shape .djs-visual > :first-child {
-      fill: ${shapeFill} !important;
-      stroke: ${shapeStroke} !important;
+      fill: ${shape.fill ?? colors.surface ?? 'transparent'} !important;
+      stroke: ${shape.stroke ?? colors.border ?? colors.text ?? '#000'} !important;
       stroke-width: ${shapeStrokeWidth}px !important;
     }
 
-    /* ensure multi-primitive shapes inherit fills */
-    .djs-element.djs-shape:not(.djs-label) .djs-visual > :first-child + :where(rect, circle, ellipse) {
-      fill: ${shapeFill} !important;
-    }
-
-    /* ── BPMN element specifics ─────────────────────────────────────────── */
-    .djs-element[data-element-type="bpmn:StartEvent"] .djs-visual > :is(:first-child, circle:nth-child(2)) {
-      fill: ${startFill} !important;
-      stroke: ${startStroke} !important;
-    }
-    .djs-element[data-element-type="bpmn:BoundaryEvent"] .djs-visual > :is(:first-child, circle:nth-child(2)) {
-      fill: ${startFill} !important;
-      stroke: ${startStroke} !important;
-    }
-    .djs-element[data-element-type="bpmn:EndEvent"] .djs-visual > :is(:first-child, circle:nth-child(2)) {
-      fill: ${endFill} !important;
-      stroke: ${endStroke} !important;
-    }
-    .djs-element[data-element-type*="Task"] .djs-visual > :first-child,
-    .djs-element[data-element-type*="Activity"] .djs-visual > :first-child {
-      fill: ${taskFill} !important;
-      stroke: ${taskStroke} !important;
-    }
-    .djs-element[data-element-type*="Gateway"] .djs-visual > :first-child {
-      fill: ${gatewayFill} !important;
-      stroke: ${gatewayStroke} !important;
-    }
-
-    /* keep event outlines clear */
     .djs-element.djs-event .djs-visual > :first-child {
       stroke-width: ${shapeStrokeWidth}px !important;
     }
 
-    /* ── connections & arrows ───────────────────────────────────────────── */
+    .djs-element[data-element-type*="Task"] .djs-visual > :first-child,
+    .djs-element[data-element-type*="Activity"] .djs-visual > :first-child {
+      fill: ${shape.fill ?? colors.surface ?? 'transparent'} !important;
+      stroke: ${shape.stroke ?? colors.border ?? colors.text ?? '#000'} !important;
+    }
+
+    .djs-element[data-element-type*="Gateway"] .djs-visual > :first-child {
+      fill: ${shape.fill ?? colors.panel ?? 'transparent'} !important;
+      stroke: ${shape.stroke ?? colors.border ?? colors.text ?? '#000'} !important;
+    }
+
     .djs-connection .djs-connection-inner,
     .djs-connection .djs-connection-outer {
-      stroke: ${connectionStrokeValue} !important;
-      stroke-width: ${connection.strokeWidth ?? shapeStrokeWidth}px !important;
+      stroke: ${connection.stroke ?? colors.accent ?? colors.text ?? '#000'} !important;
+      stroke-width: ${connectionStrokeWidth}px !important;
     }
     .djs-connection .djs-marker {
-      fill: ${markerFillValue} !important;
-      stroke: ${markerStrokeValue} !important;
+      fill: ${marker.fill ?? connection.stroke ?? colors.accent ?? '#000'} !important;
+      stroke: ${marker.stroke ?? colors.text ?? '#000'} !important;
     }
 
-    /* ── selected styles ───────────────────────────────────────────────── */
     .djs-element.djs-element-selected .djs-visual > :first-child,
     .djs-connection.djs-connection-selected .djs-outline {
-      stroke: ${selected.stroke ?? colors.accent ?? shapeStroke} !important;
-      stroke-width: ${selected.strokeWidth ?? (shapeStrokeWidth + 1)}px !important;
+      stroke: ${selected.stroke ?? colors.accent ?? colors.text ?? '#000'} !important;
+      stroke-width: ${selected.strokeWidth ?? connectionStrokeWidth + 0.5}px !important;
     }
 
-    .djs-context-pad .entry {
-      background: var(--context-pad-entry-background-color, ${quickMenu.background ?? 'transparent'}) !important;
-      color: ${quickMenu.text ?? colors.foreground ?? '#000'} !important;
-      border: 1px solid ${quickMenu.border ?? 'transparent'} !important;
-      box-shadow: ${quickMenu.shadow ?? 'none'} !important;
-    }
-
-    .djs-context-pad .entry:hover {
-      background: var(--context-pad-entry-hover-background-color, ${quickMenu.hoverBackground ?? quickMenu.background ?? 'transparent'}) !important;
-      color: ${quickMenu.hoverText ?? quickMenu.text ?? colors.foreground ?? '#000'} !important;
-      border: 1px solid ${quickMenu.hoverBorder ?? quickMenu.border ?? 'transparent'} !important;
-      box-shadow: ${quickMenu.hoverShadow ?? quickMenu.shadow ?? 'none'} !important;
-    }
-
-    /* ── popup / replace menu ───────────────────────────────────────────── */
-    #canvas .djs-popup {
-      --popup-background: ${popupBackground};
-      --popup-text: ${popupText};
-      --popup-border: ${popupBorder};
-      --popup-shadow: ${popupShadow};
-      --popup-hover-background: ${popupHoverBackground};
-      --popup-hover-text: ${popupHoverText};
-      --popup-hover-border: ${popupHoverBorder};
-      --popup-hover-shadow: ${popupHoverShadow};
-      --popup-search-background: ${popupSearchBackground};
-      --popup-search-text: ${popupSearchText};
-      --popup-search-placeholder: ${popupSearchPlaceholder};
-      --popup-search-border: ${popupSearchBorder};
-      --popup-search-focus-shadow: ${popupSearchFocusShadow};
-    }
-
-    #canvas .djs-popup,
-    #canvas .djs-popup .djs-popup-header,
-    #canvas .djs-popup .djs-popup-body,
-    #canvas .djs-popup .djs-popup-title {
-      background: var(--popup-background) !important;
-      color: var(--popup-text) !important;
-    }
-
-    #canvas .djs-popup {
-      border: 1px solid var(--popup-border) !important;
-      box-shadow: var(--popup-shadow) !important;
-    }
-
-    #canvas .djs-popup .djs-popup-header,
-    #canvas .djs-popup .djs-popup-search {
-      border-bottom: 1px solid var(--popup-border) !important;
-    }
-
-    #canvas .djs-popup .entry {
-      color: var(--popup-text) !important;
-      border: 1px solid transparent !important;
-    }
-
-    #canvas .djs-popup .djs-popup-body .entry:hover,
-    #canvas .djs-popup .djs-popup-body .entry:focus,
-    #canvas .djs-popup .djs-popup-body .entry.active {
-      background: var(--popup-hover-background) !important;
-      color: var(--popup-hover-text) !important;
-      border-color: var(--popup-hover-border) !important;
-      box-shadow: var(--popup-hover-shadow) !important;
-    }
-
-    #canvas .djs-popup .entry .djs-popup-description {
-      color: var(--popup-search-placeholder) !important;
-    }
-
-    #canvas .djs-popup .djs-popup-search input {
-      background: var(--popup-search-background) !important;
-      color: var(--popup-search-text) !important;
-      border: 1px solid var(--popup-search-border) !important;
+    #palette {
+      background: ${palette.background ?? colors.panel ?? colors.surface ?? 'transparent'} !important;
+      color: ${palette.text ?? colors.text ?? '#000'} !important;
+      border-right: 1px solid ${palette.border ?? colors.border ?? 'transparent'} !important;
       box-shadow: none !important;
     }
 
-    #canvas .djs-popup .djs-popup-search input::placeholder {
-      color: var(--popup-search-placeholder) !important;
+    #palette .entry {
+      color: ${palette.text ?? colors.text ?? '#000'} !important;
     }
 
-    #canvas .djs-popup .djs-popup-search input:focus {
-      border-color: var(--popup-hover-border) !important;
-      box-shadow: var(--popup-search-focus-shadow) !important;
+    #canvas .djs-context-pad .djs-overlay {
+      background: ${quickMenu.background ?? colors.surface ?? 'transparent'} !important;
+      border: 1px solid ${colors.border ?? 'transparent'} !important;
     }
 
-    /* ── simulation active token highlight ─────────────────────────────── */
+    .djs-context-pad .entry {
+      background: ${quickMenu.background ?? colors.surface ?? 'transparent'} !important;
+      color: ${quickMenu.text ?? colors.text ?? '#000'} !important;
+      border: 1px solid ${colors.border ?? 'transparent'} !important;
+    }
+
+    .djs-context-pad .entry:hover,
+    .djs-context-pad .entry:focus,
+    .djs-context-pad .entry:active {
+      background: ${quickMenu.hoverBackground ?? quickMenu.background ?? colors.panel ?? 'transparent'} !important;
+      color: ${quickMenu.hoverText ?? quickMenu.text ?? colors.text ?? '#000'} !important;
+      border-color: ${colors.accent ?? colors.border ?? 'transparent'} !important;
+      box-shadow: none !important;
+    }
+
     .djs-element.active .djs-visual > :nth-child(1),
     .djs-connection.active .djs-visual > path {
       stroke: ${colors.accent ?? '#00f'} !important;
       stroke-width: 4px !important;
     }
-
-    /* ── direct editing overlay ───────────────────────────────────────── */
-    .djs-direct-editing-parent,
-    .djs-direct-editing-content {
-      background: ${colors.surface ?? '#fff'} !important;
-      color: ${colors.foreground ?? '#000'} !important;
-      border: 1px solid ${colors.border ?? '#000'} !important;
-      outline: 1px solid ${colors.border ?? '#000'} !important;
-    }
-
-    /* ── diagnostic: ensure labels stay readable ─────────────────────────── */
   `;
 
   warnIfLabelInvisible();
@@ -1820,7 +1512,6 @@ function applyBpmnTheme(theme) {
 }
 
 currentTheme.subscribe(applyBpmnTheme);
-minimalThemeEnabled.subscribe(() => applyBpmnTheme(currentTheme.get()));
 
 function clearModeler() {
 

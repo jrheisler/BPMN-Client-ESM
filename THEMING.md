@@ -1,9 +1,11 @@
-# BPMN Theming Architecture
+# BPMN Theming Architecture (Light & Dark)
 
-- **Theme tokens** live in [`public/js/core/theme.js`](public/js/core/theme.js). The `currentTheme` stream carries the active theme, with normalized `colors`, `fonts`, and BPMN-specific overrides under `theme.bpmn`.
-- **BPMN overrides** are generated in a single injected `<style>` block inside [`public/js/app.js`](public/js/app.js). The `applyBpmnTheme` function rebuilds the CSS whenever the theme or the "Minimal Theme" toggle changes.
-- **Label styling ownership** stays in that injected style. `app.css` is reserved for structural/layout rules (no BPMN label rendering).
-- **Minimal theme mode** (checkbox in the control bar) clears extra overrides, leaving only a background fill and baseline label font/fill so you can isolate the default `bpmn-js` stylesheet.
-- **Debug helpers** (`debugBpmnLabelStyles`, `warnIfLabelInvisible`) run after imports or theme changes to surface contrast or rendering issues.
+We now ship a minimal, two-theme setup that avoids external theme packs and helper layers.
 
-Keep future BPMN styling changes in `applyBpmnTheme` to avoid CSS conflicts across files.
+- **Theme definitions** live in [`public/js/core/theme.js`](public/js/core/theme.js). The exported `THEMES.light` and `THEMES.dark` objects carry `colors`, `fonts`, and a small set of `bpmn` overrides used by the canvas.
+- **Active theme** is stored in the `currentTheme` stream. The helper `setTheme(key)` switches between `light` and `dark`, persists the choice to `localStorage`, and immediately reapplies styles.
+- **Page styling** is handled by `applyThemeToPage`, which writes CSS variables (e.g., `--bg`, `--panel`, `--text`, `--accent`) straight to `document.body` and the canvas host.
+- **BPMN overrides** are injected via `applyBpmnTheme` in [`public/js/app.js`](public/js/app.js). Labels, shapes, connections, the palette, and context pads all derive their fills and strokes from the active theme’s `bpmn` section.
+- **Theme selection UI** uses `themedThemeSelector()`, producing a small `<select>` bound to `currentTheme` without diagnostics or remote loading.
+
+Keep future theme tweaks inside `public/js/core/theme.js` (for tokens/fonts) and `applyBpmnTheme` (for diagram visuals) to keep the pipeline straightforward.

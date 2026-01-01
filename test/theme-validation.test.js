@@ -10,9 +10,6 @@ function createLocalStorageMock() {
     setItem(key, value) {
       store.set(key, String(value));
     },
-    removeItem(key) {
-      store.delete(key);
-    },
     clear() {
       store.clear();
     }
@@ -20,79 +17,61 @@ function createLocalStorageMock() {
 }
 
 function createMockDocument() {
-  const style = {
-    setProperty() {}
-  };
+  const style = { setProperty() {} };
   const body = { style };
   return {
     body,
-    createElement() {
-      return { style: {} };
-    }
+    getElementById() { return null; }
   };
 }
 
-test('invalid stored theme key resets to fallback theme', async t => {
+test('falls back to default theme when stored key is missing', async t => {
   const originalGlobals = {
     document: global.document,
     localStorage: global.localStorage,
-    fetch: global.fetch
+    matchMedia: global.matchMedia
   };
 
   const localStorage = createLocalStorageMock();
-  localStorage.setItem('theme', JSON.stringify({ key: 'missing-theme', schemaVersion: 1 }));
+  localStorage.setItem('theme.v2', 'missing-theme');
 
   global.document = createMockDocument();
   global.localStorage = localStorage;
-  global.fetch = () =>
-    Promise.resolve({
-      json: () => Promise.resolve({ desertSunset: { colors: {}, fonts: {} } })
-    });
+  global.matchMedia = () => ({ matches: false });
 
   t.after(() => {
     global.document = originalGlobals.document;
     global.localStorage = originalGlobals.localStorage;
-    global.fetch = originalGlobals.fetch;
+    global.matchMedia = originalGlobals.matchMedia;
   });
 
-  const { themesLoaded, currentTheme } = await import(
-    `../public/js/core/theme.js?test=${Math.random()}`
-  );
-  await themesLoaded;
+  const { currentTheme } = await import(`../public/js/core/theme.js?test=${Math.random()}`);
 
-  const stored = localStorage.getItem('theme');
-  const parsed = JSON.parse(stored);
-
-  assert.equal(parsed.key, 'dark');
-  assert.equal(currentTheme.get().name, 'Default Dark');
+  assert.equal(currentTheme.get().name, 'Light');
+  assert.equal(localStorage.getItem('theme.v2'), 'light');
 });
 
-
-test('malformed themes.json triggers error and default fallback', async t => {
+test('setTheme updates the stream and persists selection', async t => {
   const originalGlobals = {
     document: global.document,
     localStorage: global.localStorage,
-    fetch: global.fetch
+    matchMedia: global.matchMedia
   };
 
+  const localStorage = createLocalStorageMock();
   global.document = createMockDocument();
-  global.localStorage = createLocalStorageMock();
-  global.fetch = () =>
-    Promise.resolve({
-      json: () => Promise.resolve({ badTheme: 'not-an-object' })
-    });
+  global.localStorage = localStorage;
+  global.matchMedia = () => ({ matches: false });
 
   t.after(() => {
     global.document = originalGlobals.document;
     global.localStorage = originalGlobals.localStorage;
-    global.fetch = originalGlobals.fetch;
+    global.matchMedia = originalGlobals.matchMedia;
   });
 
-  const { themesLoaded, themeLoadStatus, currentTheme } = await import(
-    `../public/js/core/theme.js?test=${Math.random()}`
-  );
-  await themesLoaded;
+  const { setTheme, currentTheme } = await import(`../public/js/core/theme.js?test=${Math.random()}`);
 
-  assert.equal(themeLoadStatus.get(), 'error');
-  assert.equal(currentTheme.get().name, 'Default Dark');
+  setTheme('dark');
+  assert.equal(currentTheme.get().name, 'Dark');
+  assert.equal(localStorage.getItem('theme.v2'), 'dark');
 });
