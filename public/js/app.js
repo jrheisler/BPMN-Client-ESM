@@ -1504,7 +1504,7 @@ function applyBpmnTheme(theme) {
     /* text rendering is scoped to labels only */
     #canvas text,
     #canvas tspan {
-      text-rendering: auto;
+      text-rendering: auto !important;
     }
 
     /* ── text labels use theme-defined fill with foreground fallback ───── */
