@@ -1,310 +1,152 @@
-Perfect — this is exactly the moment to **stop nudging font-weight and instead remove the forces that are *making* SVG text look bold**.
+Yep — that “labels went thick → then disappeared” pattern screams **your label `fill` fallback became `#000` (black)** on a dark canvas, so it *looks* like the text vanished.
 
-I’ve gone through what you shared, and the issue is **not** that `font-weight: 400` isn’t being applied.
-It *is* being applied — and then several other things are **visually thickening the glyphs after the fact**.
+### What’s happening (based on your files)
 
-Below is a **surgical Codex task list**, written so Codex can *rip out the real causes*, not keep papering over them.
+You currently have **two competing label color strategies**:
 
-I’ll explicitly point to what in **your codebase** is implicated.
+1. **CSS file approach** (good for light/dark):
+   `#canvas text.djs-label { fill: var(--text, #111); font-weight: normal !important; }` 
+   This relies on theme variables like `--text`.
 
----
+2. **Injected “theme style” approach in app.js** (this is where it breaks):
+   Your injected CSS sets label fill to:
+   `fill: ${label.fill ?? colors.foreground ?? '#000'} !important;` 
+   If `colors.foreground` isn’t present (or you moved to semantic tokens), it falls back to **`#000`**.
 
-# 🔧 ROOT CAUSE SUMMARY (before tasks)
+Meanwhile, your theme system *does* compute and publish a `--text` CSS variable onto the page:
+`'--text': adjustedText` 
 
-From your files:
-
-### 1️⃣ SVG text rendering overrides (global)
-
-You are applying this globally:
-
-```css
-#canvas svg {
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-```
-
-
-
-👉 **This is the #1 reason the text looks thick.**
-`optimizeLegibility` + antialiasing **fattens SVG glyphs**, especially on dark backgrounds.
+So the “fix” is: **make BPMN label styling use `var(--text)`**, not `colors.foreground ?? '#000'`.
 
 ---
 
-### 2️⃣ Filters & shadows being aggressively stripped *after render*
+## Codex tasks (strong, drill-to-the-issue)
 
-You literally have a function called `debugSvgText()` that:
+### Task 1 — Prove the root cause in DevTools
 
-* removes SVG filters
-* removes strokes
-* normalizes font weight
-* strips blur definitions
-* mutates text nodes after every command stack change
+**Goal:** confirm label elements are being colored black (or same as background).
 
-That tells us **something earlier is applying filters/strokes**, and this function is fighting it *after the fact*.
+**Steps**
 
-This confirms:
+* Inspect a BPMN label `<text class="djs-label">`.
+* Check **Computed → fill**.
+* Confirm whether the applied rule comes from the injected style tag (app.js) and whether fill is `rgb(0,0,0)` or close.
 
-> **The boldness is emergent behavior, not a single rule.**
+**Expected finding**
 
----
-
-### 3️⃣ Theme system is HTML-centric, not SVG-aware
-
-Your `theme.js` is excellent — but it:
-
-* assumes CSS box model
-* assumes HTML text
-* applies font weight semantically (`bold`, `normal`)
-* never differentiates **SVG text vs HTML text**
-
-SVG text needs **separate constraints**.
+* Injected rule is winning with `fill: #000 !important;` (or similarly dark). 
 
 ---
 
-# ✅ CODEX TASK SET: “Kill Heavy BPMN Label Text at the Source”
+### Task 2 — Stop app.js from hardcoding label color
 
-You can paste this directly into `tasks-codex-bpmn-text.md`.
+**Goal:** make label fill always track theme variables.
 
----
+**Change in app.js**
+In the `bpmnThemeStyle.textContent` label block, replace:
 
-## 🎯 Goal
+* `fill: ${label.fill ?? colors.foreground ?? '#000'} !important;`
+  with:
+* `fill: ${label.fill ?? 'var(--text)'} !important;`
 
-Make BPMN.js label text render at **true visual weight 400** in light and dark themes **without post-render mutation, filters, or debug hacks**.
+Also make sure annotations follow the same path.
 
----
+**Why**
 
-## Task 1 — Remove SVG text fattening at the root (CRITICAL)
-
-### Action
-
-Modify BPMN canvas SVG styling to **stop glyph thickening**.
-
-### Instructions
-
-1. In `app.css`, locate the rule targeting `#canvas svg`.
-2. Replace:
-
-```css
-text-rendering: optimizeLegibility;
-```
-
-with:
-
-```css
-text-rendering: geometricPrecision;
-```
-
-3. Remove all `font-smoothing` rules for SVG entirely.
-
-### Why
-
-* `optimizeLegibility` intentionally alters glyph stroke geometry
-* Antialiasing hints **do not behave predictably on SVG**
-* BPMN.js and Camunda do **not** use these settings
-
-### Deliverable
-
-* Updated `app.css`
-* Before/after screenshot at 100% zoom
-
-
+* Your theme system already publishes `--text` based on background contrast. 
 
 ---
 
-## Task 2 — Eliminate post-render “text repair” logic
+### Task 3 — Make the injected CSS *not fight* app.css
 
-### Action
+**Goal:** reduce selector wars and avoid “sometimes this, sometimes that”.
 
-Remove all logic that mutates SVG text nodes after render.
+Right now:
 
-### Instructions
+* app.css targets `#canvas text.djs-label` 
+* app.js injects several label selectors and uses `!important` 
 
-1. Locate `debugSvgText()` in `app.js`
-2. Delete:
+**Codex instructions**
 
-   * fontWeight normalization
-   * stroke removal
-   * filter stripping
-   * blur filter deletion
-3. Remove all calls to `scheduleTextDebug`
+* Pick ONE source of truth for label typography:
 
-### Why
-
-* This function is compensating for upstream mistakes
-* BPMN text must be correct **at render time**
-* Post-mutation causes jitter, perf issues, and regressions
-
-### Deliverable
-
-* `debugSvgText()` fully removed
-* Diagram renders correctly without it
-
-
+  * Either keep it in app.css, OR keep it in injected CSS.
+* If you keep injected CSS, delete / neutralize the label styling in app.css (or vice versa).
+* Ensure only one place sets `font-weight`.
 
 ---
 
-## Task 3 — Move label styling into BPMN renderer configuration (MANDATORY)
+### Task 4 — Fix the original “thick text” without breaking visibility
 
-### Action
+**Goal:** keep weight stable across browsers and SVG.
 
-Stop styling labels via CSS overrides.
-Configure them **where BPMN.js expects it**.
+**Codex instructions**
 
-### Instructions
+* In the label rule (wherever you keep it), set:
 
-When creating `new BpmnJS(...)`, inject:
+  * `font-weight: 400 !important;` (not `normal`)
+  * `stroke: none !important; stroke-width: 0 !important; paint-order: fill !important;`
+* Avoid SVG tricks that simulate bolding (stroke-on-text, filters).
 
-```js
-const modeler = new BpmnJS({
-  container: canvasEl,
-  additionalModules,
-  moddleExtensions,
-  textRenderer: {
-    defaultStyle: {
-      fontFamily: currentTheme.get().fonts.base,
-      fontSize: 12,
-      fontWeight: 'normal',   // NOT '400'
-      lineHeight: 1.2
-    }
-  }
-});
-```
-
-### Why
-
-* SVG fontWeight `"400"` is *not* identical to `"normal"`
-* BPMN renderer normalizes text layout internally
-* This prevents CSS fights entirely
-
-### Deliverable
-
-* Centralized BPMN text config
-* No CSS `!important` on `.djs-label`
+You already do most of this in injected CSS; keep it consistent. 
 
 ---
 
-## Task 4 — Create SVG-specific typography guardrail
+### Task 5 — Guarantee `colors.foreground` exists (backward compatibility)
 
-### Action
+**Goal:** prevent future regressions even if someone reintroduces `colors.foreground` in fallbacks.
 
-Add a **single**, scoped SVG text rule — nothing more.
+In `normalizeThemeEntry()` (theme.js), after `colors` is created:
 
-### Instructions
+* If `colors.foreground` is missing, set it from:
 
-In `app.css`, add:
+  * `colors.text`, then `tokens.text`, then default.
 
-```css
-#canvas text.djs-label {
-  font-weight: normal !important;
-  stroke: none !important;
-  filter: none !important;
-}
-```
+This protects older code paths that still use `colors.foreground`.
 
-### Why
-
-* SVG text can inherit stroke/filter from ancestors
-* This is a *defensive boundary*, not primary styling
-
-### Deliverable
-
-* One SVG-only rule
-* No global `svg text` selectors
+(Your theming already computes `tokens.text`, but does not necessarily backfill `colors.foreground` for every theme pack.) 
 
 ---
 
-## Task 5 — Fix font availability (silent killer)
+### Task 6 — Add a “theme contract” assertion (fast diagnostic)
 
-### Action
+**Goal:** instantly detect missing keys in a theme pack.
 
-Verify the active font actually provides weight 400.
+**Codex instructions**
 
-### Instructions
+* Add a dev-only console warning when:
 
-1. Inspect computed `font-family` of a label `<text>`
-2. If using:
-
-   * system-ui
-   * Segoe UI
-   * variable fonts
-
-Ensure:
-
-* weight 400 exists
-* browser is not synthesizing weight
-
-If not guaranteed:
-
-* lock BPMN labels to a known-good font (Inter / Roboto)
-
-### Deliverable
-
-* Explicit BPMN font choice OR confirmed 400 support
+  * `theme.colors.foreground` is missing AND
+  * you detect any code path referencing `colors.foreground`.
+* Log current theme key + the resolved label fill string.
 
 ---
 
-## Task 6 — Separate HTML theming from SVG theming
+### Task 7 — Add a micro “label visibility” self-test
 
-### Action
+**Goal:** automated guardrail.
 
-Make SVG typography immune to UI theme weight changes.
+**Codex instructions**
 
-### Instructions
+* After applying theme + injecting CSS:
 
-1. In `theme.js`, **do not** apply font weight to containers that include BPMN
-2. BPMN canvas must be opt-out from:
-
-   * `applyTheme()`
-   * inherited font weight
-
-### Why
-
-SVG text inherits aggressively.
-HTML theming rules **will leak**.
-
-
+  * query a `.djs-label` element
+  * read computed `fill`
+  * if it equals computed canvas background (or contrast ratio < 2.0), warn loudly.
 
 ---
 
-## Task 7 — Lock zoom + verify baseline
+## The short answer to “standard BPMN.js dark/light mode”
 
-### Action
+There isn’t a single official “BPMN.js dark mode API”. The common pattern is:
 
-Verify appearance at canonical zoom levels.
+* apply a theme class to the page (or set CSS variables), and
+* override BPMN-js SVG styles via CSS (or a single injected stylesheet),
+* ideally using CSS variables so you don’t hardcode colors.
 
-### Instructions
-
-Test at:
-
-* 1.0
-* 1.25
-* 1.5
-
-Reject fixes that only “look right” at one zoom.
+You’re already *very* close — your `applyThemeToPage()` sets good variables like `--text`. 
+The main fix is to make the BPMN SVG label fill **use those variables** instead of falling back to `#000`. 
 
 ---
 
-## ✅ Acceptance Criteria (non-negotiable)
-
-* No `optimizeLegibility`
-* No SVG filters or strokes on text
-* No post-render mutation of text nodes
-* No CSS fighting `!important` wars
-* Labels visually match Camunda Modeler weight
-
----
-
-# 🧠 Final diagnosis (plain English)
-
-You weren’t losing a font-weight battle.
-You were **losing a rendering pipeline war**:
-
-* SVG hinting
-* filter inheritance
-* theme bleed
-* post-mutation “fixes”
-
-Once those are gone, **`font-weight: normal` just works**.
-
+If you want the **cleanest** outcome: I’d make `app.js` label fill be `var(--text)` by default, and only allow `label.fill` to override it. That solves *both* dark/light and the “disappearing” regression in one shot.
