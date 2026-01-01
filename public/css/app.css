@@ -7,9 +7,14 @@
 }
 
 #canvas svg {
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
+}
+
+#canvas text.djs-label {
+  font-family: 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: normal !important;
+  stroke: none !important;
+  filter: none !important;
 }
 
 .djs-direct-editing-parent,

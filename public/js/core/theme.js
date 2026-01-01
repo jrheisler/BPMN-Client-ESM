@@ -356,15 +356,20 @@ export function applyTheme(el, options = {}) {
     autoDispose = false
   } = options;
 
+  const shouldSkipTypography = () =>
+    typeof el?.closest === 'function' && Boolean(el.closest('#canvas'));
+
   const unsubscribe = currentTheme.subscribe(theme => {
     el.style.fontSize = size;
-    el.style.fontWeight = weight;
+    if (!shouldSkipTypography()) {
+      el.style.fontWeight = weight;
+      el.style.fontFamily = theme.font;
+    }
     el.style.color = color || theme.foreground;
     el.style.backgroundColor = background || theme.background;
     el.style.padding = padding;
     el.style.margin = margin;
     el.style.borderRadius = borderRadius;
-    el.style.fontFamily = theme.font;
     el.style.border = 'none';
   });
 
@@ -572,6 +577,8 @@ export function applyThemeToPage(theme, container = document.body) {
   const fonts = theme.fonts || {};
   const tokens = theme.tokens || {};
 
+  const bpmnFontFallback = "'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+
   // Prefer semantic tokens when present; fall back to colors
   const t = {
     surface: tokens.surface || colors.background || '#ffffff',
@@ -620,6 +627,17 @@ export function applyThemeToPage(theme, container = document.body) {
 
   container.style.webkitFontSmoothing = 'antialiased';
   container.style.mozOsxFontSmoothing = 'grayscale';
+
+  const canvasHost = typeof document !== 'undefined'
+    ? document.getElementById('canvas')
+    : null;
+
+  if (canvasHost) {
+    canvasHost.style.fontFamily = fonts.base || bpmnFontFallback;
+    canvasHost.style.fontWeight = '400';
+    canvasHost.style.webkitFontSmoothing = '';
+    canvasHost.style.mozOsxFontSmoothing = '';
+  }
 }
 
 function maybeApplyThemeToPage(theme) {
