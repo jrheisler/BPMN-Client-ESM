@@ -106,11 +106,16 @@ export function reactiveButton(labelStream, onClick, options = {}, themeStream =
     const colors = theme.colors || {};
     const fonts  = theme.fonts  || {};
 
-    applyTheme(button, options);
-
     const isOutlined = options.outline;
     const isAccent   = options.accent;
     const isDisabled = button.disabled;
+
+    button.style.fontSize      = options.size ?? '1rem';
+    button.style.fontWeight    = options.weight ?? (options.bold ? 'bold' : 'normal');
+    button.style.fontFamily    = fonts.base || 'sans-serif';
+    button.style.padding       = options.padding ?? '0.5rem';
+    button.style.margin        = options.margin ?? '0';
+    button.style.borderRadius  = options.rounded ? '8px' : '4px';
 
     let bg = options.bg
       ?? (isOutlined
@@ -132,12 +137,7 @@ export function reactiveButton(labelStream, onClick, options = {}, themeStream =
 
     const borderColor = options.borderColor || colors.border || fg;
 
-    button.style.fontSize      = options.size    || '1rem';
-    button.style.padding       = options.padding || '0.5rem 1rem';
     button.style.border        = `2px solid ${borderColor}`;
-    button.style.borderRadius  = options.rounded ? '8px' : '4px';
-    button.style.fontFamily    = fonts.base      || 'sans-serif';
-    button.style.fontWeight    = options.bold    ? 'bold' : 'normal';
     button.style.textTransform = options.uppercase
       ? 'uppercase'
       : options.lowercase
@@ -151,7 +151,6 @@ export function reactiveButton(labelStream, onClick, options = {}, themeStream =
     button.style.cursor          = isDisabled ? 'not-allowed' : 'pointer';
     button.style.transition      = 'all 0.3s ease';
 
-    if (options.margin) button.style.margin = options.margin;
     if (options.width)  button.style.width  = options.width;
   }
 
