@@ -121,6 +121,10 @@ function ensureShellLayout() {
   const { canvasEl, header } = setupPageScaffolding({ currentTheme });
   setupCanvasLayout({ canvasEl, header, currentTheme });
 
+  // Ensure the page variables match the initial theme before any controls render
+  // to avoid a flash of unthemed toolbar icons on load.
+  applyThemeToPage(currentTheme.get());
+
   if (!canvasEl.style.position) {
     canvasEl.style.position = 'relative';
   }
